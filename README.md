@@ -31,3 +31,13 @@ The reason is that there are other stopping criterions, such as the cart moving 
 Below we show the gaussian KDE of the reward of the model <em>models/CartPole.PPOmodel</em>, with different accuracy parameters. Note that the accuracy modifies the max_episode_steps and tau, and a lower accuracy also implies a faster computation time (less steps need to be computed).
 
 <img src="results/figures/model_accuracy_and_runtime.png" alt="drawing" width="400"/>
+
+
+
+### Change model accuracy in Mujoco 
+
+We can also change the model accuracy in Mujoco. See:
+
+<img src="results/figures/mujoco_documentation_timestep.png" alt="drawing" width="400"/>
+
+
