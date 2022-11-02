@@ -59,11 +59,12 @@ for accuracy in tqdm([1.0, 0.8, 0.6, 0.4]):
 
     model = PPO(MlpPolicy, env, verbose=1)
     model.learn(total_timesteps=10000)
-    mean_reward, std_reward = evaluate(model, eval_env, n_eval_episodes=100, deterministic=True)
-    print(mean_reward)
-
-
     elapsed = time.time() - t
+
+    mean_reward, std_reward = evaluate(model, eval_env, n_eval_episodes=100, deterministic=True)
+    print(elapsed, mean_reward)
+
+
 
 
 
