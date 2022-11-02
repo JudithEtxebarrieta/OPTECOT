@@ -43,21 +43,10 @@ mean_reward, std_reward = evaluate(model, eval_env, n_eval_episodes=100)
 
 
 model.learn(total_timesteps=10000)
-# Evaluate the trained agent
-mean_reward, std_reward = evaluate(model, eval_env, n_eval_episodes=100)
+mean_reward, std_reward = evaluate(model, eval_env, n_eval_episodes=100, deterministic=True)
+print(mean_reward)
+
+# # Save the model
+# model.save("CartPole.PPOmodel")
 
 
-print(f"mean_reward:{mean_reward:.2f} +/- {std_reward:.2f}")
-print(f"mean_reward:{mean_reward:.2f} +/- {std_reward:.2f}")
-
-# Save the model
-model.save("CartPole.PPOmodel")
-
-# # Load the trained model
-# model = PPO.load("CartPole.PPOmodel")
-
-
-
-# Generate video of model
-import model_to_video
-model_to_video.record_video('CartPole-v1', model)
