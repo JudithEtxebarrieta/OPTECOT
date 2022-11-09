@@ -31,10 +31,14 @@ for j in range(3):
   mean_list = np.zeros(bootstrap_iterations)
   for i in range(bootstrap_iterations):
     y = np.random.choice(data, len(data), replace=True) # generate bootstrap sample
-    avg = np.mean(y) # calculate average of sample
-    mean_list[i] = avg
+    mean_list[i] = np.mean(y) # calculate average of sample
+  
+  # plot confidence interval computed with bootstrap
   plt.scatter([j,j], [np.quantile(mean_list, 0.05), np.quantile(mean_list, 0.95)], marker="_", label="95% Confidence interval", color="black")
-  plt.scatter([j], [np.quantile(mean_list, 0.5)], marker="x", label="Estimation", color="black")
+
+  # plot average of data
+  plt.scatter([j], [np.quantile(y, 0.5)], marker="x", label="Estimation", color="black")
+
   plt.annotate(data_label, (j, 0.1))
   plt.ylim((0,1))
 
