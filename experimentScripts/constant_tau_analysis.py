@@ -7,6 +7,12 @@
 # y recompensas obtenidas con cada uno de los modelos en el proceso de evaluación, se guardan para
 # después poder acceder a ellos sin tener que volver a ejecutar el código.
 
+# Nota.- Para ejecutar este código se han modificado las líneas 472 y 473 del script "base_class.py"
+# del paquete "stable_baselines3", sustituyendo "maxlen=100" por "maxlen=20000". Este cambio se 
+# realiza para que el límite de entrenamiento venga fijado por el número de steps definido y no por
+# el límite de evaluaciones predefinido en ese script. El valor escogido para la modificación es 
+# uno lo suficientemente grande para garantizar lo anterior.
+
 #==================================================================================================
 # LIBRERÍAS
 #==================================================================================================
