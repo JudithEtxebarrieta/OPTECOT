@@ -80,6 +80,25 @@ for accuracy in tqdm([1.0, 0.8, 0.6, 0.4]):
     sw.reset()
 
 
+
+    # Callback in each iteration
+    def callback_in_each_iteration(self, num_timesteps: int, total_timesteps: int) -> None:
+
+        sw.pause()    
+        mean_reward, std_reward = evaluate(model, eval_env, n_eval_episodes=100, deterministic=True)
+        print("steps", "time", "reward", sep=",")
+        print(num_timesteps, sw.get_time(), mean_reward, sep=",")
+        sw.resume()
+
+        self._current_progress_remaining = 1.0 - float(num_timesteps) / float(total_timesteps) # Esta linea la usa la funcion que sustituimos: no cambiar esta linea.
+
+        
+
+    import stable_baselines3.common.base_class
+    stable_baselines3.common.base_class.BaseAlgorithm._update_current_progress_remaining = callback_in_each_iteration
+    
+
+
     model = PPO(MlpPolicy, env, verbose=1)
     model.learn(total_timesteps=10000)
     elapsed = sw.get_time()
