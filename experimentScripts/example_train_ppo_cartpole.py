@@ -42,6 +42,27 @@ env = gym.make('CartPole-v1')
 eval_env = gym.make('CartPole-v1')
 
 
+class stopwatch:
+    
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.start_t = time.time()
+        self.pause_t=0
+
+    def pause(self):
+        self.pause_start = time.time()
+        self.paused=True
+
+    def resume(self):
+        if self.paused:
+            self.pause_t += time.time() - self.pause_start
+            self.paused = False
+
+    def get_time(self):
+        return time.time() - self.start_t - self.pause_t
+        
 n_samples_reward = 100
 default_tau = 0.02
 default_max_episode_steps = 500
@@ -54,12 +75,14 @@ for accuracy in tqdm([1.0, 0.8, 0.6, 0.4]):
     env.env._max_episode_steps = int(default_max_episode_steps * accuracy)
 
 
-    t = time.time()
-    
+
+    sw = stopwatch()
+    sw.reset()
+
 
     model = PPO(MlpPolicy, env, verbose=1)
     model.learn(total_timesteps=10000)
-    elapsed = time.time() - t
+    elapsed = sw.get_time()
 
     mean_reward, std_reward = evaluate(model, eval_env, n_eval_episodes=100, deterministic=True)
     print(elapsed, mean_reward)
