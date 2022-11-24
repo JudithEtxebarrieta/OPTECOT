@@ -44,7 +44,7 @@ import random
 def significant_state_sample(original_sample,n_sample):
 
     #Ajustar el modelo de densidad kernel a los datos disponibles.
-    kde=KernelDensity(kernel='gaussian',bandwidth=0.1).fit(original_sample)
+    kde=KernelDensity(kernel='gaussian',bandwidth=0.01).fit(original_sample)
 
     #Generar muestra aleatoria de modelo.
     state_sample=kde.sample(n_samples=n_sample)
