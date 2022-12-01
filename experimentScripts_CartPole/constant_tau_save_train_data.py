@@ -206,10 +206,10 @@ for accuracy in grid_acc:
         model.learn(total_timesteps=max_train_steps)
 
     df_train_acc=pd.DataFrame(df_train_acc,columns=['steps','info_steps','seed','n_eval','max_step_per_eval','time','info_time','mean_reward'])
-    df_train_acc.to_csv('results/data/df_train_acc'+str(accuracy)+'.csv')
+    df_train_acc.to_csv('results/data/CartPole/df_train_acc'+str(accuracy)+'.csv')
 
 # Guardar los demás datos que se usarán para las gráficas.
-np.save('results/data/grid_acc',grid_acc)
+np.save('results/data/CartPole/grid_acc',grid_acc)
 
 
 

@@ -74,7 +74,7 @@ def train_data_to_figure_data(df_train_acc,list_train_steps):
 # GRÁFICA 1 (resultados generales)
 #--------------------------------------------------------------------------------------------------
 # Leer lista con valores de accuracy considerados.
-grid_acc=np.load('results/data/grid_acc.npy')
+grid_acc=np.load('results/data/CartPole/grid_acc.npy')
 
 # Lista con límites de steps de entrenamiento que se desean dibujar.
 list_train_steps=range(500,10500,500)
@@ -85,7 +85,7 @@ plt.subplots_adjust(left=0.12,bottom=0.11,right=0.74,top=0.88,wspace=0.2,hspace=
 ax=plt.subplot(111)
 for accuracy in grid_acc:
     # Leer base de datos.
-    df_train_acc=pd.read_csv("results/data/df_train_acc"+str(accuracy)+".csv", index_col=0)
+    df_train_acc=pd.read_csv("results/data/CartPole/df_train_acc"+str(accuracy)+".csv", index_col=0)
 
     # Extraer de la base de datos la información relevante.
     all_median_rewards,all_q05_rewards,all_q95_rewards=train_data_to_figure_data(df_train_acc,list_train_steps)
@@ -96,9 +96,9 @@ for accuracy in grid_acc:
 
 ax.set_xlabel("Train steps")
 ax.set_ylabel("Median reward")
-ax.set_title('Models evaluations (train 10 seeds, test 100 episodes)')
+ax.set_title('Model evaluation (train 10 seeds, test 100 episodes)')
 ax.legend(title="Train time-step \n accuracy",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
-plt.savefig('results/figures/general_results.png')
+plt.savefig('results/figures/CartPole/general_results.png')
 plt.show()
 plt.close()
 
@@ -113,7 +113,7 @@ train_steps=[]
 max_rewards=[]
 for accuracy in grid_acc:
     # Leer base de datos.
-    df_train_acc=pd.read_csv("results/data/df_train_acc"+str(accuracy)+".csv", index_col=0)
+    df_train_acc=pd.read_csv("results/data/CartPole/df_train_acc"+str(accuracy)+".csv", index_col=0)
 
     # Extraer de la base de datos la información relevante.
     all_median_rewards,all_q05_rewards,all_q95_rewards=train_data_to_figure_data(df_train_acc,list_train_steps)
@@ -137,6 +137,6 @@ ax.set_xlabel("Train steps")
 ax.set_ylabel("Maximum reward")
 ax.set_title('Best results for each model')
 ax.legend(title="Train time-step \n accuracy",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
-plt.savefig('results/figures/best_results.png')
+plt.savefig('results/figures/CartPole/best_results.png')
 plt.show()
 plt.close()
