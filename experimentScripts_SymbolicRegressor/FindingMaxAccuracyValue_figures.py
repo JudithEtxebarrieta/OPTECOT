@@ -16,7 +16,7 @@ import tqdm
 # FUNCIONES
 #==================================================================================================
 
-def bootstrap_median_and_confiance_interval(data,bootstrap_iterations=1000):
+def bootstrap_mean_and_confiance_interval(data,bootstrap_iterations=1000):
     mean_list=[]
     for i in range(bootstrap_iterations):
         sample = np.random.choice(data, len(data), replace=True)
@@ -26,10 +26,10 @@ def bootstrap_median_and_confiance_interval(data,bootstrap_iterations=1000):
 def from_data_to_figure(df,position_r2,position_mae):
 
     #Inicializaciones
-    all_median_r2=[]
+    all_mean_r2=[]
     all_q05_r2=[]
     all_q95_r2=[]
-    all_median_mae=[]
+    all_mean_mae=[]
     all_q05_mae=[]
     all_q95_mae=[]
 
@@ -43,31 +43,31 @@ def from_data_to_figure(df,position_r2,position_mae):
         scores_r2=df[df['n_pts']==n_pts]['score_r2']
         scores_mae=df[df['n_pts']==n_pts]['score_mae']
 
-        #Calcular intervalo de confianza y mediana
-        median_r2,q05_r2,q95_r2=bootstrap_median_and_confiance_interval(scores_r2)
-        median_mae,q05_mae,q95_mae=bootstrap_median_and_confiance_interval(scores_mae)
+        #Calcular intervalo de confianza y media
+        mean_r2,q05_r2,q95_r2=bootstrap_mean_and_confiance_interval(scores_r2)
+        mean_mae,q05_mae,q95_mae=bootstrap_mean_and_confiance_interval(scores_mae)
 
         #Acumular datos
-        all_median_r2.append(median_r2)
+        all_mean_r2.append(mean_r2)
         all_q05_r2.append(q05_r2)
         all_q95_r2.append(q95_r2)
-        all_median_mae.append(median_mae)
+        all_mean_mae.append(mean_mae)
         all_q05_mae.append(q05_mae)
         all_q95_mae.append(q95_mae)
 
     #Dibujar gráfica
     ax1=plt.subplot(position_r2)
     ax1.fill_between(list_train_n_pts,all_q05_r2,all_q95_r2, alpha=.5, linewidth=0)
-    plt.plot(list_train_n_pts,all_median_r2)
+    plt.plot(list_train_n_pts,all_mean_r2)
     ax1.set_xlabel("Size of train point set")
-    ax1.set_ylabel("Median R²("+str(len(list_train_seeds))+' seeds)')
+    ax1.set_ylabel("Mean R²("+str(len(list_train_seeds))+' seeds)')
     ax1.set_title('Behavior of the R² depending on the \n size of the train point set')
 
     ax2=plt.subplot(position_mae)
     ax2.fill_between(list_train_n_pts,all_q05_mae,all_q95_mae, alpha=.5, linewidth=0)
-    plt.plot(list_train_n_pts,all_median_mae)
+    plt.plot(list_train_n_pts,all_mean_mae)
     ax2.set_xlabel("Size of train point set")
-    ax2.set_ylabel("Median MAE("+str(len(list_train_seeds))+' seeds)')
+    ax2.set_ylabel("Mean MAE("+str(len(list_train_seeds))+' seeds)')
     ax2.set_title('Behavior of the MAE depending on the \n size of the train point set')
 
 def draw_surface(position,eval_expr):
