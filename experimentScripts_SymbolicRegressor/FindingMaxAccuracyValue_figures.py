@@ -21,7 +21,7 @@ def bootstrap_median_and_confiance_interval(data,bootstrap_iterations=1000):
     for i in range(bootstrap_iterations):
         sample = np.random.choice(data, len(data), replace=True)
         mean_list.append(np.mean(sample))
-    return np.median(data),np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
+    return np.mean(data),np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
 
 def from_data_to_figure(df,position_r2,position_mae):
 
