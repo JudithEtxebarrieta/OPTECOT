@@ -1,6 +1,8 @@
 
-#Encontrar el número de puntos de entrenamiento que tiene asociada la máxima precisión, para
-#diferentes superficies.
+# Se pretende encontrar el número de puntos de entrenamiento que tiene asociada la máxima precisión, 
+# para diferentes superficies. Mediante este script se guarda una base de datos por superficie
+# considerada, para resumir los scores de las superficies predichas a partir de un conjunto de 
+# puntos de diferentes tamaños definido con diferentes semillas.
 
 
 # Basado en: https://github.com/trevorstephens/gplearn/blob/main/doc/gp_examples.ipynb
@@ -18,6 +20,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import graphviz
 import pandas as pd
+from tqdm import tqdm as tqdm
 
 #Para las modificaciones
 import itertools
@@ -69,18 +72,11 @@ class stopwatch:
         return time.time() - self.start_t - self.pause_t
 
 #==================================================================================================
-# FUNCIONES GENERALES
+# FUNCIONES
 #==================================================================================================
 
 def mean_abs_err(z_test,z_pred):
     return sum(abs(z_test-z_pred))/len(z_test)
-
-def bootstrap_median_and_confiance_interval(data,bootstrap_iterations=1000):
-    mean_list=[]
-    for i in range(bootstrap_iterations):
-        sample = np.random.choice(data, len(data), replace=True)
-        mean_list.append(np.mean(sample))
-    return np.median(data),np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
 
 def build_pts_sample(n_sample,seed,eval_expr):
 
@@ -127,40 +123,19 @@ def find_max_accuracy(list_train_n_pts,list_train_seeds,test_n_pts,test_seed,eva
     df_test_pts=build_pts_sample(test_n_pts,test_seed,eval_expr)
     df=[]
 
-    for n_pts in list_train_n_pts:
-        print('TAMAÑO DE CONJUNTO INICIAL: '+str(n_pts))
-        all_scores_r2=[]
-        all_scores_mae=[]
+    for n_pts in tqdm(list_train_n_pts):
         for seed in list_train_seeds:
-            print('Seed: '+str(seed))
             #Construir la muestra de puntos para entrenar
             df_train_pts=build_pts_sample(n_pts,seed,eval_expr)
             #Aprender superficie
             est_surf=learn(df_train_pts,max_time)
             #Evaluación
             score_r2,score_mae=evaluate(df_test_pts,est_surf)
-            all_scores_r2.append(score_r2)
-            all_scores_mae.append(score_mae)
+            #Guardar datos
+            df.append([n_pts,seed,score_r2,score_mae])
 
-        median_score_r2,q05_score_r2,q95_score_r2=bootstrap_median_and_confiance_interval(all_scores_r2)
-        median_score_mae,q05_score_mae,q95_score_mae=bootstrap_median_and_confiance_interval(all_scores_mae)
+    return pd.DataFrame(df,columns=['n_pts','seed','score_r2','score_mae'])
 
-        df.append([n_pts,median_score_r2,q05_score_r2,q95_score_r2,median_score_mae,q05_score_mae,q95_score_mae])
-
-
-    return pd.DataFrame(df,columns=['n_pts','median_r2','q05_r2','q95_r2','median_mae','q05_mae','q95_mae'])
-
-def draw_surface(position,eval_expr):
-	x = np.arange(-1, 1, 1/10.)
-	y = np.arange(-1, 1, 1/10.)
-	x, y= np.meshgrid(x, y)
-	z = eval(eval_expr)
-
-	ax = plt.subplot(position,projection='3d')
-	ax.set_xlim(-1, 1)
-	ax.set_ylim(-1, 1)
-	ax.plot_surface(x, y, z, rstride=1, cstride=1,color='green', alpha=0.5)
-	ax.set_title('Real surface: '+eval_expr)
 
 def new_fit(self, X, y, max_time, sample_weight=None):
     """Fit the Genetic Program according to X, y.
@@ -508,7 +483,6 @@ BaseSymbolic.fit=new_fit
 
 #--------------------------------------------------------------------------------------------------
 # EJEMPLO 1 (Paraboloide hiperbólica)
-# Solución: se define en ??? puntos la máxima precisión.
 #--------------------------------------------------------------------------------------------------
 
 #Parámetros
@@ -516,91 +490,30 @@ list_train_n_pts=range(2,32,2)
 list_train_seeds=range(1,21,1)
 test_n_pts=30
 test_seed=0
-eval_expr='x**2-y**2+y-1'
+eval_expr1='x**2-y**2+y-1'
 max_time=30
 
-# #Guardar datos
-# df=find_max_accuracy(list_train_n_pts,list_train_seeds,test_n_pts,test_seed,eval_expr,max_time)
-# df.to_csv('results/data/SymbolicRegressor/FindingMaxAccuracyValue1.csv')
-
-
-#Lectura de datos
-df=pd.read_csv('results/data/SymbolicRegressor/FindingMaxAccuracyValue1.csv',index_col=0)
-
-#Construir gráficas
-plt.figure(figsize=[15,5])
-plt.subplots_adjust(left=0.07,bottom=0.11,right=0.94,top=0.88,wspace=0.2,hspace=0.2)
-
-list_train_n_pts=np.array(list_train_n_pts)
-
-ax1=plt.subplot(131)
-ax1.fill_between(list_train_n_pts[3:],df['q05_r2'][3:],df['q95_r2'][3:], alpha=.5, linewidth=0)
-plt.plot(list_train_n_pts[3:],df['median_r2'][3:])
-ax1.set_xlabel("Size of train point set")
-ax1.set_ylabel("Median R²("+str(len(list_train_seeds))+' seeds)')
-ax1.set_title('Behavior of the R² depending on the \n size of the train point set')
-
-ax2=plt.subplot(132)
-ax2.fill_between(list_train_n_pts[3:],df['q05_mae'][3:],df['q95_mae'][3:], alpha=.5, linewidth=0)
-plt.plot(list_train_n_pts[3:],df['median_mae'][3:])
-ax2.set_xlabel("Size of train point set")
-ax2.set_ylabel("Median MAE("+str(len(list_train_seeds))+' seeds)')
-ax2.set_title('Behavior of the MAE depending on the \n size of the train point set')
-
-draw_surface(133,eval_expr)
-
-plt.savefig('results/figures/SymbolicRegressor/FindingAccuracyConvergenceSURF1.png')
-plt.show()
-plt.close()
-
+#Guardar datos
+df1=find_max_accuracy(list_train_n_pts,list_train_seeds,test_n_pts,test_seed,eval_expr1,max_time)
+df1.to_csv('results/data/SymbolicRegressor/FindingMaxAccuracyValue1.csv')
+np.save('results/data/SymbolicRegressor/eval_expr1',eval_expr1)
 
 #--------------------------------------------------------------------------------------------------
 # EJEMPLO 2 (Plano)
-# Solución: se define en ??? puntos la máxima precisión.
 #--------------------------------------------------------------------------------------------------
 #Parámetros
 list_train_n_pts=range(2,7,1)
 list_train_seeds=range(1,21,1)
 test_n_pts=30
 test_seed=0
-eval_expr='x+2*y+3'
+eval_expr2='x+2*y+3'
 max_time=30
 
 #Guardar datos
-# df=find_max_accuracy(list_train_n_pts,list_train_seeds,test_n_pts,test_seed,eval_expr,max_time)
-# df.to_csv('results/data/SymbolicRegressor/FindingMaxAccuracyValue2.csv')
+df2=find_max_accuracy(list_train_n_pts,list_train_seeds,test_n_pts,test_seed,eval_expr2,max_time)
+df2.to_csv('results/data/SymbolicRegressor/FindingMaxAccuracyValue2.csv')
+np.save('results/data/SymbolicRegressor/eval_expr2',eval_expr2)
 
-
-#Lectura de datos
-df=pd.read_csv('results/data/SymbolicRegressor/FindingMaxAccuracyValue2.csv',index_col=0)
-
-#Construir gráficas
-plt.figure(figsize=[15,5])
-plt.subplots_adjust(left=0.07,bottom=0.11,right=0.94,top=0.88,wspace=0.2,hspace=0.2)
-
-list_train_n_pts=np.array(list_train_n_pts)
-
-ax1=plt.subplot(131)
-ax1.fill_between(list_train_n_pts,df['q05_r2'],df['q95_r2'], alpha=.5, linewidth=0)
-plt.plot(list_train_n_pts,df['median_r2'])
-#plt.yscale('log')
-ax1.set_xlabel("Size of train point set")
-ax1.set_ylabel("Median R²("+str(len(list_train_seeds))+' seeds)')
-ax1.set_title('Behavior of the R² depending on the \n size of the train point set')
-
-ax2=plt.subplot(132)
-ax2.fill_between(list_train_n_pts,df['q05_mae'],df['q95_mae'], alpha=.5, linewidth=0)
-plt.plot(list_train_n_pts,df['median_mae'])
-#plt.yscale('log')
-ax2.set_xlabel("Size of train point set")
-ax2.set_ylabel("Median MAE("+str(len(list_train_seeds))+' seeds)')
-ax2.set_title('Behavior of the MAE depending on the \n size of the train point set')
-
-draw_surface(133,eval_expr)
-
-plt.savefig('results/figures/SymbolicRegressor/FindingAccuracyConvergenceSURF2.png')
-plt.show()
-plt.close()
 
 
 
