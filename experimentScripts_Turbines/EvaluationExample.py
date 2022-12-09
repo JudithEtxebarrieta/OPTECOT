@@ -23,7 +23,8 @@ from scipy.interpolate import interp1d
 from typing import Union
 
 import sys
-sys.path.append("./packages")
+sys.path.append("OptimizationAlgorithms_KONFLOT/packages")
+
 import turbine_classes
 import MathTools as mt
 import time
@@ -46,7 +47,7 @@ import time
 # (400 ms vs 20 ms aproximadamente) muestra la importancia de contar con un objeto serializado para este 
 # tipo de operaciones.
 
-polars = turbine_classes.polar_database_load(filepath=os.path.dirname("POLARS"), pick=False)
+polars = turbine_classes.polar_database_load(filepath="OptimizationAlgorithms_KONFLOT/", pick=False)
 
 #==================================================================================================
 # FUNCIÓN FITNESS: VERSIÓN BLACK-BOX
@@ -143,7 +144,11 @@ constargs = {"N": N,
 #--------------------------------------------------------------------------------------------------
 # TURBINA INSTANTÁNEA
 #--------------------------------------------------------------------------------------------------
+os.chdir('OptimizationAlgorithms_KONFLOT')
 turb = turbine_classes.instantiate_turbine(constargs, turb_params)
+os.chdir('../')
+
+
 
 #--------------------------------------------------------------------------------------------------
 # LLAMADA A LA FUNCIÓN FITNESS (evaluación de la función objetivo)
