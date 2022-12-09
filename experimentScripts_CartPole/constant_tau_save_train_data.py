@@ -181,7 +181,7 @@ default_tau = 0.02
 default_max_episode_steps = 500
 
 # Mallados.
-grid_acc=[1.0,0.8,0.6,0.4,0.3,0.2,0.175,0.15,0.125,0.1]
+grid_acc=[1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1]
 grid_seed=range(1,11,1)
 
 # Guardar en una base de datos por valor de accuracy la información relevante durante el entrenamiento.
