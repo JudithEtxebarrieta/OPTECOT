@@ -566,8 +566,8 @@ for accuracy in list_acc:
       
 
     df_train=pd.DataFrame(df_train,columns=['train_seed','n_gen','score','elapsed_time','time_gen'])
-    df_train.to_csv('results/data/df_train_acc'+str(accuracy)+'_.csv')
+    df_train.to_csv('results/data/SymbolicRegressor/df_train_acc'+str(accuracy)+'_.csv')
 
 # Guardar lista de precisiones.
-# np.save('results/data/list_acc',list_acc)
+np.save('results/data/SymbolicRegressor/list_acc',list_acc)
 

@@ -73,7 +73,7 @@ plt.subplots_adjust(left=0.05,bottom=0.15,right=0.88,top=0.80,wspace=0.32,hspace
 #--------------------------------------------------------------------------------------------------
 print('GRAFICA 1')
 # Leer lista con valores de accuracy considerados.
-list_acc=np.load('results/data/list_acc.npy')
+list_acc=np.load('results/data/SymbolicRegressor/list_acc.npy')
 
 # Lista con límites de tiempos de entrenamiento que se desean dibujar.
 list_train_times=range(1,113,1)
@@ -82,7 +82,7 @@ list_train_times=range(1,113,1)
 ax=plt.subplot(131)
 for accuracy in list_acc:
     # Leer base de datos.
-    df_train_acc=pd.read_csv("results/data/df_train_acc"+str(accuracy)+".csv", index_col=0)
+    df_train_acc=pd.read_csv("results/data/SymbolicRegressor/df_train_acc"+str(accuracy)+".csv", index_col=0)
 
     # Extraer de la base de datos la información relevante.
     all_mean_scores,all_q05_scores,all_q95_scores =train_data_to_figure_data(df_train_acc,list_train_times,type='score')
@@ -106,7 +106,7 @@ train_times=[]
 max_scores=[]
 for accuracy in list_acc:
     # Leer base de datos.
-    df_train_acc=pd.read_csv("results/data/df_train_acc"+str(accuracy)+".csv", index_col=0)
+    df_train_acc=pd.read_csv("results/data/SymbolicRegressor/df_train_acc"+str(accuracy)+".csv", index_col=0)
 
     # Extraer de la base de datos la información relevante.
     all_mean_scores,all_q05_scores,all_q95_scores=train_data_to_figure_data(df_train_acc,list_train_times,type='score')
@@ -139,7 +139,7 @@ print('GRAFICA 3')
 ax=plt.subplot(133)
 for accuracy in list_acc:
     # Leer base de datos.
-    df_train_acc=pd.read_csv("results/data/df_train_acc"+str(accuracy)+".csv", index_col=0)
+    df_train_acc=pd.read_csv("results/data/SymbolicRegressor/df_train_acc"+str(accuracy)+".csv", index_col=0)
 
     # Extraer de la base de datos la información relevante.
     all_mean_gens,all_q05_gens,all_q95_gens =train_data_to_figure_data(df_train_acc,list_train_times,type='gen')
@@ -158,7 +158,7 @@ ax.legend(title="Train set point \n size accuracy",bbox_to_anchor=(1.25, 0, 0, 1
 axins = zoomed_inset_axes(ax,2,loc='lower right')
 for accuracy in list_acc:
     # Leer base de datos.
-    df_train_acc=pd.read_csv("results/data/df_train_acc"+str(accuracy)+".csv", index_col=0)
+    df_train_acc=pd.read_csv("results/data/SymbolicRegressor/df_train_acc"+str(accuracy)+".csv", index_col=0)
 
     # Extraer de la base de datos la información relevante.
     all_mean_gens,all_q05_gens,all_q95_gens =train_data_to_figure_data(df_train_acc,list_train_times,type='gen')
@@ -181,7 +181,7 @@ mark_inset(ax,axins,loc1=1,loc2=3)
 # ax=plt.subplot(224)
 # for accuracy in list_acc:
 #     # Leer base de datos.
-#     df_train_acc=pd.read_csv("results/data/df_train_acc"+str(accuracy)+".csv", index_col=0)
+#     df_train_acc=pd.read_csv("results/data/SymbolicRegressor/df_train_acc"+str(accuracy)+".csv", index_col=0)
 
 #     # Extraer de la base de datos la información relevante.
 #     all_mean_gentimes,all_q05_gentimes,all_q95_gentimes =train_data_to_figure_data(df_train_acc,list_train_times,type='time_gen')
@@ -197,6 +197,6 @@ mark_inset(ax,axins,loc1=1,loc2=3)
 # ax.legend(title="Train set point \n size accuracy",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
 
 
-plt.savefig('results/figures/ConstantAnalysis.png')
+plt.savefig('results/figures/SymbolicRegressor/ConstantAnalysis.png')
 plt.show()
 plt.close()

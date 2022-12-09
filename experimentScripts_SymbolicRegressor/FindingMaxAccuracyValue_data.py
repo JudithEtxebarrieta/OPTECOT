@@ -520,8 +520,8 @@ max_time=30
 
 # Guardar datos.
 df1=find_max_accuracy(list_train_n_pts,list_train_seeds,test_n_pts,test_seed,eval_expr1,max_time)
-df1.to_csv('results/data/FindingMaxAccuracyValue1.csv')
-np.save('results/data/eval_expr1',eval_expr1)
+df1.to_csv('results/data/SymbolicRegressor/FindingMaxAccuracyValue1.csv')
+np.save('results/data/SymbolicRegressor/eval_expr1',eval_expr1)
 
 #--------------------------------------------------------------------------------------------------
 # EJEMPLO 2 (Plano)
@@ -536,8 +536,8 @@ max_time=30
 
 # Guardar datos.
 df2=find_max_accuracy(list_train_n_pts,list_train_seeds,test_n_pts,test_seed,eval_expr2,max_time)
-df2.to_csv('results/data/FindingMaxAccuracyValue2.csv')
-np.save('results/data/eval_expr2',eval_expr2)
+df2.to_csv('results/data/SymbolicRegressor/FindingMaxAccuracyValue2.csv')
+np.save('results/data/SymbolicRegressor/eval_expr2',eval_expr2)
 
 
 
