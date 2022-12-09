@@ -1,18 +1,17 @@
 #==================================================================================================
-# LIBRERIAS
+# LIBRERÍAS
 #==================================================================================================
-#Para mi código
+# Para mi código.
 from gplearn.genetic import SymbolicRegressor
-#from sklearn.ensemble import RandomForestRegressor
-#from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.random import check_random_state
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 import numpy as np
 import graphviz
 import pandas as pd
+from tqdm import tqdm
 
-#Para las modificaciones
+# Para las modificaciones.
 import itertools
 from abc import ABCMeta, abstractmethod
 from time import time
@@ -33,56 +32,149 @@ from gplearn.utils import _partition_estimators
 from gplearn.utils import check_random_state
 
 from gplearn.genetic import _parallel_evolve, MAX_INT
-
 from gplearn.genetic import BaseSymbolic
 
 #==================================================================================================
-# FUNCIONES
+# NUEVAS FUNCIONES
 #==================================================================================================
+
 def mean_abs_err(z_test,z_pred):
     return sum(abs(z_test-z_pred))/len(z_test)
 
-def build_pts_sample(n_sample,seed,eval_expr):
+def build_pts_sample(n_sample,seed):
 
-	#Fijar la semilla
-	rng = check_random_state(seed)
+    # Fijar la semilla.
+    rng = check_random_state(0)
 
-	#Mallado aleatorio (x,y)
-	xy_sample=rng.uniform(-1, 1, n_sample*2).reshape(n_sample, 2)
-	x=xy_sample[:,0]
-	y=xy_sample[:,1]
+    # Mallado aleatorio (x,y).
+    xy_sample=rng.uniform(-1, 1, n_sample*2).reshape(n_sample, 2)
 
-	#Calcular alturas correspondientes (valor z)
-	z_sample=eval(eval_expr)
+    # Calcular alturas correspondientes (valor z).
+    expr_surf=random_surface(seed, xy_sample.shape[1])
+    z_sample=expr_surf.execute(xy_sample)
 
-	#Todos los datos en un array
-	pts_sample=np.insert(xy_sample, xy_sample.shape[1], z_sample, 1)
+    # Todos los datos en un array.
+    pts_sample=np.insert(xy_sample, xy_sample.shape[1], z_sample, 1)
 
-	return pts_sample
+    return pts_sample,expr_surf
+
+def split_pts_train_test(df_pts,test_n_pts):
+
+    # Todos los indices de las filas.
+    ind_rows=range(0,df_pts.shape[0])
+
+    # Seleccionar los puntos de validación y de entrenamiento.
+    ind_test_rows=np.random.choice(ind_rows,test_n_pts,replace=False)
+    df_test_pts=df_pts[ind_test_rows,]
+    df_train_pts=np.delete(df_pts, ind_test_rows, axis=0)
+
+    return df_train_pts,df_test_pts
 
 def evaluate(df_test_pts,est_surf):
 
-    #Calcular score asociado al conjunto de puntos para la superficie seleccionada
+    # Dividir base de datos con las coordenadas de los puntos.
     xy_test=df_test_pts[:,[0,1]]
     z_test=df_test_pts[:,2]
+
+    # Calcular el valor de las terceras coordenadas con las superficie seleccionada.
     z_pred=est_surf.predict(xy_test)
-    score_r2=est_surf.score(xy_test)
-    score_mae=mean_abs_err(z_test, z_pred)
 
-    return score_r2,score_mae    
+    # Calcular score asociado al conjunto de puntos para la superficie seleccionada.
+    score=mean_abs_err(z_test, z_pred)
 
-def learn(train_n_pts,train_seed,df_test_pts,eval_expr,max_time):
+    return score   
 
-    #Construir conjunto de puntos para el entrenamiento
-    df_train_pts=build_pts_sample(train_n_pts,train_seed,eval_expr)
+def learn(df_train_pts,train_seed,df_test_pts,max_time):
 
-	#Definición del algoritmo genético con el cual se encontrarán los coeficientes que definirán la superficie
-    est_surf=SymbolicRegressor(population_size=1000,generations=20,  verbose=0, random_state=0)
+	# Definición del algoritmo genético con el cual se encontrarán la superficie.
+    est_surf=SymbolicRegressor(population_size=1000,
+                               function_set= ('add', 'sub', 'mul', 'div','log','sin','cos','tan'),
+                               verbose=0, random_state=0)
 
-	#Ajustar la superficie a los puntos
+	# Ajustar la superficie a los puntos.
     xy_train=df_train_pts[:,[0,1]]
     z_train=df_train_pts[:,2]
-    est_surf.fit(xy_train, z_train,max_time,train_seed,df_test_pts)      
+    est_surf.fit(xy_train, z_train,max_time,train_seed,df_test_pts)    
+
+    return est_surf._program 
+
+def draw_surface_pts(df_train_pts,df_test_pts,expr_surf_real,expr_surf_pred,accuracy,seed):
+
+    ax = plt.subplot(111, projection='3d')
+
+    # Superficie real.
+    x= np.arange(-1, 1, 0.1)
+    y= np.arange(-1, 1, 0.1)
+    x,y=np.meshgrid(x, y)
+    z=[]
+    for i in range(len(x)):
+        xy=np.transpose(np.array([x[i],y[i]]))
+        z.append(np.array(expr_surf_real.execute(xy)))
+    z=np.array(z)
+    ax.plot_surface(x, y, z, rstride=1, cstride=1, color='green', alpha=0.5)
+
+    # Superficie predicha.
+    z=[]
+    for i in range(len(x)):
+        xy=np.transpose(np.array([x[i],y[i]]))
+        z.append(np.array(expr_surf_pred.execute(xy)))
+    z=np.array(z)
+    ax.plot_surface(x, y, z, rstride=1, cstride=1, color='yellow', alpha=0.5)
+
+    # Puntos de entrenamiento.
+    ax.scatter(df_train_pts[:,0],df_train_pts[:,1], df_train_pts[:,2],c='blue',alpha=1,s=2,label='Train pts')
+
+    # Puntos de validación.
+    ax.scatter(df_test_pts[:,0],df_test_pts[:,1], df_test_pts[:,2],c='red',alpha=1,s=2,label='Test pts')
+
+    ax.set_title('Accuracy:'+str(accuracy)+'; Seed:'+str(seed))
+    ax.legend()
+    plt.show()
+
+#==================================================================================================
+# FUNCIONES DISEÑADAS A PARTIR DE ALGUNAS YA EXISTENTES
+#==================================================================================================
+
+def find_best_individual_final_generation(self,fitness):
+
+    if isinstance(self, TransformerMixin):
+        # Find the best individuals in the final generation
+        fitness = np.array(fitness)
+        if self._metric.greater_is_better:
+            hall_of_fame = fitness.argsort()[::-1][:self.hall_of_fame]
+        else:
+            hall_of_fame = fitness.argsort()[:self.hall_of_fame]
+        evaluation = np.array([gp.execute(X) for gp in
+                                [self._programs[-1][i] for
+                                i in hall_of_fame]])
+        if self.metric == 'spearman':
+            evaluation = np.apply_along_axis(rankdata, 1, evaluation)
+
+        with np.errstate(divide='ignore', invalid='ignore'):
+            correlations = np.abs(np.corrcoef(evaluation))
+        np.fill_diagonal(correlations, 0.)
+        components = list(range(self.hall_of_fame))
+        indices = list(range(self.hall_of_fame))
+        # Iteratively remove least fit individual of most correlated pair
+        while len(components) > self.n_components:
+            most_correlated = np.unravel_index(np.argmax(correlations),
+                                                correlations.shape)
+            # The correlation matrix is sorted by fitness, so identifying
+            # the least fit of the pair is simply getting the higher index
+            worst = max(most_correlated)
+            components.pop(worst)
+            indices.remove(worst)
+            correlations = correlations[:, indices][indices, :]
+            indices = list(range(len(components)))
+        self._best_programs = [self._programs[-1][i] for i in
+                                hall_of_fame[components]]
+
+    else:
+        # Find the best individual in the final generation
+        if self._metric.greater_is_better:
+            self._program = self._programs[-1][np.argmax(fitness)]
+        else:
+            self._program = self._programs[-1][np.argmin(fitness)]
 
 def new_fit(self, X, y, max_time, train_seed,df_test_pts,sample_weight=None):
     """Fit the Genetic Program according to X, y.
@@ -283,10 +375,11 @@ def new_fit(self, X, y, max_time, train_seed,df_test_pts,sample_weight=None):
         self._verbose_reporter()
 
     ###############################################################################################
-    #MODIFICACIÓN: empezar a contar el tiempo de entrenamiento
-    start_total_time=time()
-    ###############################################################################################
-    for gen in range(prior_generations, self.generations):
+    #MODIFICACIONES: 
+    start_total_time=time() #AQUÍ: empezar a contar el tiempo de entrenamiento
+    gen=0# AQUÍ: para que el procedimiento no termine cuando se alcance un número de generaciones, las generaciones se cuentan con un contador independiente.
+
+    while time()-start_total_time < max_time: #AQUÍ: El procedimiento terminará al sobrepasar el tiempo predefinido
 
         start_time = time()
 
@@ -364,107 +457,117 @@ def new_fit(self, X, y, max_time, train_seed,df_test_pts,sample_weight=None):
         if self.verbose:
             self._verbose_reporter(self.run_details_)
 
-        ###########################################################################################
-        #MODIFICACIÓN: ir guardando los datos de interés durante el entrenamiento. 
-        score_r2,score_mae=evaluate(df_test_pts,self)
-        elapsed_time=time()-start_total_time      
-        
-        df_train.append([train_seed,score_r2,score_mae,elapsed_time])
-        ###########################################################################################
         # Check for early stopping
         if self._metric.greater_is_better:
             best_fitness = fitness[np.argmax(fitness)]
-            if best_fitness >= self.stopping_criteria:
-                break
         else:
             best_fitness = fitness[np.argmin(fitness)]
-            if best_fitness <= self.stopping_criteria:
-                break
-        ###########################################################################################
-        #MODIFICACIÓN: añadir otro criterio de parada según el tiempo de entrenamiento.
-        if generation_time>=max_time:
-            break
-        ###########################################################################################
+          
 
-    if isinstance(self, TransformerMixin):
-        # Find the best individuals in the final generation
-        fitness = np.array(fitness)
-        if self._metric.greater_is_better:
-            hall_of_fame = fitness.argsort()[::-1][:self.hall_of_fame]
-        else:
-            hall_of_fame = fitness.argsort()[:self.hall_of_fame]
-        evaluation = np.array([gp.execute(X) for gp in
-                                [self._programs[-1][i] for
-                                i in hall_of_fame]])
-        if self.metric == 'spearman':
-            evaluation = np.apply_along_axis(rankdata, 1, evaluation)
+        find_best_individual_final_generation(self,fitness) #AQUÍ: para poder evaluar la mejor superficie durante el proceso.
 
-        with np.errstate(divide='ignore', invalid='ignore'):
-            correlations = np.abs(np.corrcoef(evaluation))
-        np.fill_diagonal(correlations, 0.)
-        components = list(range(self.hall_of_fame))
-        indices = list(range(self.hall_of_fame))
-        # Iteratively remove least fit individual of most correlated pair
-        while len(components) > self.n_components:
-            most_correlated = np.unravel_index(np.argmax(correlations),
-                                                correlations.shape)
-            # The correlation matrix is sorted by fitness, so identifying
-            # the least fit of the pair is simply getting the higher index
-            worst = max(most_correlated)
-            components.pop(worst)
-            indices.remove(worst)
-            correlations = correlations[:, indices][indices, :]
-            indices = list(range(len(components)))
-        self._best_programs = [self._programs[-1][i] for i in
-                                hall_of_fame[components]]
-
-    else:
-        # Find the best individual in the final generation
-        if self._metric.greater_is_better:
-            self._program = self._programs[-1][np.argmax(fitness)]
-        else:
-            self._program = self._programs[-1][np.argmin(fitness)]
-
+        #AQUÍ: ir guardando los datos de interés durante el entrenamiento. 
+        score=evaluate(df_test_pts,self)
+        elapsed_time=time()-start_total_time      
+        df_train.append([train_seed,gen,score,elapsed_time,generation_time])
+        
+        gen+=1# AQUÍ: actualizar número de generaciones.
+    find_best_individual_final_generation(self,fitness)#AQUÍ: para obtener el mejor elemento de la última generación.
+    ###############################################################################################
     return self
 
+def random_surface(seed, n_features):
+    # Para crear una función simbólica con la semilla y las funciones simples que se deseen.
+    self=SymbolicRegressor(population_size=1,
+                           function_set= ('add', 'sub', 'mul', 'div','log','sin','cos','tan'),
+                           verbose=0, random_state=seed)
 
+    #params
+    params = self.get_params()
+
+    self._function_set = []
+    for function in self.function_set:
+        if isinstance(function, str):
+            self._function_set.append(_function_map[function])
+        elif isinstance(function, _Function):
+            self._function_set.append(function)
+
+    self._arities = {}
+    for function in self._function_set:
+        arity = function.arity
+        self._arities[arity] = self._arities.get(arity, [])
+        self._arities[arity].append(function)
+
+    if hasattr(self, '_transformer'):
+        params['_transformer'] = self.transformer
+    else:
+        params['_transformer'] = None
+
+    #program
+    program = _Program(function_set=self._function_set,
+                        arities=self._arities,
+                        init_depth=params['init_depth'],
+                        init_method=params['init_method'],
+                        n_features=n_features,
+                        metric=self.metric,
+                        transformer=params['_transformer'],
+                        const_range=params['const_range'],
+                        p_point_replace=params['p_point_replace'],
+                        parsimony_coefficient=params['parsimony_coefficient'],
+                        feature_names=params['feature_names'],
+                        random_state=check_random_state(seed),
+                        program=None)
+
+    program.build_program(check_random_state(seed))
+
+    return program
+    
 #==================================================================================================
 # PROGRAMA PRINCIPAL
 #==================================================================================================
-#Para usar la función de ajuste modificada
+
+# Para usar la función de ajuste modificada.
 BaseSymbolic.fit=new_fit
 
-#Predefinido
-eval_expr='x**2-y**2+y-1'
-default_train_n_pts=16
+# Cardinal de conjunto inicial predefinido.
+default_train_n_pts=50
 
-#Mallados
-list_seeds=range(1,11,1)
-list_acc=[1.0,0.8,0.6,0.4]
+# Mallados.
+list_seeds=range(1,31,1)
+list_acc=[1.0,0.8,0.6,0.4,0.2]
 
-#Parámetros de entrenamiento
-max_time=30
+# Parámetros de entrenamiento.
+max_time=60*2
 
-#Parámetros de validación
-test_seed=0
+# Parámetros de validación.
 test_n_pts=default_train_n_pts
 
-#Crear conjunto de entrenamiento
-df_test_pts=build_pts_sample(test_n_pts,test_seed,eval_expr)
-
-#Construir tabla con datos de entrenamiento
+# Construir tabla con datos de entrenamiento.
 for accuracy in list_acc:
 
-    #Cambiar parámetro
+    # Cambiar cardinal predefinido.
     train_n_pts=int(default_train_n_pts*accuracy)
 
-    #Guardar datos de entrenamiento
+    # Guardar datos de entrenamiento.
     df_train=[]
-    for seed in list_seeds:
-        learn(train_n_pts,seed,test_n_pts,test_seed,eval_expr,max_time)
+    for seed in tqdm(list_seeds):
 
-    df_train=pd.DataFrame(df_train,columns=['train_seed','score_r2','score_mae','elapsed_time'])
-    df_train.to_csv('results/data/SymbolicRegressor/df_train_acc'+str(accuracy)+'.csv')
+        # Crear conjuntos generales de entrenamiento y validación.
+        total_n_pts=test_n_pts+train_n_pts
+        df_pts,expr_surf_real=build_pts_sample(total_n_pts,seed)
+        print(df_pts)
+        df_train_pts,df_test_pts=split_pts_train_test(df_pts,test_n_pts)
 
+        # Entrenamiento.
+        expr_surf_pred=learn(df_train_pts,seed,df_test_pts,max_time)
 
+        # Dibujar puntos de entrenamiento y validación junto a superficies.
+        #draw_surface_pts(df_train_pts,df_test_pts,expr_surf_real,expr_surf_pred,accuracy,seed)
+      
+
+    df_train=pd.DataFrame(df_train,columns=['train_seed','n_gen','score','elapsed_time','time_gen'])
+    df_train.to_csv('results/data/df_train_acc'+str(accuracy)+'_.csv')
+
+# Guardar lista de precisiones.
+# np.save('results/data/list_acc',list_acc)
 
