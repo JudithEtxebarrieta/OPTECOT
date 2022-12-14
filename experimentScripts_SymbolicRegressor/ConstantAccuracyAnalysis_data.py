@@ -1,3 +1,14 @@
+# Mediante este script se analiza la influencia de considerar conjuntos de puntos de diferentes 
+# tamaños a la hora de entrenar/buscar la superficie a la que pertenecen, usando una regresión 
+# simbólica con GA. Para ello, se escoge la superficie x²-y²+y-1 y se consideran 7 tamaños/precisiones
+# para el conjunto de puntos inicial sobre el cual se entrenará/buscará la superficie. Para cada
+# precisión se repite el procedimiento usando 30 semillas diferentes (esto permite definir la población
+# inicial del GA de forma diferente). Para la búsqueda de las superficies se fijará un número máximo
+# de evaluaciones (en la expresión de la superficie seleccionada) y se guardarán los datos relevantes 
+# asociados a la mejor superficie encontrada durante el proceso de búsqueda.
+
+# Basado en: https://github.com/trevorstephens/gplearn/blob/main/doc/gp_examples.ipynb
+
 #==================================================================================================
 # LIBRERÍAS
 #==================================================================================================
@@ -34,41 +45,51 @@ from gplearn.utils import check_random_state
 from gplearn.genetic import _parallel_evolve, MAX_INT
 from gplearn.genetic import BaseSymbolic
 
+
 #==================================================================================================
 # NUEVAS FUNCIONES
 #==================================================================================================
 
+# FUNCIÓN 1
+# Parámetros:
+#   >z_test: terceras coordenadas reales de los puntos de la superficie.
+#   >z_pred: terceras coordenadas obtenidas a partir de la superficie predicha.
+# Devuelve: el error absoluto medio de las dos listas anteriores.
+
 def mean_abs_err(z_test,z_pred):
     return sum(abs(z_test-z_pred))/len(z_test)
 
-def build_pts_sample(n_sample,seed):
+# FUNCIÓN 2
+# Parámetros:
+#   >n_sample: número de puntos que se desean construir.
+#   >seed: semilla para la selección aleatoria de los puntos.
+#   >eval_expr: expresión de la superficie de la cual se quiere extraer la muestra de puntos.
+# Devuelve: base de datos con las tres coordenadas de los puntos de la muestra.
+
+def build_pts_sample(n_sample,seed,expr_surf):
 
     # Fijar la semilla.
-    rng = check_random_state(0)
+    rng = check_random_state(seed)
 
     # Mallado aleatorio (x,y).
     xy_sample=rng.uniform(-1, 1, n_sample*2).reshape(n_sample, 2)
+    x=xy_sample[:,0]
+    y=xy_sample[:,1]
 
     # Calcular alturas correspondientes (valor z).
-    expr_surf=random_surface(seed, xy_sample.shape[1])
-    z_sample=expr_surf.execute(xy_sample)
+    z_sample=eval(expr_surf)
 
     # Todos los datos en un array.
     pts_sample=np.insert(xy_sample, xy_sample.shape[1], z_sample, 1)
 
-    return pts_sample,expr_surf
+    return pts_sample
 
-def split_pts_train_test(df_pts,test_n_pts):
-
-    # Todos los indices de las filas.
-    ind_rows=range(0,df_pts.shape[0])
-
-    # Seleccionar los puntos de validación y de entrenamiento.
-    ind_test_rows=np.random.choice(ind_rows,test_n_pts,replace=False)
-    df_test_pts=df_pts[ind_test_rows,]
-    df_train_pts=np.delete(df_pts, ind_test_rows, axis=0)
-
-    return df_train_pts,df_test_pts
+# FUNCIÓN 3
+# Parámetros:
+#   >df_test_pts: base de datos con las tres coordenadas de los puntos que forman el 
+#    conjunto de validación.
+#   >est_surf: superficie seleccionada en el proceso GA de entrenamiento.
+# Devuelve: error absoluto medio.
 
 def evaluate(df_test_pts,est_surf):
 
@@ -84,12 +105,21 @@ def evaluate(df_test_pts,est_surf):
 
     return score   
 
+# FUNCIÓN 4
+# Parámetros:
+#   >df_train_pts: base de datos con las tres coordenadas de los puntos que forman el 
+#    conjunto de entrenamiento.
+#   >train_seed: semilla de entrenamiento.
+#   >df_test_pts: base de datos con las tres coordenadas de los puntos que forman el 
+#    conjunto de validación.
+#   >max_time: tiempo máximo fijado para la ejecución del GA (búsqueda de la superficie).
+# Devuelve: superficie seleccionada.
+
 def learn(df_train_pts,train_seed,df_test_pts,max_time):
 
 	# Definición del algoritmo genético con el cual se encontrarán la superficie.
-    est_surf=SymbolicRegressor(population_size=1000,
-                               function_set= ('add', 'sub', 'mul', 'div','log','sin','cos','tan'),
-                               verbose=0, random_state=0)
+    est_surf=SymbolicRegressor(function_set= ('add', 'sub', 'mul', 'div','sqrt','log','abs','neg','inv','max','min','sin','cos','tan'),
+                               verbose=0, random_state=train_seed)
 
 	# Ajustar la superficie a los puntos.
     xy_train=df_train_pts[:,[0,1]]
@@ -98,43 +128,160 @@ def learn(df_train_pts,train_seed,df_test_pts,max_time):
 
     return est_surf._program 
 
-def draw_surface_pts(df_train_pts,df_test_pts,expr_surf_real,expr_surf_pred,accuracy,seed):
-
-    ax = plt.subplot(111, projection='3d')
-
-    # Superficie real.
-    x= np.arange(-1, 1, 0.1)
-    y= np.arange(-1, 1, 0.1)
-    x,y=np.meshgrid(x, y)
-    z=[]
-    for i in range(len(x)):
-        xy=np.transpose(np.array([x[i],y[i]]))
-        z.append(np.array(expr_surf_real.execute(xy)))
-    z=np.array(z)
-    ax.plot_surface(x, y, z, rstride=1, cstride=1, color='green', alpha=0.5)
-
-    # Superficie predicha.
-    z=[]
-    for i in range(len(x)):
-        xy=np.transpose(np.array([x[i],y[i]]))
-        z.append(np.array(expr_surf_pred.execute(xy)))
-    z=np.array(z)
-    ax.plot_surface(x, y, z, rstride=1, cstride=1, color='yellow', alpha=0.5)
-
-    # Puntos de entrenamiento.
-    ax.scatter(df_train_pts[:,0],df_train_pts[:,1], df_train_pts[:,2],c='blue',alpha=1,s=2,label='Train pts')
-
-    # Puntos de validación.
-    ax.scatter(df_test_pts[:,0],df_test_pts[:,1], df_test_pts[:,2],c='red',alpha=1,s=2,label='Test pts')
-
-    ax.set_title('Accuracy:'+str(accuracy)+'; Seed:'+str(seed))
-    ax.legend()
-    plt.show()
 
 #==================================================================================================
 # FUNCIONES DISEÑADAS A PARTIR DE ALGUNAS YA EXISTENTES
 #==================================================================================================
 
+# FUNCIÓN 5
+# -Original: raw_fitness
+# -Script: _Program.py
+# -Clase: _Program
+def new_raw_fitness(self, X, y, sample_weight):
+    
+    y_pred = self.execute(X)
+    if self.transformer:
+        y_pred = self.transformer(y_pred)
+    raw_fitness = self.metric(y, y_pred, sample_weight)
+    
+    # MODIFICACIÓN: Sumar el número de evaluaciones realizadas (tantas como puntos en el 
+    # conjunto de entrenamiento).
+    global n_evaluations
+    n_evaluations+=X.shape[0]
+
+    return raw_fitness
+
+# FUNCIÓN 6
+# -Original: _parallel_evolve
+# -Script: genetic.py
+
+def new_parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
+   
+    n_samples, n_features = X.shape
+    # Unpack parameters
+    tournament_size = params['tournament_size']
+    function_set = params['function_set']
+    arities = params['arities']
+    init_depth = params['init_depth']
+    init_method = params['init_method']
+    const_range = params['const_range']
+    metric = params['_metric']
+    transformer = params['_transformer']
+    parsimony_coefficient = params['parsimony_coefficient']
+    method_probs = params['method_probs']
+    p_point_replace = params['p_point_replace']
+    max_samples = params['max_samples']
+    feature_names = params['feature_names']
+
+    max_samples = int(max_samples * n_samples)
+
+    def _tournament():
+        """Find the fittest individual from a sub-population."""
+        contenders = random_state.randint(0, len(parents), tournament_size)
+        fitness = [parents[p].fitness_ for p in contenders]
+        if metric.greater_is_better:
+            parent_index = contenders[np.argmax(fitness)]
+        else:
+            parent_index = contenders[np.argmin(fitness)]
+        return parents[parent_index], parent_index
+
+    # Build programs
+    programs = []
+    i=0# MODIFICACIÓN: inicializar contador de forma manual.
+    while i<n_programs and n_evaluations<max_n_eval:#MODIFICACIÓN: añadir nueva restricción para terminar el bucle.
+
+        random_state = check_random_state(seeds[i])
+
+        if parents is None:
+            program = None
+            genome = None
+        else:
+            method = random_state.uniform()
+            parent, parent_index = _tournament()
+
+            if method < method_probs[0]:
+                # crossover
+                donor, donor_index = _tournament()
+                program, removed, remains = parent.crossover(donor.program,
+                                                             random_state)
+                genome = {'method': 'Crossover',
+                          'parent_idx': parent_index,
+                          'parent_nodes': removed,
+                          'donor_idx': donor_index,
+                          'donor_nodes': remains}
+            elif method < method_probs[1]:
+                # subtree_mutation
+                program, removed, _ = parent.subtree_mutation(random_state)
+                genome = {'method': 'Subtree Mutation',
+                          'parent_idx': parent_index,
+                          'parent_nodes': removed}
+            elif method < method_probs[2]:
+                # hoist_mutation
+                program, removed = parent.hoist_mutation(random_state)
+                genome = {'method': 'Hoist Mutation',
+                          'parent_idx': parent_index,
+                          'parent_nodes': removed}
+            elif method < method_probs[3]:
+                # point_mutation
+                program, mutated = parent.point_mutation(random_state)
+                genome = {'method': 'Point Mutation',
+                          'parent_idx': parent_index,
+                          'parent_nodes': mutated}
+            else:
+                # reproduction
+                program = parent.reproduce()
+                genome = {'method': 'Reproduction',
+                          'parent_idx': parent_index,
+                          'parent_nodes': []}
+
+        program = _Program(function_set=function_set,
+                           arities=arities,
+                           init_depth=init_depth,
+                           init_method=init_method,
+                           n_features=n_features,
+                           metric=metric,
+                           transformer=transformer,
+                           const_range=const_range,
+                           p_point_replace=p_point_replace,
+                           parsimony_coefficient=parsimony_coefficient,
+                           feature_names=feature_names,
+                           random_state=random_state,
+                           program=program)
+
+        program.parents = genome
+
+        # Draw samples, using sample weights, and then fit
+        if sample_weight is None:
+            curr_sample_weight = np.ones((n_samples,))
+        else:
+            curr_sample_weight = sample_weight.copy()
+        oob_sample_weight = curr_sample_weight.copy()
+
+        indices, not_indices = program.get_all_indices(n_samples,
+                                                       max_samples,
+                                                       random_state)
+
+        curr_sample_weight[not_indices] = 0
+        oob_sample_weight[indices] = 0
+
+        
+        
+        program.raw_fitness_=program.raw_fitness(X, y, curr_sample_weight)
+         
+        if max_samples < n_samples:
+            # Calculate OOB fitness
+            program.oob_fitness_= program.raw_fitness(X, y, oob_sample_weight)
+            
+
+        programs.append(program)
+
+        i+=1# MODIFICACIÓN: actualizar contador de forma manual.
+    return programs
+
+# FUNCIÓN 7
+# Esta función contiene una parte del código interno de una función ya existente.
+# -Original: fit
+# -Script: genetic.py 
 def find_best_individual_final_generation(self,fitness):
 
     if isinstance(self, TransformerMixin):
@@ -176,27 +323,12 @@ def find_best_individual_final_generation(self,fitness):
         else:
             self._program = self._programs[-1][np.argmin(fitness)]
 
-def new_fit(self, X, y, max_time, train_seed,df_test_pts,sample_weight=None):
-    """Fit the Genetic Program according to X, y.
+# FUNCIÓN 8
+# -Original: fit
+# -Script: genetic.py
+# -Clase: BaseSymbolic
+def new_fit(self, X, y, max_n_eval, train_seed,df_test_pts,sample_weight=None):# MODIFICACIÓN: añadir nuevos argumentos.
 
-    Parameters
-    ----------
-    X : array-like, shape = [n_samples, n_features]
-        Training vectors, where n_samples is the number of samples and
-        n_features is the number of features.
-
-    y : array-like, shape = [n_samples]
-        Target values.
-
-    sample_weight : array-like, shape = [n_samples], optional
-        Weights applied to individual samples.
-
-    Returns
-    -------
-    self : object
-        Returns self.
-
-    """
     random_state = check_random_state(self.random_state)
 
     # Check arrays
@@ -374,12 +506,15 @@ def new_fit(self, X, y, max_time, train_seed,df_test_pts,sample_weight=None):
         # Print header fields
         self._verbose_reporter()
 
-    ###############################################################################################
-    #MODIFICACIONES: 
-    start_total_time=time() #AQUÍ: empezar a contar el tiempo de entrenamiento
-    gen=0# AQUÍ: para que el procedimiento no termine cuando se alcance un número de generaciones, las generaciones se cuentan con un contador independiente.
+    start_total_time=time() #MODIFICACIÓN: empezar a contar el tiempo de entrenamiento.
+    gen=0# MODIFICACIÓN: para que el procedimiento no termine cuando se alcance un número de generaciones, las generaciones se cuentan con un contador independiente.
+    
+    # MODIFICACIÓN: variable global mediante la cual se irán contando el número de evaluaciones realizadas,
+    # entendiendo por evaluación cada evaluación de un punto en una expresión de una superficie.
+    global n_evaluations
+    n_evaluations=0
 
-    while time()-start_total_time < max_time: #AQUÍ: El procedimiento terminará al sobrepasar el tiempo predefinido
+    while n_evaluations < max_n_eval:# MODIFICACIÓN: modificar el límite de entrenamiento.
 
         start_time = time()
 
@@ -462,112 +597,69 @@ def new_fit(self, X, y, max_time, train_seed,df_test_pts,sample_weight=None):
             best_fitness = fitness[np.argmax(fitness)]
         else:
             best_fitness = fitness[np.argmin(fitness)]
-          
+        
 
-        find_best_individual_final_generation(self,fitness) #AQUÍ: para poder evaluar la mejor superficie durante el proceso.
-
-        #AQUÍ: ir guardando los datos de interés durante el entrenamiento. 
+        find_best_individual_final_generation(self,fitness) # MODIFICACIÓN: para poder evaluar la mejor superficie durante el proceso.
+        
+        # MODIFICACIÓN: ir guardando los datos de interés durante el entrenamiento. 
         score=evaluate(df_test_pts,self)
         elapsed_time=time()-start_total_time      
-        df_train.append([train_seed,gen,score,elapsed_time,generation_time])
+        df_train.append([train_seed,gen,score,elapsed_time,generation_time,n_evaluations])
         
-        gen+=1# AQUÍ: actualizar número de generaciones.
-    find_best_individual_final_generation(self,fitness)#AQUÍ: para obtener el mejor elemento de la última generación.
-    ###############################################################################################
+        gen+=1# MODIFICACIÓN: actualizar número de generaciones.
+
+    find_best_individual_final_generation(self,fitness)# MODIFICACIÓN: para obtener el mejor individuo de la última generación.
+    
     return self
 
-def random_surface(seed, n_features):
-    # Para crear una función simbólica con la semilla y las funciones simples que se deseen.
-    self=SymbolicRegressor(population_size=1,
-                           function_set= ('add', 'sub', 'mul', 'div','log','sin','cos','tan'),
-                           verbose=0, random_state=seed)
-
-    #params
-    params = self.get_params()
-
-    self._function_set = []
-    for function in self.function_set:
-        if isinstance(function, str):
-            self._function_set.append(_function_map[function])
-        elif isinstance(function, _Function):
-            self._function_set.append(function)
-
-    self._arities = {}
-    for function in self._function_set:
-        arity = function.arity
-        self._arities[arity] = self._arities.get(arity, [])
-        self._arities[arity].append(function)
-
-    if hasattr(self, '_transformer'):
-        params['_transformer'] = self.transformer
-    else:
-        params['_transformer'] = None
-
-    #program
-    program = _Program(function_set=self._function_set,
-                        arities=self._arities,
-                        init_depth=params['init_depth'],
-                        init_method=params['init_method'],
-                        n_features=n_features,
-                        metric=self.metric,
-                        transformer=params['_transformer'],
-                        const_range=params['const_range'],
-                        p_point_replace=params['p_point_replace'],
-                        parsimony_coefficient=params['parsimony_coefficient'],
-                        feature_names=params['feature_names'],
-                        random_state=check_random_state(seed),
-                        program=None)
-
-    program.build_program(check_random_state(seed))
-
-    return program
-    
 #==================================================================================================
 # PROGRAMA PRINCIPAL
 #==================================================================================================
 
 # Para usar la función de ajuste modificada.
+_Program.raw_fitness=new_raw_fitness
+_parallel_evolve=new_parallel_evolve
 BaseSymbolic.fit=new_fit
 
-# Cardinal de conjunto inicial predefinido.
-default_train_n_pts=50
+# Superficie.
+expr_surf_real='x**2-y**2+y-1'
 
 # Mallados.
-list_seeds=range(1,31,1)
-list_acc=[1.0,0.8,0.6,0.4,0.2]
+list_train_seeds=range(1,31,1)
+list_acc=[1.0,0.9,0.8,0.7,0.6,0.5,0.4]
 
 # Parámetros de entrenamiento.
-max_time=60*2
+default_train_n_pts=50# Cardinal de conjunto inicial predefinido.
+train_pts_seed=0
+max_n_eval=10000000
 
-# Parámetros de validación.
+# Parámetros y conjunto de validación.
 test_n_pts=default_train_n_pts
+test_pts_seed=1
+df_test_pts=build_pts_sample(test_n_pts,test_pts_seed,expr_surf_real)
 
-# Construir tabla con datos de entrenamiento.
+# Construir tabla con datos de validación.
 for accuracy in list_acc:
 
     # Cambiar cardinal predefinido.
     train_n_pts=int(default_train_n_pts*accuracy)
 
+    # Crear conjunto de entrenamiento.
+    df_train_pts=build_pts_sample(train_n_pts,train_pts_seed,expr_surf_real)
+
     # Guardar datos de entrenamiento.
     df_train=[]
-    for seed in tqdm(list_seeds):
-
-        # Crear conjuntos generales de entrenamiento y validación.
-        total_n_pts=test_n_pts+train_n_pts
-        df_pts,expr_surf_real=build_pts_sample(total_n_pts,seed)
-        print(df_pts)
-        df_train_pts,df_test_pts=split_pts_train_test(df_pts,test_n_pts)
+    for train_seed in tqdm(list_train_seeds):
 
         # Entrenamiento.
-        expr_surf_pred=learn(df_train_pts,seed,df_test_pts,max_time)
+        expr_surf_pred=learn(df_train_pts,train_seed,df_test_pts,max_n_eval)
 
-        # Dibujar puntos de entrenamiento y validación junto a superficies.
-        #draw_surface_pts(df_train_pts,df_test_pts,expr_surf_real,expr_surf_pred,accuracy,seed)
-      
-
-    df_train=pd.DataFrame(df_train,columns=['train_seed','n_gen','score','elapsed_time','time_gen'])
-    df_train.to_csv('results/data/SymbolicRegressor/df_train_acc'+str(accuracy)+'_.csv')
+    df_train=pd.DataFrame(df_train,columns=['train_seed','n_gen','score','elapsed_time','time_gen','n_eval'])
+    df_train.to_csv('results/data/SymbolicRegressor/df_train_acc'+str(accuracy)+'.csv')
 
 # Guardar lista de precisiones.
 np.save('results/data/SymbolicRegressor/list_acc',list_acc)
+
+# Guardar expresión de superficie.
+np.save('results/data/SymbolicRegressor/expr_surf',expr_surf_real)
 
