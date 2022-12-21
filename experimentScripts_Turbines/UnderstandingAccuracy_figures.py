@@ -10,6 +10,7 @@ import scipy as sc
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes,mark_inset
 
 #==================================================================================================
 # FUNCIONES
@@ -94,6 +95,17 @@ plt.plot(x,y_mean,linewidth=2)
 ax1.set_xlabel('N')
 ax1.set_ylabel('Time per evaluation')
 ax1.set_title('Evaluation time depending on N')
+
+#Zoom
+axins = zoomed_inset_axes(ax1,6,loc='upper left',borderpad=1)
+axins.fill_between(x,y_q05,y_q95,alpha=.5,linewidth=0)
+plt.plot(x,y_mean,linewidth=2)
+axins.set_xlim(0,60)
+axins.set_ylim(2,7)
+axins.yaxis.tick_right()
+#plt.xticks(visible=False)
+#plt.yticks(visible=False)
+#mark_inset(ax1,axins,loc1=2,loc2=4)
 
 #--------------------------------------------------------------------------------------------------
 # GRÁFICA 2 

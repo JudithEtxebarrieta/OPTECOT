@@ -84,7 +84,7 @@ def build_constargs_dict(N):
 	omega = 2100# Rotational speed.
 	rcas = 0.4# Casing radius.
 	airfoils = ["NACA0015", "NACA0018", "NACA0021"]# Set of possible airfoils.
-	polars = turbine_classes.polar_database_load(filepath=os.path.dirname("POLARS"), pick=False)# Polars.
+	polars = turbine_classes.polar_database_load(filepath="OptimizationAlgorithms_KONFLOT/", pick=False)# Polars.
 	cpobjs = [933.78, 1089.41, 1089.41, 1011.59, 1011.59, 1011.59, 933.78, 933.78, 933.78, 855.96]# Target dumping coefficients.
 	devobjs = [2170.82, 2851.59, 2931.97, 2781.80, 2542.296783, 4518.520988, 4087.436172, 3806.379812, 5845.986619, 6745.134759]# Input sea-state standard pressure deviations.
 	weights = [0.1085, 0.1160, 0.1188, 0.0910, 0.0824, 0.1486, 0.0882, 0.0867, 0.0945, 0.0652]# Input sea-state weights.
@@ -158,12 +158,23 @@ def set_evaluation(set_turb_params,N):
 		all_times.append(elapsed)
 
 	# Calcular datos que se guardarán en la base de datos.
-	ranking=np.argsort(all_scores)
+	ranking=from_argsort_to_ranking(np.argsort(all_scores))
 	total_time=sum(all_times)
 	time_per_eval=np.mean(all_times)
 
 	return [N,all_scores,ranking,all_times,total_time,time_per_eval]
 	
+# FUNCIÓN 5
+# Parámetros:
+#   >list: lista conseguida tras aplicar "np.argsort" sobre una lista (original).
+# Devolver: nueva lista que representa el ranking de los elementos de la lista original.
+def from_argsort_to_ranking(list):
+    new_list=[0]*len(list)
+    i=0
+    for j in list:
+        new_list[j]=i
+        i+=1
+    return new_list
 
 #==================================================================================================
 # PROGRAMA PRINCIPAL
@@ -183,7 +194,7 @@ for n in tqdm(grid_N):
 	df.append(set_evaluation(set_turb_params,n))
 
 df=pd.DataFrame(df,columns=['N','all_scores','ranking','all_times','total_time','time_per_eval'])
-df.to_csv('results/data/Turbines/UnderstandingAccuracy.scv')
+df.to_csv('results/data/Turbines/UnderstandingAccuracy.csv')
 
 
 
