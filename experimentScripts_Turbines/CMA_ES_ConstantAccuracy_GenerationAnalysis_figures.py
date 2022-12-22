@@ -92,18 +92,15 @@ def draw_rankings_per_generation(size,blade_number,seed):
         matrix=np.matrix(ranking_matrix(df,gen))
 
         # Dibujar la matriz
-        # color = sns.cubehelix_palette(start=2, rot=0, dark=0, light=.95, reverse=True, as_cmap=True)
-        # color=cm.get_cmap(color)
-        # color=color(np.linspace(0,1,total_n_eval))
-        # color[:1, :]=np.array([248/256, 67/256, 24/256, 1])# Rojo (código rgb)
-        # color = ListedColormap(color)
-
         color = sns.color_palette("deep",total_n_eval )
+        color = ListedColormap(color)
 
         ax = sns.heatmap(matrix, cmap=color,linewidths=.5, linecolor='lightgray',cbar=False)
         plt.xticks([])
 
-        if seed==size[0]-1:
+        # if seed==size[0]-1:
+        #     ax.set_xlabel('Generation '+str(gen))
+        if seed==size[0]-2:
             ax.set_xlabel('Generation '+str(gen))
 
         if gen ==1:
@@ -197,6 +194,7 @@ def draw_ranking_comparison_per_gen(blade_number,list_seeds,type,what):
     ax.set_title('Comparing similarity between the perfect \n and each '+str(what)+' ranking (blade-number '+str(blade_number)+')')
     ax.legend(title="N",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
 
+    return ax
 
 #==================================================================================================
 # PROGRAMA PRINCIPAL
@@ -218,18 +216,20 @@ plt.figure(figsize=[15,9])
 plt.subplots_adjust(left=0.1,bottom=0.05,right=0.95,top=0.93,wspace=0.14,hspace=0.3)
 
 for seed in list_seeds:
-    color=draw_rankings_per_generation([len(list_seeds),n_gen_per_seed],blade_number,seed)
+    #color=draw_rankings_per_generation([len(list_seeds),n_gen_per_seed],blade_number,seed)
+    color=draw_rankings_per_generation([len(list_seeds)+1,n_gen_per_seed],blade_number,seed)
 
 # Barra de colores.
-# ax = plt.subplot(len(list_seeds)+1,n_gen_per_seed,(len(list_seeds)*n_gen_per_seed+2,(len(list_seeds)+1)*n_gen_per_seed-1))
-# mpl.colorbar.ColorbarBase(ax, cmap=color,orientation='horizontal')
-# ax.set_xlabel('Ranking position')
-# ax.set_xticks(np.arange(.05,1.05,0.1))
-# ax.set_xticklabels(range(1,10+1,1))
+ax = plt.subplot(len(list_seeds)+1,n_gen_per_seed,(len(list_seeds)*n_gen_per_seed+2,(len(list_seeds)+1)*n_gen_per_seed-1))
+mpl.colorbar.ColorbarBase(ax, cmap=color,orientation='horizontal')
+ax.set_xlabel('Ranking position')
+ax.set_xticks(np.arange(.05,1.05,0.1))
+ax.set_xticklabels(range(1,10+1,1))
 
 
 plt.figtext(0.5, 0.95, 'Rankings per generation (blade-number '+str(blade_number)+')', ha='center', va='center')
-plt.savefig('results/figures/Turbines/CMA_ES_GenerationAnalysis_rankings.png')
+#plt.savefig('results/figures/Turbines/CMA_ES_GenerationAnalysis_rankings.png')
+plt.savefig('results/figures/Turbines/CMA_ES_GenerationAnalysis_rankings_legend.png')
 plt.show()
 plt.close()
 
@@ -240,9 +240,17 @@ plt.close()
 plt.figure(figsize=[7,5])
 plt.subplots_adjust(left=0.13,bottom=0.11,right=0.77,top=0.87,wspace=0.14,hspace=0.3)
 
-
-# Crear y guardar gráfica.
+# Crear gráfica.
 draw_ranking_comparison_per_gen(blade_number,list_seeds,'pearson','scores')
+
+def forward(x):
+    return -np.log(x)
+
+def inverse(x):
+    return np.exp(-x)
+#ax.set_yscale('function', functions=(forward, inverse))
+
+# Guardar gráfica.
 plt.savefig('results/figures/Turbines/CMA_ES_GenerationAnalysis_comparison_scores.png')
 plt.show()
 plt.close()
@@ -255,8 +263,17 @@ plt.figure(figsize=[7,5])
 plt.subplots_adjust(left=0.13,bottom=0.11,right=0.77,top=0.87,wspace=0.14,hspace=0.3)
 
 
-# Crear y guardar gráfica.
+# Crear gráfica.
 draw_ranking_comparison_per_gen(blade_number,list_seeds,'pearson','positions')
+
+def forward(x):
+    return -np.log(x)
+
+def inverse(x):
+    return np.exp(-x)
+#ax.set_yscale('function', functions=(forward, inverse))
+
+# Guardar gráfica.
 plt.savefig('results/figures/Turbines/CMA_ES_GenerationAnalysis_comparison_positions.png')
 plt.show()
 plt.close()
