@@ -160,6 +160,9 @@ print('GRAFICA 2')
 plt.figure(figsize=[8,6])
 plt.subplots_adjust(left=0.15,bottom=0.1,right=0.74,top=0.9,wspace=0.36,hspace=0.4)
 
+# Límite de score prefijado.
+score_limit=0.1
+
 # Conseguir datos para la gráfica.
 train_times=[]
 max_scores=[]
@@ -171,8 +174,12 @@ for accuracy in list_acc:
     # Extraer de la base de datos la información relevante.
     all_mean_scores,all_q05_scores,all_q95_scores=train_data_to_figure_data(df_train_acc,list_train_n_eval)
 
-    # Encontrar cuando se da el máximo score por primera vez.
-    ind_min=all_mean_scores.index(min(all_mean_scores))
+    # Encontrar cuando se da el límite de score prefijado por primera vez.
+    limit_scores=list(np.array(all_mean_scores)<=score_limit)
+    if True in limit_scores:
+        ind_min=limit_scores.index(True)
+    else:
+        ind_min=len(all_mean_scores)-1
     train_times.append(list_train_n_eval[ind_min])
     max_scores.append(all_mean_scores[ind_min])
 
@@ -187,9 +194,10 @@ colors=[list(mcolors.TABLEAU_COLORS.keys())[i] for i in ind_sort]
 ax=plt.subplot(111)
 ax.bar(train_times_sort,max_scores_sort,acc_sort,label=acc_sort_str,color=colors)
 ax.set_xlabel("Train evaluations")
-ax.set_ylabel("Maximum score (MAE)")
+ax.set_ylabel("Score (MAE)")
 ax.set_title('Best results for each model')
 ax.legend(title="Train set point \n size accuracy",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
+plt.axhline(y=score_limit,color='red', linestyle='--')
 plt.savefig('results/figures/SymbolicRegressor/best_results.png')
 plt.show()
 plt.close()
