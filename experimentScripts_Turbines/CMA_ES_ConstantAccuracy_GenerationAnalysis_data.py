@@ -113,8 +113,8 @@ def fitness_function(turb_params,N=50):
 
     # Crear turbina instantantanea.
     os.chdir('OptimizationAlgorithms_KONFLOT')
-    turb = turbine_classes.instantiate_turbine(constargs, turb_params)
-    os.chdir('../')	
+    turb = turbine_classes.instantiate_turbine(constargs, turb_params)	
+    os.chdir('../')
 
     # Calcular evaluación.
     if N==default_N:
@@ -137,11 +137,11 @@ def transform_turb_params(x, blade_number,bounds):
     return [blade_number]+list(scaled_x[:-1])+[round(scaled_x[-1])]
 
 
-def evaluate(blade_number,bounds,seed):
+def evaluate(blade_number,bounds,seed,popsize):
 
     # Inicializar CMA-ES
     np.random.seed(seed)
-    es = cma.CMAEvolutionStrategy(np.random.random(5), 0.33,inopts={'bounds': [0, 1],'seed':seed,'popsize':10})
+    es = cma.CMAEvolutionStrategy(np.random.random(5), 0.33,inopts={'bounds': [0, 1],'seed':seed,'popsize':popsize})
 
     # Inicializar contadores de tiempo.
     global sw_stop
@@ -150,7 +150,13 @@ def evaluate(blade_number,bounds,seed):
 
     # Evaluar los diseños de las generaciones con diferentes accuracys para N hasta agotar el tiempo
     # máximo definido para el accuracy máximo.
+    list_turb_params=[]
     n_gen=0
+
+    # Inicializar contador de número de evaluaciones.
+    global stop_n_eval
+    stop_n_eval=0
+
     while not es.stop():
 
         # Nueva generación.
@@ -180,9 +186,13 @@ def evaluate(blade_number,bounds,seed):
 
                 if N==default_N:
                     new_scores.append(new_score)
+                    list_turb_params.append(turb_params)
 
                 # Añadir nuevos datos a la base de datos.
                 df.append([N,seed,n_gen,n_eval,-new_score,sw_eval_time.get_time()])
+
+        # Actualizar número de evaluaciones.
+        stop_n_eval+=popsize
 
         # Pasar los valores de la función objetivo para prepararse para la próxima iteración.
         es.tell(solutions, new_scores)
@@ -191,11 +201,22 @@ def evaluate(blade_number,bounds,seed):
         # Imprimir las variables del estado actual en una sola línea.
         es.disp()
 
-      
-def new_stop(self, check=True, ignore_list=(), check_in_same_iteration=False,
+    # Guardar diseños de turbinas evaluados.
+    df_turb_params=pd.DataFrame(list_turb_params)
+    df_turb_params.to_csv('results/data/2023_01_05/df_turb_params_blade_number'+str(blade_number)+'_seed'+str(seed)+'.csv')
+
+
+def new_stop_time(self, check=True, ignore_list=(), check_in_same_iteration=False,
              get_value=None):
 	stop={}
 	if sw_stop.get_time()>max_time:
+		stop={'TIME RUN OUT':max_time}
+	return stop
+
+def new_stop_n_eval(self, check=True, ignore_list=(), check_in_same_iteration=False,
+             get_value=None):
+	stop={}
+	if stop_n_eval>max_time:
 		stop={'TIME RUN OUT':max_time}
 	return stop
 
@@ -205,17 +226,20 @@ def new_stop(self, check=True, ignore_list=(), check_in_same_iteration=False,
 #==================================================================================================
 
 # Para usar la nueva función de parada (según el tiempo de ejecución).
-cma.CMAEvolutionStrategy.stop=new_stop
+# cma.CMAEvolutionStrategy.stop=new_stop_time
+cma.CMAEvolutionStrategy.stop=new_stop_n_eval
 
 # Definir array de rangos de los parámetros a optimizar (blase_number de forma individual).
 bounds=define_bounds()
 list_blade_number = [3, 5, 7]# Blade-number gene.
 
 # Mallados y parámetros.
-list_seeds=range(0,5,1)
-list_acc=[1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1]
-max_time=60*9
+list_seeds=[1,2,3,4,5]
+list_acc=[1.0,0.8,0.6,0.4,0.2]
+# max_time=60*3
+max_time=100*5 # Número de evaluaciones máximo.
 default_N=50
+popsize=10
 
 #--------------------------------------------------------------------------------------------------
 # BLADE-NUMBER=3
@@ -229,16 +253,17 @@ df=[]
 # Guardar datos asociados a cada semilla en una base de datos.	
 for seed in list_seeds:
     # Evaluación.
-    evaluate(blade_number,bounds,seed)
+    evaluate(blade_number,bounds,seed,popsize)
 
     # Guardar datos acumulados.
     df=pd.DataFrame(df,columns=['N','seed','n_gen','n_eval','score','time'])
-    df.to_csv('results/data/Turbines/CMA_ES_GenerationAnalysis/df_blade_number'+str(blade_number)+'_seed'+str(seed)+'.csv')
+    df.to_csv('rresults/data/Turbines/CMA_ES_GenerationAnalysis/df_blade_number'+str(blade_number)+'_seed'+str(seed)+'.csv')
 
 # Guardar lista de semillas.
 np.save('results/data/Turbines/CMA_ES_GenerationAnalysis/list_seeds',list_seeds)
 
-		
+# Guardar tamaño de generación.
+np.save('results/data/Turbines/CMA_ES_GenerationAnalysis/popsize',popsize)
 		
 		
 
