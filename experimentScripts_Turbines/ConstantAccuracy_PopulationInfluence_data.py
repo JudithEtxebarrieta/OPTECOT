@@ -203,7 +203,7 @@ def evaluate(blade_number,bounds,seed,popsize):
 
     # Guardar diseños de turbinas evaluados.
     df_turb_params=pd.DataFrame(list_turb_params)
-    df_turb_params.to_csv('results/data/2023_01_05/df_turb_params_blade_number'+str(blade_number)+'_seed'+str(seed)+'.csv')
+    df_turb_params.to_csv('results/data/Turbines/PopulationInfluence/df_turb_params_blade_number'+str(blade_number)+'_seed'+str(seed)+'.csv')
 
 
 def new_stop_time(self, check=True, ignore_list=(), check_in_same_iteration=False,
@@ -257,13 +257,13 @@ for seed in list_seeds:
 
     # Guardar datos acumulados.
     df=pd.DataFrame(df,columns=['N','seed','n_gen','n_eval','score','time'])
-    df.to_csv('rresults/data/Turbines/CMA_ES_GenerationAnalysis/df_blade_number'+str(blade_number)+'_seed'+str(seed)+'.csv')
+    df.to_csv('results/data/Turbines/PopulationInfluence/df_blade_number'+str(blade_number)+'_seed'+str(seed)+'.csv')
 
 # Guardar lista de semillas.
-np.save('results/data/Turbines/CMA_ES_GenerationAnalysis/list_seeds',list_seeds)
+np.save('results/data/Turbines/PopulationInfluence/list_seeds',list_seeds)
 
 # Guardar tamaño de generación.
-np.save('results/data/Turbines/CMA_ES_GenerationAnalysis/popsize',popsize)
+np.save('results/data/Turbines/PopulationInfluence/popsize',popsize)
 		
 		
 
