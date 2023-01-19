@@ -447,7 +447,7 @@ for figure in range(1,int(n_gen_per_seed/n_gen_per_figure+1)):
     ax.set_xticklabels(range(1,10+1,1))
 
     plt.figtext(0.5, 0.95, 'Rankings per generation (blade-number '+str(blade_number)+') (FIGURE '+str(figure)+')', ha='center', va='center')
-    plt.savefig('results/figures/Turbines/rankings'+str(figure)+'.png')
+    plt.savefig('results/figures/Turbines/PopulationInfluence/rankings'+str(figure)+'.png')
     plt.show()
     plt.close()
 
@@ -468,7 +468,7 @@ for figure in range(1,int(n_gen_per_seed/n_gen_per_figure+1)):
     ax.set_xlabel('Scaled parameter value')
 
     plt.figtext(0.5, 0.95, 'Turbine designs per generation (blade-number '+str(blade_number)+') (FIGURE '+str(figure)+')', ha='center', va='center')
-    plt.savefig('results/figures/Turbines/turbines'+str(figure)+'.png')
+    plt.savefig('results/figures/Turbines/PopulationInfluence/turbines'+str(figure)+'.png')
     plt.show()
     plt.close()
 
@@ -494,6 +494,6 @@ draw_best_turbine_score_per_gen(221,False,blade_number,list_seeds)
 draw_n_null_score_turb_per_gen(224,False,blade_number,list_seeds)
 
 # Guardar gráfica.
-plt.savefig('results/figures/Turbines/eval_time_and_ranking_comparison.png')
+plt.savefig('results/figures/Turbines/PopulationInfluence/eval_time_and_ranking_comparison.png')
 plt.show()
 plt.close()
