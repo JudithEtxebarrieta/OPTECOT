@@ -2,3 +2,13 @@
 OptimizationAlgorithms_KONFLOT
 outcmaes
 hipatia/*
+rl-baselines3-zoo/rl_zoo3/__pycache__
+venv
+logs
+.vscode
+.github
+cleanrl-master/docs
+runs
+cleanrl/docs
+cleanrl/cloud
+cleanrl/tests
