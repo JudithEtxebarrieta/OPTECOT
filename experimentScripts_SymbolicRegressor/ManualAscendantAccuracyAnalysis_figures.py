@@ -90,7 +90,7 @@ def draw_changes_of_accuracy(df,acc_label_height,list_train_n_eval,color):
 list_train_n_eval=range(100000,10100000,100000)
 
 # Superficie.
-eval_expr=str(np.load('results/data/SymbolicRegressor/expr_surf.npy'))
+eval_expr=str(np.load('results/data/SymbolicRegressor/ManualAscendantAccuracyAnalysis/expr_surf.npy'))
 
 # Inicializar gráfica.
 plt.figure(figsize=[12,7])
@@ -103,7 +103,7 @@ ax=plt.subplot(111)
 #--------------------------------------------------------------------------------------------------
 print('CURVA 1')
 accuracy=1.0
-df_train_acc=pd.read_csv("results/data/SymbolicRegressor/df_train_acc"+str(accuracy)+".csv", index_col=0)
+df_train_acc=pd.read_csv("results/data/SymbolicRegressor/ManualAscendantAccuracyAnalysis/df_train_acc"+str(accuracy)+".csv", index_col=0)
 all_mean,all_q05,all_q95=train_data_to_figure_data(df_train_acc,list_train_n_eval)
 ax.fill_between(list_train_n_eval,all_q05,all_q95, alpha=.5, linewidth=0)
 plt.plot(list_train_n_eval, all_mean, linewidth=2,label=str(accuracy))
@@ -113,8 +113,8 @@ plt.plot(list_train_n_eval, all_mean, linewidth=2,label=str(accuracy))
 # comportamiento ascendente.
 #--------------------------------------------------------------------------------------------------
 print('CURVA 2')
-accuracy=np.load('results/data/SymbolicRegressor/init_acc.npy')
-df_train_acc=pd.read_csv("results/data/SymbolicRegressor/df_train_acc"+str(accuracy)+".csv", index_col=0)
+accuracy=np.load('results/data/SymbolicRegressor/ManualAscendantAccuracyAnalysis/init_acc.npy')
+df_train_acc=pd.read_csv("results/data/SymbolicRegressor/ManualAscendantAccuracyAnalysis/df_train_acc"+str(accuracy)+".csv", index_col=0)
 all_mean,all_q05,all_q95=train_data_to_figure_data(df_train_acc,list_train_n_eval)
 ax.fill_between(list_train_n_eval,all_q05,all_q95, alpha=.5, linewidth=0)
 plt.plot(list_train_n_eval, all_mean, linewidth=2,label=str(accuracy))
@@ -127,7 +127,7 @@ print('CURVA 3')
 freq_change=500000
 split_acc=0.1
 acc_label_height=1
-df_ascendant_acc=pd.read_csv('results/data/SymbolicRegressor/df_train_AscendantAccuracy_freq'+str(freq_change)+'_split'+str(split_acc)+'.csv', index_col=0)
+df_ascendant_acc=pd.read_csv('results/data/SymbolicRegressor/ManualAscendantAccuracyAnalysis/df_train_AscendantAccuracy_freq'+str(freq_change)+'_split'+str(split_acc)+'.csv', index_col=0)
 all_mean,all_q05,all_q95=train_data_to_figure_data(df_ascendant_acc,list_train_n_eval)
 ax.fill_between(list_train_n_eval,all_q05,all_q95, alpha=.5, linewidth=0)
 plt.plot(list_train_n_eval, all_mean, linewidth=2,label='Ascendant freq. '+str(freq_change)+'\n split '+str(split_acc))
@@ -141,7 +141,7 @@ print('CURVA 4')
 freq_change=250000
 split_acc=0.1
 acc_label_height=2
-df_ascendant_acc=pd.read_csv('results/data/SymbolicRegressor/df_train_AscendantAccuracy_freq'+str(freq_change)+'_split'+str(split_acc)+'.csv', index_col=0)
+df_ascendant_acc=pd.read_csv('results/data/SymbolicRegressor/ManualAscendantAccuracyAnalysis/df_train_AscendantAccuracy_freq'+str(freq_change)+'_split'+str(split_acc)+'.csv', index_col=0)
 all_mean,all_q05,all_q95=train_data_to_figure_data(df_ascendant_acc,list_train_n_eval)
 ax.fill_between(list_train_n_eval,all_q05,all_q95, alpha=.5, linewidth=0)
 plt.plot(list_train_n_eval, all_mean, linewidth=2,label='Ascendant freq. '+str(freq_change)+'\n split '+str(split_acc))
@@ -155,7 +155,7 @@ print('CURVA 5')
 freq_change=250000
 split_acc=0.2
 acc_label_height=3
-df_ascendant_acc=pd.read_csv('results/data/SymbolicRegressor/df_train_AscendantAccuracy_freq'+str(freq_change)+'_split'+str(split_acc)+'.csv', index_col=0)
+df_ascendant_acc=pd.read_csv('results/data/SymbolicRegressor/ManualAscendantAccuracyAnalysis/df_train_AscendantAccuracy_freq'+str(freq_change)+'_split'+str(split_acc)+'.csv', index_col=0)
 all_mean,all_q05,all_q95=train_data_to_figure_data(df_ascendant_acc,list_train_n_eval)
 ax.fill_between(list_train_n_eval,all_q05,all_q95, alpha=.5, linewidth=0)
 plt.plot(list_train_n_eval, all_mean, linewidth=2,label='Ascendant freq. '+str(freq_change)+'\n split '+str(split_acc))
@@ -169,7 +169,7 @@ print('CURVA 6')
 freq_change=250000
 split_acc=0.5
 acc_label_height=4
-df_ascendant_acc=pd.read_csv('results/data/SymbolicRegressor/df_train_AscendantAccuracy_freq'+str(freq_change)+'_split'+str(split_acc)+'.csv', index_col=0)
+df_ascendant_acc=pd.read_csv('results/data/SymbolicRegressor/ManualAscendantAccuracyAnalysis/df_train_AscendantAccuracy_freq'+str(freq_change)+'_split'+str(split_acc)+'.csv', index_col=0)
 all_mean,all_q05,all_q95=train_data_to_figure_data(df_ascendant_acc,list_train_n_eval)
 ax.fill_between(list_train_n_eval,all_q05,all_q95, alpha=.5, linewidth=0)
 plt.plot(list_train_n_eval, all_mean, linewidth=2,label='Ascendant freq. '+str(freq_change)+'\n split '+str(split_acc))

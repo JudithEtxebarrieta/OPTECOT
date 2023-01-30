@@ -664,13 +664,13 @@ for train_seed in tqdm(list_train_seeds):
     expr_surf_pred=learn(init_acc,split_acc,n_eval_to_change_accuracy,default_train_n_pts,train_pts_seed,train_seed,df_test_pts,max_n_eval)
 
 df_train=pd.DataFrame(df_train,columns=['train_seed','acc','n_gen','score','elapsed_time','time_gen','n_eval'])
-df_train.to_csv('results/data/SymbolicRegressor/df_train_AscendantAccuracy_freq'+str(freq_change)+'_split'+str(split_acc)+'.csv')
+df_train.to_csv('results/data/SymbolicRegressor/ManualAscendantAccuracyAnalysis/df_train_AscendantAccuracy_freq'+str(freq_change)+'_split'+str(split_acc)+'.csv')
 
 # Guardar expresión de superficie.
-np.save('results/data/SymbolicRegressor/expr_surf',expr_surf_real)
+np.save('results/data/SymbolicRegressor/ManualAscendantAccuracyAnalysis/expr_surf',expr_surf_real)
 
 # Guardar valor de accuracy inicial considerado.
-np.save('results/data/SymbolicRegressor/init_acc',init_acc)
+np.save('results/data/SymbolicRegressor/ManualAscendantAccuracyAnalysis/init_acc',init_acc)
 
 
 
