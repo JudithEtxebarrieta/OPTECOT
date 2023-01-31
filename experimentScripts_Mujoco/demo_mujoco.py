@@ -45,7 +45,7 @@ from torch.utils.tensorboard import SummaryWriter
 default_timestep = 0.002 # Default timestep
 timestep = 0.002         # Reduce timestep for speedup
 
-
+print("With an increased timestep (Implying reduced accuracy) do we need to also reduce the num_steps? So that the update step is done with the same amount of computatinal time (but less samples per second).")
 
 args = parse_args(
   env_id = "Hopper-v4",      # Name of mujoco environment
@@ -121,8 +121,9 @@ def run_experiment():
     envs = gym.vector.SyncVectorEnv(envs_list)
     assert isinstance(envs.single_action_space, gym.spaces.Box), "only continuous action space is supported"
 
-    print(args.rpo_alpha)
-    exit(0)
+    for name in ["Ant", "Hopper", "InvertedDoublePendulum", "Reacher", "Pusher"]:
+        if name in args.env_id:
+            args.rpo_alpha = 0.01
 
     agent = Agent(envs, args.rpo_alpha).to(device)
     optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
@@ -189,7 +190,7 @@ def run_experiment():
 
         policy_objective_value = evaluate_policy(agent, envs, args.num_steps, test_seed, device)
 
-        print("Evaluated with reward", policy_objective_value, " | ", nsteps / args.total_timesteps)
+        print("Evaluated with reward", policy_objective_value, " | ", global_step / args.total_timesteps)
 
 
         with open("test_resultmujoco_rpo.txt", "a") as f:
@@ -279,23 +280,23 @@ def run_experiment():
         var_y = np.var(y_true)
         explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
 
-        # TRY NOT TO MODIFY: record rewards for plotting purposes
-        writer.add_scalar("charts/learning_rate", optimizer.param_groups[0]["lr"], global_step)
-        writer.add_scalar("losses/value_loss", v_loss.item(), global_step)
-        writer.add_scalar("losses/policy_loss", pg_loss.item(), global_step)
-        writer.add_scalar("losses/entropy", entropy_loss.item(), global_step)
-        writer.add_scalar("losses/old_approx_kl", old_approx_kl.item(), global_step)
-        writer.add_scalar("losses/approx_kl", approx_kl.item(), global_step)
-        writer.add_scalar("losses/clipfrac", np.mean(clipfracs), global_step)
-        writer.add_scalar("losses/explained_variance", explained_var, global_step)
-        print("SPS:", int(global_step / (time.time() - start_time)))
-        writer.add_scalar("charts/SPS", int(global_step / (time.time() - start_time)), global_step)
+        # # TRY NOT TO MODIFY: record rewards for plotting purposes
+        # writer.add_scalar("charts/learning_rate", optimizer.param_groups[0]["lr"], global_step)
+        # writer.add_scalar("losses/value_loss", v_loss.item(), global_step)
+        # writer.add_scalar("losses/policy_loss", pg_loss.item(), global_step)
+        # writer.add_scalar("losses/entropy", entropy_loss.item(), global_step)
+        # writer.add_scalar("losses/old_approx_kl", old_approx_kl.item(), global_step)
+        # writer.add_scalar("losses/approx_kl", approx_kl.item(), global_step)
+        # writer.add_scalar("losses/clipfrac", np.mean(clipfracs), global_step)
+        # writer.add_scalar("losses/explained_variance", explained_var, global_step)
+        # print("SPS:", int(global_step / (time.time() - start_time)))
+        # writer.add_scalar("charts/SPS", int(global_step / (time.time() - start_time)), global_step)
 
-        if args.track and args.capture_video:
-            for filename in os.listdir(f"videos/{run_name}"):
-                if filename not in video_filenames and filename.endswith(".mp4"):
-                    wandb.log({f"videos": wandb.Video(f"videos/{run_name}/{filename}")})
-                    video_filenames.add(filename)
+        # if args.track and args.capture_video:
+        #     for filename in os.listdir(f"videos/{run_name}"):
+        #         if filename not in video_filenames and filename.endswith(".mp4"):
+        #             wandb.log({f"videos": wandb.Video(f"videos/{run_name}/{filename}")})
+        #             video_filenames.add(filename)
 
     envs.close()
     writer.close()
