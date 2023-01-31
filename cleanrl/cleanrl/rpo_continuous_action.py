@@ -146,6 +146,12 @@ class Agent(nn.Module):
         return action, probs.log_prob(action).sum(1), probs.entropy().sum(1), self.critic(x)
 
 
+    def get_action_and_value_no_random(self, x, action=None):
+        action_mean = self.actor_mean(x)
+        action = action_mean
+        return action, None, None, self.critic(x)
+
+
 if __name__ == "__main__":
     args = parse_args()
     run_name = f"{args.env_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
