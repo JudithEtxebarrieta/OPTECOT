@@ -39,11 +39,11 @@ import torch.optim as optim
 from torch.distributions.normal import Normal
 from torch.utils.tensorboard import SummaryWriter
 
- 
+ # See https://docs.cleanrl.dev/rl-algorithms/rpo/
 
 # timestep = 0.002 
 default_timestep = 0.002 # Default timestep
-timestep = 0.002         # Reduced timestep for speedup
+timestep = 0.002         # Reduce timestep for speedup
 
 
 
@@ -121,6 +121,9 @@ def run_experiment():
     envs = gym.vector.SyncVectorEnv(envs_list)
     assert isinstance(envs.single_action_space, gym.spaces.Box), "only continuous action space is supported"
 
+    print(args.rpo_alpha)
+    exit(0)
+
     agent = Agent(envs, args.rpo_alpha).to(device)
     optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
 
@@ -158,6 +161,7 @@ def run_experiment():
             # ALGO LOGIC: action logic
             with torch.no_grad():
                 action, logprob, _, value = agent.get_action_and_value(next_obs)
+                nsteps += 1
                 values[step] = value.flatten()
             actions[step] = action
             logprobs[step] = logprob
@@ -185,7 +189,7 @@ def run_experiment():
 
         policy_objective_value = evaluate_policy(agent, envs, args.num_steps, test_seed, device)
 
-        print("Evaluated with reward", policy_objective_value, " | ", args.total_timesteps)
+        print("Evaluated with reward", policy_objective_value, " | ", nsteps / args.total_timesteps)
 
 
         with open("test_resultmujoco_rpo.txt", "a") as f:
