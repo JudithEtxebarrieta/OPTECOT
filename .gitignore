@@ -12,3 +12,16 @@ runs
 cleanrl/docs
 cleanrl/cloud
 cleanrl/tests
+windflo/WindFLO.res
+windflo/release/WindFLO_LINUX
+windflo/optimum.dat
+windflo/Examples/Example4/WindFLO.res
+windflo/Examples/Example2/WindFLO.res
+windflo/Examples/Example0/WindFLO.res
+windflo/*.inp
+windflo/outcmaes
+windflo/terrain.dat
+*.o
+*.so
+windflo/result_fig.pdf
+__pycache__
