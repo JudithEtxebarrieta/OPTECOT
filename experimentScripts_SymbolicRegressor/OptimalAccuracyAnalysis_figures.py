@@ -148,7 +148,10 @@ def draw_and_save_figures_per_heuristic(heuristic):
         ax=plt.subplot(132)
 
     # Lectura de bases de datos que se emplearán.
-    df_max_acc=pd.read_csv("results/data/SymbolicRegressor/OptimalAccuracyAnalysis/df_train_ConstantAccuracy1.csv", index_col=0) # Accuracy constante 1 (situación por defecto).
+    if heuristic ==11:
+        df_max_acc=pd.read_csv("results/data/SymbolicRegressor/OptimalAccuracyAnalysis/df_train_ConstantAccuracy1_RandomTrain.csv", index_col=0) # Accuracy constante 1 (situación por defecto).
+    else:
+        df_max_acc=pd.read_csv("results/data/SymbolicRegressor/OptimalAccuracyAnalysis/df_train_ConstantAccuracy1.csv", index_col=0) # Accuracy constante 1 (situación por defecto).
     df_optimal_acc=pd.read_csv('results/data/SymbolicRegressor/OptimalAccuracyAnalysis/df_train_OptimalAccuracy_heuristic'+str(heuristic)+'.csv', index_col=0) # Accuracy ascendente.
 
     # Inicializar número de curvas.
@@ -174,10 +177,10 @@ def draw_and_save_figures_per_heuristic(heuristic):
 
     ax.set_xlabel("Train total evaluations")
     ax.set_ylabel("Mean score (MAE)")
-    if heuristic==6:
+    if heuristic >6:
         ax.set_title('Comparison between optimal and constant accuracy \n (real surface '+str(eval_expr)+')')
     else:
-        ax.set_title('Comparison between optimal and constant accuracy \n (real surface '+str(eval_expr)+')')
+        ax.set_title('Comparison between ascendant and constant accuracy \n (real surface '+str(eval_expr)+')')
 
     ax.set_yscale('log')
     ax.set_xscale('log')
@@ -213,10 +216,10 @@ def draw_and_save_figures_per_heuristic(heuristic):
 
     ax.set_xlabel("Train evaluations (without extra)")
     ax.set_ylabel("Mean score (MAE)")
-    if heuristic==6:
+    if heuristic >6:
         ax.set_title('Comparison between optimal and constant accuracy \n (real surface '+str(eval_expr)+')')
     else:
-        ax.set_title('Comparison between optimal and constant accuracy \n (real surface '+str(eval_expr)+')')
+        ax.set_title('Comparison between ascendant and constant accuracy \n (real surface '+str(eval_expr)+')')
 
     ax.legend(title="Train set point size accuracy",bbox_to_anchor=(1.4, 0, 0, 1), loc='center')
     ax.set_yscale('log')
@@ -240,7 +243,7 @@ def draw_and_save_figures_per_heuristic(heuristic):
         curve+=1
     ax.set_xlabel("Train evaluations")
     ax.set_ylabel("Accuracy value")
-    if heuristic in [6,8,9,10]:
+    if heuristic >6:
         ax.set_title('Behavior of optimal accuracy')
     else:
         ax.set_title('Ascendant behavior of accuracy')
@@ -257,6 +260,6 @@ def draw_and_save_figures_per_heuristic(heuristic):
     plt.close()
 
 # Llamar a la función.
-list_heuristics=[1,2,3,4,5,6,7,8,9,10]
+list_heuristics=[1,2,3,4,5,6,7,8,9,10,11,12,13]
 for heuristic in list_heuristics:
     draw_and_save_figures_per_heuristic(heuristic)
