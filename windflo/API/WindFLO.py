@@ -336,7 +336,7 @@ class WindFLO:
 		
 
 
-	def run(self, sw,**kwargs):
+	def run(self,**kwargs):
 		self.ParseKwargsForAnalysisParams(**kwargs)
 		
 		self.runDir = kwargs.get('runDir', self.runDir)			

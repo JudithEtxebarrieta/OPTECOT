@@ -165,7 +165,7 @@ def main(seed, accuracy):
 
     print(bestPower, sw.get_time(), sep=",")
 
-    windFLO.run(stopwatch(), clean = True, resFile = 'WindFLO.res')
+    windFLO.run(clean = True, resFile = 'WindFLO.res')
     
     # Plot the optimum configuration    
     fig = plt.figure(figsize=(8,5), edgecolor = 'gray', linewidth = 2)
