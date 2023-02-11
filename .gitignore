@@ -8,6 +8,7 @@ logs
 .vscode
 .github
 cleanrl-master/docs
+cleanrl
 cleanrl/docs
 cleanrl/cloud
 cleanrl/tests
@@ -24,4 +25,3 @@ WindFLO/terrain.dat
 *.so
 WindFLO/result_fig.pdf
 __pycache__
-cleanrl
