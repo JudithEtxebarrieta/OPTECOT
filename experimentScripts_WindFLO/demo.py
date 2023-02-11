@@ -2,8 +2,8 @@ import os
 import sys
 
 
-os.chdir("windflo")
-sys.path.append(sys.path[0] + '/../windflo/Examples/Example1')
+os.chdir("WindFLO")
+sys.path.append(sys.path[0] + '/../WindFLO/Examples/Example1')
 print(sys.path)
 from example1 import main
 
