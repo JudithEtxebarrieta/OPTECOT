@@ -8,7 +8,6 @@ logs
 .vscode
 .github
 cleanrl-master/docs
-cleanrl
 cleanrl/docs
 cleanrl/cloud
 cleanrl/tests
