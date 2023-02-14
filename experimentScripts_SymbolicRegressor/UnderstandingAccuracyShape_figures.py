@@ -1,3 +1,6 @@
+# Mediante este script se representan gráficamente los resultados numéricos calculados por 
+# "UnderstandingAccuracyShape.py".
+
 #==================================================================================================
 # LIBRERÍAS
 #==================================================================================================
@@ -15,6 +18,14 @@ import plotly.express as px
 #==================================================================================================
 # FUNCIONES
 #==================================================================================================
+# FUNCIÓN 1
+# Parámetros:
+#   >data: datos sobre los cuales se calculará el rango entre percentiles.
+#   >bootstrap_iterations: número de submuestras que se considerarán de data para poder calcular el 
+#    rango entre percentiles de sus medias.
+# Devolver: la media de los datos originales junto a los percentiles de las medias obtenidas del 
+# submuestreo realizado sobre data.
+
 def bootstrap_mean_and_confiance_interval(data,bootstrap_iterations=1000):
     mean_list=[]
     for i in range(bootstrap_iterations):
@@ -22,6 +33,9 @@ def bootstrap_mean_and_confiance_interval(data,bootstrap_iterations=1000):
         mean_list.append(np.mean(sample))
     return np.mean(data),np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
 
+# FUNCIÓN 2 (transformar datos en figura)
+# Parámetros: list_threshold_corr, lista con los umbrales de correlación ideal considerados.
+# Devolver: nada, construye directamente la gráica.
 
 def from_data_to_figure(list_threshold_corr):
     # Lista de colores.

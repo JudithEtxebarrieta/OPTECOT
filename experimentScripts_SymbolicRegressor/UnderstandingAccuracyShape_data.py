@@ -1,3 +1,6 @@
+# Mediante este script se pretende estudiar cual es el comportamiento óptimo del accuracy 
+# durante el proceso de entrenamiento.
+
 #==================================================================================================
 # LIBRERÍAS
 #==================================================================================================
@@ -43,8 +46,21 @@ import multiprocessing as mp
 #--------------------------------------------------------------------------------------------------
 # Funciones para el proceso de aprendizaje o búsqueda de la superficie.
 #--------------------------------------------------------------------------------------------------
+# FUNCIÓN 1
+# Parámetros:
+#   >z_test: terceras coordenadas reales de los puntos de la superficie.
+#   >z_pred: terceras coordenadas obtenidas a partir de la superficie predicha.
+# Devuelve: el error absoluto medio de las dos listas anteriores.
+
 def mean_abs_err(z_test,z_pred):
     return sum(abs(z_test-z_pred))/len(z_test)
+
+# FUNCIÓN 2
+# Parámetros:
+#   >n_sample: número de puntos que se desean construir.
+#   >seed: semilla para la selección aleatoria de los puntos.
+#   >expr_surf: expresión de la superficie de la cual se quiere extraer la muestra de puntos.
+# Devuelve: base de datos con las tres coordenadas de los puntos de la muestra.
 
 def build_pts_sample(n_sample,seed,expr_surf):
 
@@ -64,6 +80,13 @@ def build_pts_sample(n_sample,seed,expr_surf):
 
     return pts_sample
 
+# FUNCIÓN 3
+# Parámetros:
+#   >df_test_pts: base de datos con las tres coordenadas de los puntos que forman el 
+#    conjunto de validación.
+#   >est_surf: superficie seleccionada en el proceso GA de entrenamiento.
+# Devuelve: error absoluto medio.
+
 def evaluate(df_test_pts,est_surf):
 
     # Dividir base de datos con las coordenadas de los puntos.
@@ -78,6 +101,13 @@ def evaluate(df_test_pts,est_surf):
 
     return score   
 
+# FUNCIÓN 4
+# Parámetros:
+#   >inti_acc: valor del accuracy inicial.
+#   >threshold_corr: umbral de correlación ideal.
+#   >train_seed: semilla de entrenamiento.
+# Devuelve: superficie seleccionada.
+
 def learn(init_acc,threshold_corr,train_seed):
 
     # Cambiar cardinal predefinido.
@@ -87,8 +117,7 @@ def learn(init_acc,threshold_corr,train_seed):
     df_train_pts=build_pts_sample(train_n_pts,train_pts_seed,expr_surf_real)
 
     # Definición del algoritmo genético con el cual se encontrarán la superficie.
-    est_surf=SymbolicRegressor(function_set= ('add', 'sub', 'mul', 'div','sqrt','log','abs','neg','inv','max','min','sin','cos','tan'),
-                               verbose=0, random_state=train_seed)
+    est_surf=SymbolicRegressor(random_state=train_seed)
     
     # Ajustar la superficie a los puntos.
     xy_train=df_train_pts[:,[0,1]]
@@ -100,10 +129,11 @@ def learn(init_acc,threshold_corr,train_seed):
 #--------------------------------------------------------------------------------------------------
 # Funciones auxiliares para definir el accuracy  apropiado en cada momento del proceso.
 #--------------------------------------------------------------------------------------------------
-
+# FUNCIÓN 5 (Cálculo de la correlación de Spearman entre dos secuencias)
 def spearman_corr(x,y):
     return sc.stats.spearmanr(x,y)[0]
 
+# FUNCIÓN 6 (Convertir vector de scores en vector de rankings)
 def from_scores_to_ranking(list_scores):
     list_pos_ranking=np.argsort(np.array(list_scores))
     ranking=[0]*len(list_pos_ranking)
@@ -112,6 +142,12 @@ def from_scores_to_ranking(list_scores):
         ranking[j]=i
         i+=1
     return ranking
+
+# FUNCIÓN 7 (Generar lista con los scores asociados a cada superficie que forma la generación)
+# Parámetros:
+#   >list_surfaces: lista con las expresiones de las superficies que forman la generación.
+#   >df_pts: conjunto de puntos sobre el que se desea evaluar cada superficie.
+# Devuelve: lista de scores.
 
 def generation_score_list(list_surfaces,df_pts):
     
@@ -135,6 +171,14 @@ def generation_score_list(list_surfaces,df_pts):
         list_scores.append(score)
      
     return list_scores
+
+# FUNCIÓN 8 (definir el accuracy óptimo por generación)
+# Parámetros:
+#   >threshold_corr: umbral de correlación ideal.
+#   >acc: accuracy mínimo.
+#   >acc_type: 'Ascendant' o 'Optimal', si se define un accuracy ascendente o no, respectivamente.
+#   >list_surfaces: lista con las expresiones de las superficies que forman la generación.
+# Devuelve: valor de accuracy seleccionado como óptimo.
 
 def accuracy_behaviour_shape(threshold_corr,acc,acc_type,list_surf_gen):
 
@@ -167,7 +211,6 @@ def accuracy_behaviour_shape(threshold_corr,acc,acc_type,list_surf_gen):
             next_acc+=0.05
     
     return next_acc
-
 
 
 #==================================================================================================
@@ -536,7 +579,6 @@ global train_pts_seed
 global max_n_gen
 global acc_change_gen_freq
 global expr_surf_real
-global acc_type
 
 # Superficie.
 expr_surf_real='x**2-y**2+y-1'
@@ -554,7 +596,12 @@ test_pts_seed=1
 df_test_pts=build_pts_sample(test_n_pts,test_pts_seed,expr_surf_real)
 
 # Función para ejecución en paralelo.
-def parallel_processing(threshold_corr):
+def parallel_processing(arg):
+    # Extraer información del argumento.
+    threshold=arg[0]
+    global acc_type
+    acc_type=arg[1]
+
     # Accuracy de partida.
     global init_acc
     init_acc=0.05
@@ -563,18 +610,22 @@ def parallel_processing(threshold_corr):
     global df
     df=[]
     for train_seed in tqdm(list_train_seeds):
-        learn(init_acc,threshold_corr,train_seed)
+        learn(init_acc,threshold,train_seed)
 
     df=pd.DataFrame(df,columns=['corr','train_seed','gen','n_eval','acc','score'])
-    df.to_csv('results/data/SymbolicRegressor/UnderstandingAccuracyShape/df_'+str(acc_type)+'_acc_shape_tc'+str(threshold_corr)+'.csv',)
+    df.to_csv('results/data/SymbolicRegressor/UnderstandingAccuracyShape/df_'+str(acc_type)+'_acc_shape_tc'+str(threshold)+'.csv',)
 
+# Preparación de argumentos de la función.
+acc_types=['Optimal','Ascendant']
+list_threshold_corr=[1.0,0.9,0.8,0.6,0.4,0.0]
+list_arg=[]
+for acc_type in acc_types:
+    for threshold in list_threshold_corr:
+        list_arg.append([threshold,acc_type])
 
 # Ejecución en paralelo.
-# acc_type='Ascendant'
-acc_type='Optimal'
-list_threshold_corr=[1,0.9,0.8,0.6,0.4,0]
 pool=mp.Pool(mp.cpu_count())
-pool.map(parallel_processing,list_threshold_corr)
+pool.map(parallel_processing,list_arg)
 pool.close()
 
 # Guardar valores considerados como umbral para la correlación.
