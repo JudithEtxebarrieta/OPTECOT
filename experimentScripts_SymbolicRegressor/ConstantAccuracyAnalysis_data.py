@@ -2,7 +2,7 @@
 # tamaños a la hora de entrenar/buscar la superficie a la que pertenecen, usando una regresión 
 # simbólica con GA. Para ello, se escoge la superficie x²-y²+y-1 y se consideran 7 tamaños/precisiones
 # para el conjunto de puntos inicial sobre el cual se entrenará/buscará la superficie. Para cada
-# precisión se repite el procedimiento usando 30 semillas diferentes (esto permite definir la población
+# precisión se repite el procedimiento usando 100 semillas diferentes (esto permite definir la población
 # inicial del GA de forma diferente). Para la búsqueda de las superficies se fijará un número máximo
 # de evaluaciones (en la expresión de la superficie seleccionada) y se guardarán los datos relevantes 
 # asociados a la mejor superficie encontrada durante el proceso de búsqueda.
@@ -44,7 +44,7 @@ from gplearn.utils import check_random_state
 
 from gplearn.genetic import _parallel_evolve, MAX_INT
 from gplearn.genetic import BaseSymbolic
-
+import multiprocessing as mp
 
 #==================================================================================================
 # NUEVAS FUNCIONES
@@ -63,7 +63,7 @@ def mean_abs_err(z_test,z_pred):
 # Parámetros:
 #   >n_sample: número de puntos que se desean construir.
 #   >seed: semilla para la selección aleatoria de los puntos.
-#   >eval_expr: expresión de la superficie de la cual se quiere extraer la muestra de puntos.
+#   >expr_surf: expresión de la superficie de la cual se quiere extraer la muestra de puntos.
 # Devuelve: base de datos con las tres coordenadas de los puntos de la muestra.
 
 def build_pts_sample(n_sample,seed,expr_surf):
@@ -107,24 +107,30 @@ def evaluate(df_test_pts,est_surf):
 
 # FUNCIÓN 4
 # Parámetros:
-#   >df_train_pts: base de datos con las tres coordenadas de los puntos que forman el 
-#    conjunto de entrenamiento.
+#   >acc: valor de accuracy que se esta considerando para el conjunto de puntos de entrenamiento.
 #   >train_seed: semilla de entrenamiento.
+#   >train_type: 'random' si el conjunto de puntos de entrenamiento va variando o 'fixed' si se 
+#    mantiene fijo durante todo el proceso de entrenamiento.
 #   >df_test_pts: base de datos con las tres coordenadas de los puntos que forman el 
 #    conjunto de validación.
 #   >max_time: tiempo máximo fijado para la ejecución del GA (búsqueda de la superficie).
 # Devuelve: superficie seleccionada.
 
-def learn(df_train_pts,train_seed,df_test_pts,max_time):
+def learn(acc,train_seed,train_type,df_test_pts,max_time):
+
+    # Cambiar cardinal predefinido.
+    train_n_pts=int(default_train_n_pts*acc)
+
+    # Inicializar conjunto de entrenamiento.
+    df_train_pts=build_pts_sample(train_n_pts,train_pts_seed,expr_surf_real)
 
 	# Definición del algoritmo genético con el cual se encontrarán la superficie.
-    est_surf=SymbolicRegressor(function_set= ('add', 'sub', 'mul', 'div','sqrt','log','abs','neg','inv','max','min','sin','cos','tan'),
-                               verbose=0, random_state=train_seed)
+    est_surf=SymbolicRegressor(random_state=train_seed)
 
 	# Ajustar la superficie a los puntos.
     xy_train=df_train_pts[:,[0,1]]
     z_train=df_train_pts[:,2]
-    est_surf.fit(xy_train, z_train,max_time,train_seed,df_test_pts)    
+    est_surf.fit(xy_train, z_train,acc,max_time,train_seed,train_type,df_test_pts)    
 
     return est_surf._program 
 
@@ -327,7 +333,7 @@ def find_best_individual_final_generation(self,fitness):
 # -Original: fit
 # -Script: genetic.py
 # -Clase: BaseSymbolic
-def new_fit(self, X, y, max_n_eval, train_seed,df_test_pts,sample_weight=None):# MODIFICACIÓN: añadir nuevos argumentos.
+def new_fit(self, X, y, acc,max_n_eval, train_seed,train_type,df_test_pts,sample_weight=None):# MODIFICACIÓN: añadir nuevos argumentos.
 
     random_state = check_random_state(self.random_state)
 
@@ -528,6 +534,12 @@ def new_fit(self, X, y, max_n_eval, train_seed,df_test_pts,sample_weight=None):#
             self.population_size, self.n_jobs)
         seeds = random_state.randint(MAX_INT, size=self.population_size)
 
+        # MODIFICACIÓN: cambiar el conjunto train.
+        if train_type=='random':
+            df_train_pts=build_pts_sample(int(default_train_n_pts*acc),gen,expr_surf_real)
+            X=df_train_pts[:,[0,1]]
+            y=df_train_pts[:,2]
+
         population = Parallel(n_jobs=n_jobs,
                                 verbose=int(self.verbose > 1))(
             delayed(_parallel_evolve)(n_programs[i],
@@ -625,41 +637,55 @@ BaseSymbolic.fit=new_fit
 expr_surf_real='x**2-y**2+y-1'
 
 # Mallados.
-list_train_seeds=range(1,31,1)
+list_train_seeds=range(1,101,1)
 list_acc=[1.0,0.9,0.8,0.7,0.6,0.5,0.4]
 
 # Parámetros de entrenamiento.
 default_train_n_pts=50# Cardinal de conjunto inicial predefinido.
 train_pts_seed=0
-max_n_eval=10000000
+max_n_eval=20*50*1000# Número de evaluaciones que se harían con un accuracy=1 durante 20 generaciones (límite de entrenamiento fijado por defecto).
 
 # Parámetros y conjunto de validación.
 test_n_pts=default_train_n_pts
 test_pts_seed=1
 df_test_pts=build_pts_sample(test_n_pts,test_pts_seed,expr_surf_real)
 
-# Construir tabla con datos de validación.
-for accuracy in list_acc:
+# Guardar lista de precisiones.
+np.save('results/data/SymbolicRegressor/ConstantAccuracyAnalysis/list_acc',list_acc)
 
-    # Cambiar cardinal predefinido.
-    train_n_pts=int(default_train_n_pts*accuracy)
+# Guardar expresión de superficie.
+np.save('results/data/SymbolicRegressor/ConstantAccuracyAnalysis/expr_surf',expr_surf_real)
 
-    # Crear conjunto de entrenamiento.
-    df_train_pts=build_pts_sample(train_n_pts,train_pts_seed,expr_surf_real)
+# Función para ejecución en paralelo.
+def parallel_processing(arg):
+    # Extraer información del argumento.
+    accuracy=arg[0]
+    train_type=arg[1]
 
     # Guardar datos de entrenamiento.
+    global df_train
     df_train=[]
     for train_seed in tqdm(list_train_seeds):
 
         # Entrenamiento.
-        expr_surf_pred=learn(df_train_pts,train_seed,df_test_pts,max_n_eval)
+        expr_surf_pred=learn(accuracy,train_seed,train_type,df_test_pts,max_n_eval)
 
     df_train=pd.DataFrame(df_train,columns=['train_seed','n_gen','score','elapsed_time','time_gen','n_eval'])
-    df_train.to_csv('results/data/SymbolicRegressor/df_train_acc'+str(accuracy)+'.csv')
+    df_train.to_csv('results/data/SymbolicRegressor/ConstantAccuracyAnalysis/df_'+str(train_type)+'train_acc'+str(accuracy)+'.csv')
 
-# Guardar lista de precisiones.
-np.save('results/data/SymbolicRegressor/list_acc',list_acc)
+# Preparar argumentos de la función.
+train_types=['fixed','random']
+list_arg=[]
+for acc in list_acc:
+    for train_type in train_types:
+        list_arg.append([acc,train_type])
 
-# Guardar expresión de superficie.
-np.save('results/data/SymbolicRegressor/expr_surf',expr_surf_real)
+# Procesamiento en paralelo.
+pool=mp.Pool(mp.cpu_count())
+pool.map(parallel_processing,list_arg)
+pool.close()
+
+
+
+
 
