@@ -1,3 +1,6 @@
+# Mediante este script se representan gráficamente los resultados numéricos calculados por 
+# "OptimaltAccuracyAnalysis_data.py".
+
 #==================================================================================================
 # LIBRERÍAS
 #==================================================================================================
@@ -15,12 +18,32 @@ import plotly.express as px
 #==================================================================================================
 # FUNCIONES
 #==================================================================================================
+
+# FUNCIÓN 1
+# Parámetros:
+#   >data: datos sobre los cuales se calculará el rango entre percentiles.
+#   >bootstrap_iterations: número de submuestras que se considerarán de data para poder calcular el 
+#    rango entre percentiles de sus medias.
+# Devolver: la media de los datos originales junto a los percentiles de las medias obtenidas del 
+# submuestreo realizado sobre data.
+
 def bootstrap_mean_and_confiance_interval(data,bootstrap_iterations=1000):
     mean_list=[]
     for i in range(bootstrap_iterations):
         sample = np.random.choice(data, len(data), replace=True) 
         mean_list.append(np.mean(sample))
     return np.mean(data),np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
+
+# FUNCIÓN 2 (construcción de la gráfica de scores)
+# Parámetros:
+#   >df_train: base de datos con datos de entrenamiento.
+#   >type_eval: tipo de evaluación que se quiere representar en la gráfica ('n_eval': todas las evaluaciones; 
+#   'n_eval_proc': solo las evaluaciones gastadas para el calculo de los scores por generación sin el extra de evaluaciones usado para 
+#    el ajuste del accuracy).
+# Devolver: 
+#   >all_mean: medias de los scores por límite de número de evaluaciones de entrenamiento fijados en list_train_n_eval.
+#   >all_q05,all_q95: percentiles de los scores por límite de evaluaciones de entrenamiento.
+#   >list_train_n_eval: lista con número de evaluaciones que se representarán en la gráfica.
 
 def train_data_to_figure_data(df_train,type_eval):
 
@@ -30,7 +53,7 @@ def train_data_to_figure_data(df_train,type_eval):
     all_q95=[]
 
     # Definir número de evaluaciones que se desean dibujar.
-    list_train_n_eval=range(50000,1500000,10000)
+    list_train_n_eval=range(50000,1000000,10000)
 
     # Rellenar listas.
     for train_n_eval in list_train_n_eval:
@@ -53,6 +76,15 @@ def train_data_to_figure_data(df_train,type_eval):
 
     return all_mean,all_q05,all_q95,list_train_n_eval
 
+# FUNCIÓN 3 (construcción de las curvas que muestran el comportamiento del accuracy durante el entrenamiento)
+# Parámetros:
+#   >df_train: base de datos con datos de entrenamiento.
+#   >type_n_eval: tipo de evaluación que se quiere representar en la gráfica ('n_eval': todas las evaluaciones; 
+#   'n_eval_proc': solo las evaluaciones gastadas para el calculo de los scores por generación sin el extra de evaluaciones usado para 
+#    el ajuste del accuracy).
+#   >curve: número que indica que curva se esta dibujando (la n-ésima curva).
+# Devolver: nada directamente dibuja la gráfica con la forma del accuracy.
+
 def draw_accuracy_behaviour(df_train,type_n_eval,curve):
     # Inicializar listas para la gráfica.
     all_mean=[]
@@ -60,7 +92,7 @@ def draw_accuracy_behaviour(df_train,type_n_eval,curve):
     all_q95=[]
 
     # Definir número de evaluaciones que se desean dibujar.
-    list_train_n_eval=range(50000,1500000,10000)
+    list_train_n_eval=range(50000,1000000,10000)
 
     # Rellenar listas.
     for train_n_eval in list_train_n_eval:
@@ -83,6 +115,10 @@ def draw_accuracy_behaviour(df_train,type_n_eval,curve):
     # Dibujar gráfica
     ax.fill_between(list_train_n_eval,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
     plt.plot(list_train_n_eval, all_mean, linewidth=2,color=colors[curve])
+
+# FUNCIÓN 4 (representación gráfica de las funciones que definen el salto de accuracy en el heurístico 1)
+# Parámetros: list_params, conjunto de parámetros que dejan definida la función.
+# Devolver: nada directamente dibuja la gráfica con la forma del accuracy.
 
 def draw_heristic1_acc_split_functions(list_params):
 
@@ -116,7 +152,6 @@ def draw_heristic1_acc_split_functions(list_params):
         ax.set_yticklabels([0,"1-accuracy"],rotation=90)
 
         curve+=1
-
 
 #==================================================================================================
 # PROGRAMA PRINCIPAL
