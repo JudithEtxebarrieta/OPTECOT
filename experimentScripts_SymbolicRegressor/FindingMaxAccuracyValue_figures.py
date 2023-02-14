@@ -102,8 +102,8 @@ def draw_surface(position,eval_expr):
 # Solución: se define en 30 puntos la máxima precisión.
 #--------------------------------------------------------------------------------------------------
 # Lectura de datos.
-df=pd.read_csv('results/data/SymbolicRegressor/FindingMaxAccuracyValue1.csv',index_col=0)
-eval_expr=str(np.load('results/data/SymbolicRegressor/eval_expr1.npy'))
+df=pd.read_csv('results/data/SymbolicRegressor/FindingMaxAccuracyValue/FindingMaxAccuracyValue1.csv',index_col=0)
+eval_expr=str(np.load('results/data/SymbolicRegressor/FindingMaxAccuracyValue/eval_expr1.npy'))
 
 # Construir gráficas.
 plt.figure(figsize=[10,5])
@@ -122,8 +122,8 @@ plt.close()
 #--------------------------------------------------------------------------------------------------
 
 # Lectura de datos.
-df=pd.read_csv('results/data/SymbolicRegressor/FindingMaxAccuracyValue2.csv',index_col=0)
-eval_expr=str(np.load('results/data/SymbolicRegressor/eval_expr2.npy'))
+df=pd.read_csv('results/data/SymbolicRegressor/FindingMaxAccuracyValue/FindingMaxAccuracyValue2.csv',index_col=0)
+eval_expr=str(np.load('results/data/SymbolicRegressor/FindingMaxAccuracyValue/eval_expr2.npy'))
 
 # Construir gráficas.
 plt.figure(figsize=[10,5])

@@ -90,7 +90,7 @@ def build_pts_sample(n_sample,seed,eval_expr):
 def learn(df_train_pts,max_time):
 
 	# Definición del algoritmo genético con el cual se encontrará la superficie.
-    est_surf = SymbolicRegressor(population_size=1000,verbose=0,random_state=0)
+    est_surf = SymbolicRegressor(random_state=0)
 
 	# Ajustar la superficie a los puntos.
     xy_train=df_train_pts[:,[0,1]]
@@ -520,8 +520,8 @@ max_time=30
 
 # Guardar datos.
 df1=find_max_accuracy(list_train_n_pts,list_train_seeds,test_n_pts,test_seed,eval_expr1,max_time)
-df1.to_csv('results/data/SymbolicRegressor/FindingMaxAccuracyValue1.csv')
-np.save('results/data/SymbolicRegressor/eval_expr1',eval_expr1)
+df1.to_csv('results/data/SymbolicRegressor/FindingMaxAccuracyValue/FindingMaxAccuracyValue1.csv')
+np.save('results/data/SymbolicRegressor/FindingMaxAccuracyValue/eval_expr1',eval_expr1)
 
 #--------------------------------------------------------------------------------------------------
 # EJEMPLO 2 (Plano)
@@ -536,8 +536,8 @@ max_time=30
 
 # Guardar datos.
 df2=find_max_accuracy(list_train_n_pts,list_train_seeds,test_n_pts,test_seed,eval_expr2,max_time)
-df2.to_csv('results/data/SymbolicRegressor/FindingMaxAccuracyValue2.csv')
-np.save('results/data/SymbolicRegressor/eval_expr2',eval_expr2)
+df2.to_csv('results/data/SymbolicRegressor/FindingMaxAccuracyValue/FindingMaxAccuracyValue2.csv')
+np.save('results/data/SymbolicRegressor/FindingMaxAccuracyValue/eval_expr2',eval_expr2)
 
 
 
