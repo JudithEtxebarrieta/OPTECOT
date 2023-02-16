@@ -136,7 +136,7 @@ for accuracy in list_acc:
 
 ax.set_xlabel("Train time")
 ax.set_ylabel("Score (generated power)")
-ax.set_title('Model evaluation \n (train 100 seeds, test monteCarloPts=1000)')
+ax.set_title('Model evaluation \n (train 50 seeds, test monteCarloPts=1000)')
 ax.legend(title="monteCarloPts \n parameter accuracy",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
 plt.axhline(y=score_limit,color='black', linestyle='--')
 # plt.xscale('log')
