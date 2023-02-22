@@ -42,5 +42,3 @@ cd windflo/release/
 make OS=LINUX MAIN=main
 cd ../../
 
-# Install fortran confiler
-sudo apt install xfoil
