@@ -1,0 +1,5 @@
+trained_gan/*
+tmp/*
+*.pyc
+*/*.pyc
+opt_results
