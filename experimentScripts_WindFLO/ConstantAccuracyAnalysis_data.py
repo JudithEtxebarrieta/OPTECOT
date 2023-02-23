@@ -1,3 +1,9 @@
+# Mediante este script se aplica el algoritmo CMA-ES durante un tiempo máximo de ejecución, 
+# considerando 10 valores diferentes de accuracy y 50 semillas para cada uno de ellos. Primero se 
+# ejecuta el algoritmo para accuracy 1, fijando así el límite de tiempo de entrenamiento en el 
+# mínimo tiempo entre los tiempos totales necesarios para cada semilla. Por cada valor de accuracy
+# se construirá una base de datos con la información relevante durante en entrenamiento.
+
 #==================================================================================================
 # LIBRERÍAS
 #==================================================================================================
@@ -48,7 +54,7 @@ class stopwatch:
 # FUNCIONES
 #==================================================================================================
 
-# Función para inicializar las características del terreno y las turbinas sobre los cuales se aplicará la optimización.
+# FUNCIÓN 1 (Inicializar las características del terreno y las turbinas sobre los cuales se aplicará la optimización)
 def get_windFLO_with_accuracy(momentary_folder='',accuracy=1):
 
     # Configuración y parámetros de WindFLO.
@@ -68,9 +74,7 @@ def get_windFLO_with_accuracy(momentary_folder='',accuracy=1):
 
     return windFLO
 
-
-
-# Función para evaluar el desempeño del diseño del parque eólico.
+# FUNCIÓN 2 (Evaluar el desempeño del diseño del parque eólico)
 def EvaluateFarm(x, windFLO):
     
     k = 0
@@ -80,15 +84,12 @@ def EvaluateFarm(x, windFLO):
             windFLO.turbines[i].position[j] = x[k]
             k = k + 1
 
-    # Eliminar ficheros auxiliares.
+    # Run WindFLO analysis
     windFLO.run(clean = True) 
-    windFLO.run(clean = True, inFile = 'WindFLO.res')
-    windFLO.run(clean = True, inFile = 'terrain.dat')
 
     return -windFLO.farmPower
 
-
-# Función para aprender la solución.
+# FUNCIÓN 3 (Buscar la solución óptima aplicando el algoritmo CMA-ES)
 def learn(seed, accuracy,maxfeval=500,popsize=50): 
 
     global max_n_eval
@@ -99,6 +100,7 @@ def learn(seed, accuracy,maxfeval=500,popsize=50):
     folder_name='File'+str(accuracy)
     os.makedirs(folder_name)
     windFLO = get_windFLO_with_accuracy(momentary_folder=folder_name+'/',accuracy=accuracy)
+    default_windFLO= get_windFLO_with_accuracy(momentary_folder=folder_name+'/')
     
     # Función para transformar el valor escalado de los parámetros en los valores reales.
     def transform_to_problem_dim(list_coord):
@@ -118,7 +120,7 @@ def learn(seed, accuracy,maxfeval=500,popsize=50):
 
     # Aplicar algoritmo CMA-ES para la búsqueda de la solución.
     np.random.seed(seed)
-    es = cma.CMAEvolutionStrategy(np.random.random(windFLO.nTurbines*2), 0.33, inopts={'bounds': [0, 1],'seed':seed,'maxiter':1e9, 'maxfevals':maxfeval, 'popsize':popsize})
+    es = cma.CMAEvolutionStrategy(np.random.random(default_windFLO.nTurbines*2), 0.33, inopts={'bounds': [0, 1],'seed':seed,'maxiter':1e9, 'maxfevals':maxfeval, 'popsize':popsize})
     
     while not es.stop():
 
@@ -143,7 +145,7 @@ def learn(seed, accuracy,maxfeval=500,popsize=50):
         es.tell(solutions, list_scores)
 
         # Acumular datos de interés.
-        score = EvaluateFarm(transform_to_problem_dim(es.result.xbest),windFLO)
+        score = EvaluateFarm(transform_to_problem_dim(es.result.xbest),default_windFLO)
         df_acc.append([accuracy,seed,n_gen,-score,sw.get_time()])
 
         n_gen+=1
@@ -153,7 +155,7 @@ def learn(seed, accuracy,maxfeval=500,popsize=50):
     if accuracy==1:
         return sw.get_time()
 
-
+# FUNCIÓN 4 (Criterio de parada para accuracy=1)
 def new_stop_max_acc(self, check=True, ignore_list=(), check_in_same_iteration=False,
              get_value=None):
     stop={}
@@ -161,6 +163,7 @@ def new_stop_max_acc(self, check=True, ignore_list=(), check_in_same_iteration=F
         stop={'TIME RUN OUT':max_n_eval}
     return stop
 
+# FUNCIÓN 5 (Criterio de parada para accuracys menores)
 def new_stop_lower_acc(self, check=True, ignore_list=(), check_in_same_iteration=False,
              get_value=None):
 	stop={}
@@ -176,52 +179,34 @@ def new_stop_lower_acc(self, check=True, ignore_list=(), check_in_same_iteration
 list_seeds=range(1,51,1)
 
 # Lista de accuracys a considerar.
-list_acc=[1.0,0.5,0.2,0.1,0.05,0.02,0.01,0.005]
+list_acc=[1.0,0.5,0.2,0.1,0.05,0.02,0.01,0.005,0.002,0.001]
 
-# El caso de accuracy 1 hay que ejecutarlo el primero para definir el límite de tiempo de 
-# ejecución para el resto.
-def process_max_acc():
+# Construir base de datos con datos relevantes por cada ejecución con un valor de accuracy.
+for accuracy in list_acc:
 
     global df_acc
     df_acc=[]
 
-    cma.CMAEvolutionStrategy.stop=new_stop_max_acc
-    list_total_time=[]
+    # El caso de accuracy 1 hay que ejecutarlo el primero para definir el límite de tiempo de 
+    # ejecución para el resto.
+    if accuracy==1:
+        cma.CMAEvolutionStrategy.stop=new_stop_max_acc
+        list_total_time=[]
+
+    # Para el resto de accuracys.
+    else:
+        cma.CMAEvolutionStrategy.stop=new_stop_lower_acc
 
     for seed in tqdm(list_seeds):
-        total_time=learn(seed,list_acc[0])
+        total_time=learn(seed,accuracy)
         list_total_time.append(total_time)
 
     df_acc=pd.DataFrame(df_acc,columns=['accuracy','seed','n_gen','score','elapsed_time'])
-    df_acc.to_csv('results/data/WindFLO/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis'+str(list_acc[0])+'.csv')
+    df_acc.to_csv('results/data/WindFLO/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis'+str(accuracy)+'.csv')
 
-    return min(list_total_time)
-
-# Función para realizar la ejecución en paralelo.
-def parallel_processing(arg):
-
-    global df_acc
-    df_acc=[]
-
-    cma.CMAEvolutionStrategy.stop=new_stop_lower_acc
-
-    for seed in tqdm(list_seeds):
-        learn(seed,arg)
-    
-    df_acc=pd.DataFrame(df_acc,columns=['accuracy','seed','n_gen','score','elapsed_time'])
-    df_acc.to_csv('results/data/WindFLO/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis'+str(arg)+'.csv')
-
-# Ejecución para accuracy 1.
-max_time=process_max_acc()
-# df=pd.read_csv("results/data/WindFLO/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis1.0.csv", index_col=0)
-# max_time=min(df.groupby('seed')['elapsed_time'].max())
-np.save('results/data/WindFLO/ConstantAccuracyAnalysis/max_time',max_time)
-
-
-# Ejecución en paralelo para el resto de accuracys.
-pool=mp.Pool(mp.cpu_count())
-pool.map(parallel_processing,list_acc[1:])
-pool.close()
+    if accuracy==1:
+        max_time=min(list_total_time)
+        np.save('results/data/WindFLO/ConstantAccuracyAnalysis/max_time',max_time)
 
 # Guardar lista con valores de accuracy.
 np.save('results/data/WindFLO/ConstantAccuracyAnalysis/list_acc',list_acc)
