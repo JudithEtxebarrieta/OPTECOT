@@ -13,6 +13,7 @@ import matplotlib.colors as mcolors
 import random
 import pandas as pd
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes,mark_inset
+import plotly.express as px
 
 #==================================================================================================
 # FUNCIONES
@@ -72,96 +73,99 @@ def train_data_to_figure_data(df_train_acc,list_train_n_eval):
 #==================================================================================================
 # PROGRAMA PRINCIPAL
 #==================================================================================================
-# Función para dibujar las gráficas.
-def draw_figure(train_type):
-
-    # Inicializar gráfica.
-    plt.figure(figsize=[15,6])
-    plt.subplots_adjust(left=0.09,bottom=0.11,right=0.84,top=0.88,wspace=0.3,hspace=0.2)
-
-    #--------------------------------------------------------------------------------------------------
-    # GRÁFICA 1 (Resultados generales scores)
-    #--------------------------------------------------------------------------------------------------
-    print('GRAFICA 1')
-
-    # Leer lista con valores de accuracy considerados.
-    list_acc=np.load('results/data/SymbolicRegressor/ConstantAccuracyAnalysis/list_acc.npy')
-
-    # Leer expresión de superficie real.
-    eval_expr=str(np.load('results/data/SymbolicRegressor/ConstantAccuracyAnalysis/expr_surf.npy'))
-
-    # Lista con límites de número de evaluaciones de entrenamiento que se desean dibujar.
-    list_train_n_eval=range(50000,1000000,10000)
-
-    # Ir dibujando una curva por cada valor de accuracy.
-    ax=plt.subplot(122)
-    for accuracy in list_acc:
-
-        # Leer base de datos.
-        df_train_acc=pd.read_csv("results/data/SymbolicRegressor/ConstantAccuracyAnalysis/df_"+str(train_type)+"train_acc"+str(accuracy)+".csv", index_col=0)
-
-        # Extraer de la base de datos la información relevante.
-        all_mean_scores,all_q05_scores,all_q95_scores =train_data_to_figure_data(df_train_acc,list_train_n_eval)
-
-        # Dibujar curva.
-        ax.fill_between(list_train_n_eval,all_q05_scores,all_q95_scores, alpha=.5, linewidth=0)
-        plt.plot(list_train_n_eval, all_mean_scores, linewidth=2,label=str(accuracy))
+colors=px.colors.qualitative.D3+['#FFB90F']
 
 
-    ax.set_xlabel("Train evaluations")
-    ax.set_ylabel("Mean score (MAE)")
-    ax.set_title('Model evaluation with '+str(train_type)+' train set point \n (train 100 seeds, test 50 pts, real surface '+str(eval_expr)+')')
-    ax.legend(title="Train set point \n size accuracy",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
-    plt.xscale('log')
-    plt.yscale('log')
- 
-    #--------------------------------------------------------------------------------------------------
-    # GRÁFICA 2 (Mejores resultados por valor de accuracy)
-    #--------------------------------------------------------------------------------------------------
-    print('GRAFICA 2')
+# Inicializar gráfica.
+plt.figure(figsize=[15,6])
+plt.subplots_adjust(left=0.09,bottom=0.11,right=0.84,top=0.88,wspace=0.3,hspace=0.2)
 
-    # Límite de score prefijado.
-    score_limit=0.15
+#--------------------------------------------------------------------------------------------------
+# GRÁFICA 1 (Mejores resultados por valor de accuracy)
+#--------------------------------------------------------------------------------------------------
+print('GRAFICA 1')
 
-    # Conseguir datos para la gráfica.
-    train_times=[]
-    max_scores=[]
-    for accuracy in list_acc:
+# Leer lista con valores de accuracy considerados.
+list_acc=np.load('results/data/SymbolicRegressor/ConstantAccuracyAnalysis/list_acc.npy')
 
-        # Leer base de datos.
-        df_train_acc=pd.read_csv("results/data/SymbolicRegressor/ConstantAccuracyAnalysis/df_"+str(train_type)+"train_acc"+str(accuracy)+".csv", index_col=0)
+# Leer expresión de superficie real.
+eval_expr=str(np.load('results/data/SymbolicRegressor/ConstantAccuracyAnalysis/expr_surf.npy'))
 
-        # Extraer de la base de datos la información relevante.
-        all_mean_scores,all_q05_scores,all_q95_scores=train_data_to_figure_data(df_train_acc,list_train_n_eval)
+# Lista con límites de número de evaluaciones de entrenamiento que se desean dibujar.
+list_train_n_eval=range(50000,1000000,10000)
 
-        # Encontrar cuando se da el límite de score prefijado por primera vez.
-        limit_scores=list(np.array(all_mean_scores)<=score_limit)
-        if True in limit_scores:
-            ind_min=limit_scores.index(True)
-        else:
-            ind_min=len(all_mean_scores)-1
-        train_times.append(list_train_n_eval[ind_min])
-        max_scores.append(all_mean_scores[ind_min])
+# Conseguir datos para la gráfica.
+train_times=[]
+max_scores=[]
+for accuracy in list_acc:
 
-    # Dibujar la gráfica.
-    ind_sort=np.argsort(train_times)
-    train_times_sort=[str(i) for i in sorted(train_times)]
-    max_scores_sort=[max_scores[i] for i in ind_sort]
-    acc_sort=[list_acc[i] for i in ind_sort]
-    acc_sort_str=[str(list_acc[i]) for i in ind_sort]
-    colors=[list(mcolors.TABLEAU_COLORS.keys())[i] for i in ind_sort]
+    # Leer base de datos.
+    df_train_acc=pd.read_csv("results/data/SymbolicRegressor/ConstantAccuracyAnalysis/df_train_acc"+str(accuracy)+".csv", index_col=0)
 
-    ax=plt.subplot(121)
-    ax.bar(train_times_sort,max_scores_sort,acc_sort,label=acc_sort_str,color=colors)
-    ax.set_xlabel("Train evaluations")
-    ax.set_ylabel("Score (MAE)")
-    ax.set_title('Best results for each model \n (real surface '+str(eval_expr)+')')
-    # ax.legend(title="Train set point \n size accuracy",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
-    plt.axhline(y=score_limit,color='red', linestyle='--')
-    plt.savefig('results/figures/SymbolicRegressor/ConstantAccuracyAnalysis_'+str(train_type)+'train.png')
-    plt.show()
-    plt.close()
+    # Extraer de la base de datos la información relevante.
+    all_mean_scores,all_q05_scores,all_q95_scores=train_data_to_figure_data(df_train_acc,list_train_n_eval)
 
-# Llamar a la función.
-draw_figure('random')
-draw_figure('fixed')
+    # Fijar límite de evaluación de alcance de score.
+    if accuracy==1:
+        score_limit=all_mean_scores[-1]
+
+    # Encontrar cuando se da el límite de score prefijado por primera vez.
+    limit_scores=list(np.array(all_mean_scores)<=score_limit)
+    if True in limit_scores:
+        ind_min=limit_scores.index(True)
+    else:
+        ind_min=len(all_mean_scores)-1
+    train_times.append(list_train_n_eval[ind_min])
+    max_scores.append(all_mean_scores[ind_min])
+
+# Dibujar la gráfica.
+ind_sort=np.argsort(train_times)
+train_times_sort=[str(i) for i in sorted(train_times)]
+max_scores_sort=[max_scores[i] for i in ind_sort]
+acc_sort=[list_acc[i] for i in ind_sort]
+acc_sort_str=[str(list_acc[i]) for i in ind_sort]
+colors_sort=[colors[i] for i in ind_sort]
+
+ax=plt.subplot(121)
+ax.bar(train_times_sort,max_scores_sort,acc_sort,label=acc_sort_str,color=colors_sort)
+ax.set_xlabel("Train evaluations")
+ax.set_ylabel("Score (MAE)")
+ax.set_title('Best results for each model \n (real surface '+str(eval_expr)+')')
+# ax.legend(title="Train set point \n size accuracy",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
+plt.axhline(y=score_limit,color='black', linestyle='--')
+
+#--------------------------------------------------------------------------------------------------
+# GRÁFICA 2 (Resultados generales scores)
+#--------------------------------------------------------------------------------------------------
+print('GRAFICA 2')
+
+# Ir dibujando una curva por cada valor de accuracy.
+ax=plt.subplot(122)
+curve=0
+for accuracy in list_acc:
+
+    # Leer base de datos.
+    df_train_acc=pd.read_csv("results/data/SymbolicRegressor/ConstantAccuracyAnalysis/df_train_acc"+str(accuracy)+".csv", index_col=0)
+
+    # Extraer de la base de datos la información relevante.
+    all_mean_scores,all_q05_scores,all_q95_scores =train_data_to_figure_data(df_train_acc,list_train_n_eval)
+
+    # Dibujar curva.
+    ax.fill_between(list_train_n_eval,all_q05_scores,all_q95_scores, alpha=.5, linewidth=0,color=colors[curve])
+    plt.plot(list_train_n_eval, all_mean_scores, linewidth=2,label=str(accuracy),color=colors[curve])
+
+    curve+=1
+
+plt.axhline(y=score_limit,color='black', linestyle='--')
+ax.set_xlabel("Train evaluations")
+ax.set_ylabel("Mean score (MAE)")
+ax.set_title('Model evaluation \n (train 100 seeds, test 50 pts, real surface '+str(eval_expr)+')')
+ax.legend(title="Train set point \n size accuracy",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
+plt.xscale('log')
+plt.yscale('log')
+
+
+plt.savefig('results/figures/SymbolicRegressor/ConstantAccuracyAnalysis.png')
+plt.show()
+plt.close()
+
