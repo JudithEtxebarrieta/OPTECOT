@@ -97,11 +97,11 @@ def draw_accuracy_behaviour(df_train,type_n_eval,curve):
     # Rellenar listas.
     for train_n_eval in list_train_n_eval:
 
-        # Indices de filas con un el número de evaluaciones de entrenamiento más cercano a train_n_eval.
+        # Indices de filas con el número de evaluaciones de entrenamiento más cercano a train_n_eval.
         ind_down=df_train[type_n_eval] <= train_n_eval
         ind_per_seed=df_train[ind_down].groupby('train_seed')[type_n_eval].idxmax()
 
-        # Agrupar las filas anteriores por semillas y quedarnos con los valores máximos de accuracy.
+        # Agrupar las filas anteriores por semillas y quedarnos con los valores de accuracy.
         list_acc=list(df_train[ind_down].loc[ind_per_seed]['acc'])
 
         # Calcular la media y el intervalo de confianza del accuracy.
@@ -153,6 +153,39 @@ def draw_heristic1_acc_split_functions(list_params):
 
         curve+=1
 
+def draw_heuristic13_14_threshold_shape(df_train,type_n_eval,curve):
+    # Inicializar listas para la gráfica.
+    all_mean=[]
+    all_q05=[]
+    all_q95=[]
+
+    # Definir número de evaluaciones que se desean dibujar.
+    list_train_n_eval=range(50000,1000000,10000)
+
+    # Rellenar listas.
+    for train_n_eval in list_train_n_eval:
+
+        # Indices de filas con el número de evaluaciones de entrenamiento más cercano a train_n_eval.
+        ind_down=df_train[type_n_eval] <= train_n_eval
+        ind_per_seed=df_train[ind_down].groupby('train_seed')[type_n_eval].idxmax()
+
+        # Agrupar las filas anteriores por semillas y quedarnos con los valores del umbral.
+        list_threshold=list(df_train[ind_down].loc[ind_per_seed]['threshold'])
+
+        # Calcular la media y el intervalo de confianza del umbral.
+        mean,q05,q95=bootstrap_mean_and_confiance_interval(list_threshold)
+
+        # Guardar datos.
+        all_mean.append(mean)
+        all_q05.append(q05)
+        all_q95.append(q95)
+    
+    # Dibujar gráfica
+    ax.fill_between(list_train_n_eval,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
+    plt.plot(list_train_n_eval, all_mean, linewidth=2,color=colors[curve])
+
+
+
 #==================================================================================================
 # PROGRAMA PRINCIPAL
 #==================================================================================================
@@ -167,9 +200,12 @@ def draw_and_save_figures_per_heuristic(heuristic):
     if heuristic==1:
         plt.figure(figsize=[20,9])
         plt.subplots_adjust(left=0.08,bottom=0.11,right=0.82,top=0.88,wspace=0.98,hspace=0.76)
-    else:
+    if heuristic in [2,3,4,5,6,7,8,9,10,11,12]:
         plt.figure(figsize=[20,5])
         plt.subplots_adjust(left=0.08,bottom=0.11,right=0.76,top=0.88,wspace=0.4,hspace=0.76)
+    if heuristic in [13,14]:
+        plt.figure(figsize=[22,5])
+        plt.subplots_adjust(left=0.04,bottom=0.11,right=0.87,top=0.88,wspace=0.37,hspace=0.76)
 
     # Superficie.
     eval_expr=str(np.load('results/data/SymbolicRegressor/OptimalAccuracyAnalysis/expr_surf.npy'))
@@ -179,14 +215,13 @@ def draw_and_save_figures_per_heuristic(heuristic):
 
     if heuristic==1:
         ax=plt.subplot2grid((3, 6), (0,2), colspan=2,rowspan=2)
-    else:
+    if heuristic in [2,3,4,5,6,7,8,9,10,11,12]:
         ax=plt.subplot(132)
+    if heuristic in [13,14]:
+        ax=plt.subplot(143)
 
     # Lectura de bases de datos que se emplearán.
-    if heuristic ==11:
-        df_max_acc=pd.read_csv("results/data/SymbolicRegressor/OptimalAccuracyAnalysis/df_train_ConstantAccuracy1_RandomTrain.csv", index_col=0) # Accuracy constante 1 (situación por defecto).
-    else:
-        df_max_acc=pd.read_csv("results/data/SymbolicRegressor/OptimalAccuracyAnalysis/df_train_ConstantAccuracy1.csv", index_col=0) # Accuracy constante 1 (situación por defecto).
+    df_max_acc=pd.read_csv("results/data/SymbolicRegressor/OptimalAccuracyAnalysis/df_train_ConstantAccuracy1.csv", index_col=0) # Accuracy constante 1 (situación por defecto).
     df_optimal_acc=pd.read_csv('results/data/SymbolicRegressor/OptimalAccuracyAnalysis/df_train_OptimalAccuracy_heuristic'+str(heuristic)+'.csv', index_col=0) # Accuracy ascendente.
 
     # Inicializar número de curvas.
@@ -225,8 +260,10 @@ def draw_and_save_figures_per_heuristic(heuristic):
     # necesarios para reajustar el accuracy.
     if heuristic==1:
         ax=plt.subplot2grid((3, 6), (0,4), colspan=2,rowspan=2)
-    else:
+    if heuristic in [2,3,4,5,6,7,8,9,10,11,12]:
         ax=plt.subplot(133)
+    if heuristic in [13,14]:
+        ax=plt.subplot(144)
 
     # Inicializar número de curvas.
     curve=0
@@ -265,8 +302,10 @@ def draw_and_save_figures_per_heuristic(heuristic):
     # SUBGRÁFICA 3: representación gráfica del comportamiento del accuracy.
     if heuristic==1:
         ax=plt.subplot2grid((3, 6), (0,0), colspan=2,rowspan=2)
-    else:
+    if heuristic in [2,3,4,5,6,7,8,9,10,11,12]:
         ax=plt.subplot(131)
+    if heuristic in [13,14]:
+        ax=plt.subplot(142)
 
     # Inicializar número de curvas.
     curve=1
@@ -282,19 +321,34 @@ def draw_and_save_figures_per_heuristic(heuristic):
         ax.set_title('Behavior of optimal accuracy')
     else:
         ax.set_title('Ascendant behavior of accuracy')
-                                                                                                                                                                                                                                                                                                                        
-    if heuristic==1:
-        #__________________________________________________________________________________________________
-        # SUBGRÁFICA 3: 
 
+    #______________________________________________________________________________________________
+    # SUBGRÁFICA 4:                                                                                                                                                                                                                                                                                                              
+    if heuristic==1:
         # Dibujar funciones consideradas para definir el ascenso del accuracy.
         draw_heristic1_acc_split_functions(list_params)
+
+    if heuristic in[13,14]:
+        ax=plt.subplot(141)
+
+        # Inicializar número de curvas.
+        curve=1
+
+        # Dibujar curvas.
+        for param in list_params:
+            df=df_optimal_acc[df_optimal_acc['heuristic_param']==param]
+            draw_heuristic13_14_threshold_shape(df,'n_eval',curve)
+            curve+=1
+        ax.set_xlabel("Train evaluations")
+        ax.set_ylabel("Threshold value")
+        ax.set_title('Behavior of bisection method threshold')
+
 
     plt.savefig('results/figures/SymbolicRegressor/OptimalAccuracy_h'+str(heuristic)+'.png')
     plt.show()
     plt.close()
 
 # Llamar a la función.
-list_heuristics=[1,2,3,4,5,6,7,8,9,10,11,12,13]
+list_heuristics=[1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 for heuristic in list_heuristics:
     draw_and_save_figures_per_heuristic(heuristic)
