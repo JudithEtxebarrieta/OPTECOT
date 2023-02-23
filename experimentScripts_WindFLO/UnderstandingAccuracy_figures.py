@@ -1,3 +1,7 @@
+
+# Mediante este script se representan gráficamente los resultados numéricos calculados por 
+# "UnderstandingAccuracy_data.py".
+
 #==================================================================================================
 # LIBRERÍAS
 #==================================================================================================
@@ -20,6 +24,14 @@ from itertools import combinations
 #==================================================================================================
 # FUNCIONES
 #==================================================================================================
+# FUNCIÓN 1
+# Parámetros:
+#   >data: datos sobre los cuales se calculará el rango entre percentiles.
+#   >bootstrap_iterations: número de submuestras que se considerarán de data para poder calcular el 
+#    rango entre percentiles de sus medias.
+# Devolver: la media de los datos originales junto a los percentiles de las medias obtenidas del 
+# submuestreo realizado sobre data.
+
 def bootstrap_mean_and_confidence_interval(data,bootstrap_iterations=1000):
     mean_list=[]
     for i in range(bootstrap_iterations):
@@ -27,6 +39,7 @@ def bootstrap_mean_and_confidence_interval(data,bootstrap_iterations=1000):
         mean_list.append(np.mean(sample))
     return np.mean(data),np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
 
+# FUNCIÓN 2 (Obtener ranking a partir de lista conseguida tras aplicar "np.argsort" sobre una lista original)
 def from_argsort_to_ranking(list):
     new_list=[0]*len(list)
     i=0
@@ -35,6 +48,7 @@ def from_argsort_to_ranking(list):
         i+=1
     return new_list
 
+# FUNCIÓN 3 (Cálculo de la distancia inversa normalizada de tau kendall entre dos rankings)
 def inverse_normalized_tau_kendall(x,y):
     # Número de pares con orden inverso.
     pairs_reverse_order=0
@@ -54,6 +68,15 @@ def inverse_normalized_tau_kendall(x,y):
 
     return 1-tau_kendall
 
+# FUNCIÓN 4 (Eliminar elementos en ciertas posiciones de una lista)
+def remove_element_in_idx(list_elements,list_idx):
+    new_list=[]
+    for i in range(len(list_elements)):
+        if i not in list_idx:
+            new_list.append(list_elements[i])
+    return new_list
+
+# FUNCIÓN 5 (Construir las gráficas deseadas a partir de la base de datos)
 def from_data_to_figures(df):
 
     # Inicializar gráfica.
@@ -150,14 +173,45 @@ def from_data_to_figures(df):
     #----------------------------------------------------------------------------------------------
     ax=plt.subplot(224)
 
+    # Similitud entre rankings enteros.
     list_corr=[]
     for i in range(ranking_matrix.shape[0]):
         list_corr.append(inverse_normalized_tau_kendall(ranking_list[-1],ranking_list[i]))
 
-    plt.plot(list_acc, list_corr, linewidth=2) 
+    plt.plot(list_acc, list_corr, linewidth=2,label='All ranking') 
+
+    # Similitud entre el 50% inicial de los rankings.
+    list_ind=[]
+    for i in range(int(ranking_matrix.shape[1]*0.5),ranking_matrix.shape[1]):
+        ind=ranking_list[-1].index(i)
+        list_ind.append(ind)
+
+    list_corr=[]
+    for i in range(ranking_matrix.shape[0]):
+        best_ranking=remove_element_in_idx(ranking_list[-1],list_ind)
+        lower_ranking=remove_element_in_idx(ranking_list[i],list_ind)
+        list_corr.append(inverse_normalized_tau_kendall(best_ranking,lower_ranking))
+
+    plt.plot(list_acc, list_corr, linewidth=2,label='The best 50%') 
+
+    # Similitud entre el 10% inicial de los rankings.
+    list_ind=[]
+    for i in range(int(ranking_matrix.shape[1]*0.1),ranking_matrix.shape[1]):
+        ind=ranking_list[-1].index(i)
+        list_ind.append(ind)
+
+    list_corr=[]
+    for i in range(ranking_matrix.shape[0]):
+        best_ranking=remove_element_in_idx(ranking_list[-1],list_ind)
+        lower_ranking=remove_element_in_idx(ranking_list[i],list_ind)
+        list_corr.append(inverse_normalized_tau_kendall(best_ranking,lower_ranking))
+
+    plt.plot(list_acc, list_corr, linewidth=2,label='The best 10%') 
+    ax.legend(title="Similarity between")
     ax.set_xlabel("Accuracy")
     ax.set_ylabel("1 - normalized tau Kendall")
     ax.set_title('Comparing the similarity between the best and the rest rankings')
+    ax.set_xscale('log')
 
     # Guardar imagen.
     plt.savefig('results/figures/WindFLO/UnderstandingAccuracy.png')

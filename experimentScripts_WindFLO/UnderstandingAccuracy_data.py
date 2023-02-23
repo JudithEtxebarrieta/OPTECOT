@@ -1,3 +1,7 @@
+# Mediante este script se evalúan 100 soluciones aleatorias considerando 10 valores de accuracy
+# diferentes para el parámetro monteCarloPts. Los datos relevantes (scores y tiempos de ejecución
+# por evaluación) se almacenan para después poder acceder a ellos.
+
 #==================================================================================================
 # LIBRERÍAS
 #==================================================================================================
@@ -12,6 +16,8 @@ import cma
 from tqdm import tqdm as tqdm
 import pandas as pd
 import multiprocessing as mp
+import concurrent.futures as cf
+import psutil as ps
 
 
 sys.path.append('WindFLO/API')
@@ -21,8 +27,7 @@ from WindFLO import WindFLO
 # FUNCIONES
 #==================================================================================================
 
-# Función para inicializar las características del terreno y las turbinas sobre los cuales se 
-# aplicará la optimización.
+# FUNCIÓN 1 (Inicializar las características del terreno y las turbinas sobre los cuales se aplicará la optimización)
 def get_windFLO_with_accuracy(momentary_folder='',accuracy=1):
 
     # Configuración y parámetros de WindFLO.
@@ -42,7 +47,7 @@ def get_windFLO_with_accuracy(momentary_folder='',accuracy=1):
 
     return windFLO
 
-# Función para evaluar el desempeño del diseño del parque eólico.
+# FUNCIÓN 2 (Evaluar el desempeño del diseño del parque eólico)
 def EvaluateFarm(x, windFLO):
     
     k = 0
@@ -52,13 +57,12 @@ def EvaluateFarm(x, windFLO):
             windFLO.turbines[i].position[j] = x[k]
             k = k + 1
 
-    # Eliminar ficheros auxiliares.
+    # Run WindFLO analysis
     windFLO.run(clean = True) 
-    windFLO.run(clean = True, inFile = 'WindFLO.res')
 
     return windFLO.farmPower
 
-# Generar conjunto de soluciones.
+# FUNCIÓN 3 (Generar conjunto de soluciones)
 def build_solution_set(n_sample,seed):
 
     # Construir entorno por defecto.
@@ -78,7 +82,7 @@ def build_solution_set(n_sample,seed):
 
     return solution_set
 
-# Función que evaluar un conjunto de soluciones.
+# FUNCIÓN 4 (Evaluar un conjunto de soluciones)
 def evaluate_solution_set(solution_set,accuracy):
 
     # Crear carpeta auxiliar para guardar en cada ejecución en paralelo sus propios archivos 
@@ -111,9 +115,8 @@ def evaluate_solution_set(solution_set,accuracy):
 # Construir conjunto de 100 posibles soluciones.
 solution_set=build_solution_set(100,0)
 
-# Lista de accuracys a considerar (para que el código funcione lo elementos de esta lista no deben superar 
-# el número de cores del ordenador, en caso de querer evaluar más accuracys hacerlo en una nueva ejecución).
-list_acc=[1.0,0.5,0.2,0.1,0.05,0.02,0.01,0.005] 
+# Lista de accuracys a considerar.
+list_acc=[1.0,0.5,0.2,0.1,0.05,0.02,0.01,0.005,0.002,0.001] 
 
 # Inicializar base de datos donde se guardará la información.
 df=[]
@@ -130,9 +133,26 @@ def parallel_processing(arg):
     df.to_csv('results/data/WindFLO/df_UnderstandingAccuracy'+str(arg)+'.csv')
 
 # Procesamiento en paralelo.
-pool=mp.Pool(mp.cpu_count())
-pool.map(parallel_processing,list_acc)
-pool.close()
+logical_cpu=mp.cpu_count()
+phisical_cpu=ps.cpu_count(logical=False)
+# n_cpu=logical_cpu
+# n_cpu=phisical_cpu
+n_cpu=1
+matrix_args=[[]]
+
+for arg in list_acc:
+    if len(matrix_args[-1])<n_cpu:
+        matrix_args[-1].append(arg)
+    else:
+        matrix_args.append([arg])
+
+for i in range(len(matrix_args)):
+    pool=mp.Pool(n_cpu)
+    pool.map(parallel_processing,matrix_args[i])
+    pool.close()
+
+# Eliminar ficheros auxiliares.
+os.remove(os.path.sep.join(sys.path[0].split(os.path.sep)[:-1])+'/terrain.dat')
 
 # Juntar bases de datos.
 df=pd.read_csv('results/data/WindFLO/df_UnderstandingAccuracy'+str(list_acc[0])+'.csv', index_col=0)
@@ -143,7 +163,4 @@ for accuracy in list_acc[1:]:
     os.remove('results/data/WindFLO/df_UnderstandingAccuracy'+str(accuracy)+'.csv')
     df=pd.concat([df,df_new],ignore_index=True)
 df.to_csv('results/data/WindFLO/df_UnderstandingAccuracy.csv')
-
-# Eliminar ficheros auxiliares.
-os.remove(os.path.sep.join(sys.path[0].split(os.path.sep)[:-1])+'/terrain.dat')
 
