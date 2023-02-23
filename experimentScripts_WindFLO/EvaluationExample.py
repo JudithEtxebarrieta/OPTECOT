@@ -1,3 +1,7 @@
+# Mediante este script se evalúa una posible solución aleatoria para la distribución de los 
+# molinos en el entorno del ejemplo "example1". Se obtienen el score, el tiempo de evaluación y
+# la representación gráfica de la solución.
+
 #==================================================================================================
 # LIBRERÍAS
 #==================================================================================================
@@ -18,8 +22,7 @@ from WindFLO import WindFLO
 #==================================================================================================
 # FUNCIONES
 #==================================================================================================
-
-# Función para inicializar las características del terreno y las turbinas sobre los cuales se aplicará la optimización.
+# FUNCIÓN 1 (Inicializar las características del terreno y las turbinas sobre los cuales se aplicará la optimización)
 def get_windFLO_with_accuracy(accuracy=1):
 
     # Configuración y parámetros de WindFLO.
@@ -38,7 +41,7 @@ def get_windFLO_with_accuracy(accuracy=1):
 
     return windFLO
 
-# Función para evaluar el desempeño del diseño del parque eólico.
+# FUNCIÓN 2 (Evaluar el desempeño del diseño del parque eólico)
 def EvaluateFarm(x, windFLO):
     
     k = 0
@@ -48,14 +51,12 @@ def EvaluateFarm(x, windFLO):
             windFLO.turbines[i].position[j] = x[k]
             k = k + 1
 
-    # Eliminar ficheros auxiliares.
+    # Run WindFLO analysis
     windFLO.run(clean = True) 
-    windFLO.run(clean = True, inFile = 'WindFLO.res')
-    windFLO.run(clean = True, inFile = 'terrain.dat')
 
     return windFLO.farmPower
 
-# Generar solución aleatoria.
+# FUNCIÓN 3 (Generar solución aleatoria)
 def generate_random_solution(seed,windFLO):
 
     # Función para tranformar solución al
@@ -69,7 +70,7 @@ def generate_random_solution(seed,windFLO):
     solution=transform_to_problem_dim(np.random.random(windFLO.nTurbines*2))
     return solution
 
-# Para representar de forma gráfica el resultado.
+# FUNCIÓN 4 (Representar de forma gráfica el resultado)
 def plot_WindFLO(windFLO,path,file_name):
 
     # Resultado en 2D.
@@ -103,3 +104,6 @@ print('Score: '+str(score)+' Time: '+str(elapsed))
 
 # Dibujar solución.
 plot_WindFLO(windFLO,'results/figures/WindFLO','EvaluationExample')
+
+# Eliminar ficheros auxiliares.
+os.remove(os.path.sep.join(sys.path[0].split(os.path.sep)[:-1])+'/terrain.dat')
