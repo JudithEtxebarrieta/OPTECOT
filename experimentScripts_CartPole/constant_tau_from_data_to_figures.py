@@ -1,4 +1,4 @@
-# Meante este script se representan de forma gráfica los resultados numéricos obtenidos en 
+# Mediante este script se representan de forma gráfica los resultados numéricos obtenidos en 
 # "constant_tau_save_train_data.py".
 
 #==================================================================================================
@@ -25,7 +25,7 @@ import pandas as pd
 # Devolver: la media de los datos originales junto a los percentiles de las medias obtenidas del 
 # submuestreo realizado sobre data.
 
-def bootstrap_mean_and_confiance_interval(data,bootstrap_iterations=1000):
+def bootstrap_mean_and_confidence_interval(data,bootstrap_iterations=1000):
     mean_list=[]
     for i in range(bootstrap_iterations):
         sample = np.random.choice(data, len(data), replace=True) 
@@ -57,7 +57,7 @@ def train_data_to_figure_data(df_train_acc,list_train_steps):
 
         # Calcular la media y el intervalo de confianza del reward.
         interest_rewards=list(df_train_acc['mean_reward'][interest_rows])
-        mean_reward,q05_reward,q95_reward=bootstrap_mean_and_confiance_interval(interest_rewards)
+        mean_reward,q05_reward,q95_reward=bootstrap_mean_and_confidence_interval(interest_rewards)
 
         # Guardar datos.
         all_mean_rewards.append(mean_reward)
@@ -70,43 +70,20 @@ def train_data_to_figure_data(df_train_acc,list_train_steps):
 # PROGRAMA PRINCIPAL
 #==================================================================================================
 
-#--------------------------------------------------------------------------------------------------
-# GRÁFICA 1 (resultados generales)
-#--------------------------------------------------------------------------------------------------
+# Inicializar gráfica.
+plt.figure(figsize=[15,6])
+plt.subplots_adjust(left=0.09,bottom=0.11,right=0.84,top=0.88,wspace=0.17,hspace=0.2)
+
 # Leer lista con valores de accuracy considerados.
 grid_acc=np.load('results/data/CartPole/grid_acc.npy')
 
 # Lista con límites de steps de entrenamiento que se desean dibujar.
 list_train_steps=range(500,10500,500)
 
-# Ir dibujando una curva por cada valor de accuracy.
-plt.figure(figsize=[8,6])
-plt.subplots_adjust(left=0.12,bottom=0.11,right=0.74,top=0.88,wspace=0.2,hspace=0.2)
-ax=plt.subplot(111)
-for accuracy in grid_acc:
-    # Leer base de datos.
-    df_train_acc=pd.read_csv("results/data/CartPole/df_train_acc"+str(accuracy)+".csv", index_col=0)
-
-    # Extraer de la base de datos la información relevante.
-    all_mean_rewards,all_q05_rewards,all_q95_rewards=train_data_to_figure_data(df_train_acc,list_train_steps)
-
-    # Dibujar curva.
-    ax.fill_between(list_train_steps,all_q05_rewards,all_q95_rewards, alpha=.5, linewidth=0)
-    plt.plot(list_train_steps, all_mean_rewards, linewidth=2,label=str(accuracy))
-
-ax.set_xlabel("Train steps")
-ax.set_ylabel("Mean reward")
-ax.set_title('Model evaluation (train 10 seeds, test 100 episodes)')
-ax.legend(title="Train time-step \n accuracy",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
-plt.savefig('results/figures/CartPole/general_results.png')
-plt.show()
-plt.close()
-
 #--------------------------------------------------------------------------------------------------
-# GRÁFICA 2 (mejores resultados por valor de accuracy)
+# GRÁFICA 1 (mejores resultados por valor de accuracy)
 #--------------------------------------------------------------------------------------------------
-plt.figure(figsize=[8,6])
-plt.subplots_adjust(left=0.15,bottom=0.1,right=0.74,top=0.9,wspace=0.36,hspace=0.4)
+ax=plt.subplot(121)
 
 # Conseguir datos para la gráfica
 train_steps=[]
@@ -118,8 +95,16 @@ for accuracy in grid_acc:
     # Extraer de la base de datos la información relevante.
     all_mean_rewards,all_q05_rewards,all_q95_rewards=train_data_to_figure_data(df_train_acc,list_train_steps)
 
-    # Encontrar cuando se da el máximo reward por primera vez
-    ind_max=all_mean_rewards.index(max(all_mean_rewards))
+    # Fijar límite de evaluación de alcance de score.
+    if accuracy==1:
+        score_limit=all_mean_rewards[-1]
+
+    # Encontrar cuando se da el máximo reward por primera vez.
+    limit_rewards=list(np.array(all_mean_rewards)>=score_limit)
+    if True in limit_rewards:
+        ind_max=limit_rewards.index(True)
+    else:
+        ind_max=len(all_mean_rewards)-1
     train_steps.append(list_train_steps[ind_max])
     max_rewards.append(all_mean_rewards[ind_max])
 
@@ -127,16 +112,43 @@ for accuracy in grid_acc:
 ind_sort=np.argsort(train_steps)
 train_steps_sort=[str(i) for i in sorted(train_steps)]
 max_rewards_sort=[max_rewards[i] for i in ind_sort]
-acc_sort=[grid_acc[i] for i in ind_sort]
+acc_sort=[np.arange(len(grid_acc)/10,0,-0.1)[i] for i in ind_sort]
 acc_sort_str=[str(grid_acc[i]) for i in ind_sort]
 colors=[list(mcolors.TABLEAU_COLORS.keys())[i] for i in ind_sort]
 
-ax=plt.subplot(111)
+
 ax.bar(train_steps_sort,max_rewards_sort,acc_sort,label=acc_sort_str,color=colors)
+plt.axhline(y=score_limit,color='black', linestyle='--')
 ax.set_xlabel("Train steps")
 ax.set_ylabel("Maximum reward")
 ax.set_title('Best results for each model')
+# ax.legend(title="Train time-step \n accuracy",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
+
+#--------------------------------------------------------------------------------------------------
+# GRÁFICA 2 (resultados generales)
+#--------------------------------------------------------------------------------------------------
+
+# Ir dibujando una curva por cada valor de accuracy.
+ax=plt.subplot(122)
+for accuracy in grid_acc:
+    # Leer base de datos.
+    df_train_acc=pd.read_csv("results/data/CartPole/df_train_acc"+str(accuracy)+".csv", index_col=0)
+
+    # Extraer de la base de datos la información relevante.
+    all_mean_rewards,all_q05_rewards,all_q95_rewards=train_data_to_figure_data(df_train_acc,list_train_steps)
+
+    # Dibujar curva.
+    ax.fill_between(list_train_steps,all_q05_rewards,all_q95_rewards, alpha=.5, linewidth=0)
+    plt.plot(list_train_steps, all_mean_rewards, linewidth=2,label=str(accuracy))
+
+plt.axhline(y=score_limit,color='black', linestyle='--')
+ax.set_xlabel("Train steps")
+ax.set_ylabel("Mean reward")
+ax.set_title('Models evaluations (train 10 seeds, test 100 episodes)')
 ax.legend(title="Train time-step \n accuracy",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
-plt.savefig('results/figures/CartPole/best_results.png')
+
+
+
+plt.savefig('results/figures/CartPole/ConstantAccuracyAnalysis.png')
 plt.show()
 plt.close()
