@@ -24,3 +24,4 @@ WindFLO/terrain.dat
 *.so
 WindFLO/result_fig.pdf
 __pycache__
+other_RL_unused
