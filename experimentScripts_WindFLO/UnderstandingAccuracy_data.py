@@ -118,38 +118,18 @@ solution_set=build_solution_set(100,0)
 # Lista de accuracys a considerar.
 list_acc=[1.0,0.5,0.2,0.1,0.05,0.02,0.01,0.005,0.002,0.001] 
 
-# Inicializar base de datos donde se guardará la información.
-df=[]
+# Guardar datos de scores y tiempos por evaluación usando diferentes valores de accuracy.
+for accuracy in list_acc:
 
-# Función para realizar la ejecución en paralelo.
-def parallel_processing(arg):
+    # Inicializar base de datos donde se guardará la información.
+    df=[]
 
     # Evaluar conjunto de puntos.
-    evaluate_solution_set(solution_set,arg)
+    evaluate_solution_set(solution_set,accuracy)
 
     # Guardar base de datos.
-    global df
     df=pd.DataFrame(df,columns=['accuracy','n_solution','score','time'])
-    df.to_csv('results/data/WindFLO/df_UnderstandingAccuracy'+str(arg)+'.csv')
-
-# Procesamiento en paralelo.
-logical_cpu=mp.cpu_count()
-phisical_cpu=ps.cpu_count(logical=False)
-# n_cpu=logical_cpu
-# n_cpu=phisical_cpu
-n_cpu=1
-matrix_args=[[]]
-
-for arg in list_acc:
-    if len(matrix_args[-1])<n_cpu:
-        matrix_args[-1].append(arg)
-    else:
-        matrix_args.append([arg])
-
-for i in range(len(matrix_args)):
-    pool=mp.Pool(n_cpu)
-    pool.map(parallel_processing,matrix_args[i])
-    pool.close()
+    df.to_csv('results/data/WindFLO/df_UnderstandingAccuracy'+str(accuracy)+'.csv')
 
 # Eliminar ficheros auxiliares.
 os.remove(os.path.sep.join(sys.path[0].split(os.path.sep)[:-1])+'/terrain.dat')
