@@ -109,14 +109,11 @@ def generation_score_list(population,accuracy,count_time_acc=True,count_time_gen
 #   >population: lista con las soluciones que forman la generación.
 #   >train_seed: semilla de entrenamiento.
 #   >threshold: umbral del método de bisección con el que se irá actualizando el intervalo que contiene el valor de accuracy óptimo.
-#   >change_threshold: True o False en caso de que se quiera o no respectivamente actualizar el umbral con el valor de correlación 
-#    asociado al accuracy seleccionado como óptimo.
 # Devuelve: 
 #   >prev_m: valor de accuracy seleccionado como óptimo.
 #   >last_time_acc_increase: tiempo de evaluación consumido en la última iteración del método de bisección.
-#   >next_threshold: en caso de haber seleccionado change_threshold=True, se devolverá también el valor candidato para actualizar el umbral.
 
-def bisection_method(init_acc,population,train_seed,threshold=0.95,change_threshold=False):
+def bisection_method(init_acc,population,train_seed,threshold=0.95):
 
     # Inicializar límite inferior y superior.
     acc0=init_acc
@@ -165,11 +162,7 @@ def bisection_method(init_acc,population,train_seed,threshold=0.95,change_thresh
         
         first_iteration=False
 
-    if change_threshold:
-        next_threshold=metric_value
-        return prev_m,last_time_acc_increase,next_threshold
-    else:
-        return prev_m,last_time_acc_increase
+    return prev_m,last_time_acc_increase
 
 # FUNCIÓN 5 (Ejecutar heurísticos durante el proceso de entrenamiento)
 # Parámetros:
@@ -190,20 +183,16 @@ def execute_heuristic(gen,min_acc,acc,population,train_seed,list_variances,heuri
     global last_optimal_time
     global sw_proc
     global sw_acc
-    global next_threshold
     global max_time
     global time_best_acc
-    global threshold
 
-    # HEURÍSTICO 7 de Symbolic Regressor: Bisección de generación en generación.
+    # HEURÍSTICO 7 de Symbolic Regressor: Bisección de generación en generación (el umbral es el parámetro).
     if heuristic==7: 
-        threshold=param
         acc,time_best_acc=bisection_method(min_acc,population,train_seed,threshold=param)
 
     # HEURÍSTICO 9 de Symbolic Regressor: Bisección con frecuencia constante (parámetro) 
     # de actualización de accuracy y umbral de método de bisección fijado en 0.95.
     if heuristic==9: 
-        threshold=0.95
         if gen==0:
             acc,time_best_acc=bisection_method(min_acc,population,train_seed)
             last_optimal_time=sw_proc.get_time()+sw_acc.get_time()
@@ -213,12 +202,11 @@ def execute_heuristic(gen,min_acc,acc,population,train_seed,list_variances,heuri
                 acc,time_best_acc=bisection_method(min_acc,population,train_seed)
                 last_optimal_time=sw_proc.get_time()+sw_acc.get_time()
 
-    # HEURÍSTICO 14 de Symbolic Regressor: Bisección con definición automática para frecuencia 
-    # de actualización de accuracy y umbral del método de bisección.
-    if heuristic==14: 
+    # HEURÍSTICO 12 de Symbolic Regressor: Bisección con definición automática para frecuencia 
+    # de actualización de accuracy (depende de parámetro) y umbral del método de bisección fijado en 0.95.
+    if heuristic==12: 
         if gen==0: 
-            threshold=0.95
-            acc,time_best_acc,next_threshold=bisection_method(min_acc,population,train_seed,change_threshold=True)
+            acc,time_best_acc=bisection_method(min_acc,population,train_seed)
         else:
             if len(list_variances)>=param+1:
                 # Función para calcular el intervalo de confianza.
@@ -234,10 +222,9 @@ def execute_heuristic(gen,min_acc,acc,population,train_seed,list_variances,heuri
 
                 # Calcular el mínimo accuracy con el que se obtiene la máxima calidad.
                 if last_variance<variance_q05 or last_variance>variance_q95:
-                    threshold=next_threshold
-                    acc,time_best_acc,next_threshold=bisection_method(min_acc,population,train_seed,threshold=next_threshold,change_threshold=True)
+                    acc,time_best_acc=bisection_method(min_acc,population,train_seed)
 
-    return acc,threshold,time_best_acc
+    return acc,time_best_acc
     
 
 #--------------------------------------------------------------------------------------------------
@@ -332,12 +319,12 @@ def learn(seed,heuristic,heuristic_param,maxfeval=500,popsize=50):
 
         # Reajustar el accuracy según el heurístico seleccionado.
         if gen==0:
-            accuracy,threshold,time_best_acc_bisection=execute_heuristic(gen,min_acc,accuracy,real_solutions,seed,[],heuristic,heuristic_param)
+            accuracy,time_best_acc_bisection=execute_heuristic(gen,min_acc,accuracy,real_solutions,seed,[],heuristic,heuristic_param)
 
         else:
             df_seed=pd.DataFrame(df)
             df_seed=df_seed[df_seed[1]==seed]
-            accuracy,threshold,time_best_acc_bisection=execute_heuristic(gen,min_acc,accuracy,real_solutions,seed,list(df_seed[5]),heuristic,heuristic_param)
+            accuracy,time_best_acc_bisection=execute_heuristic(gen,min_acc,accuracy,real_solutions,seed,list(df_seed[5]),heuristic,heuristic_param)
 
         # Lista de scores asociados a la generación.
         list_scores=generation_score_list(real_solutions,accuracy,count_time_gen=True)
@@ -348,7 +335,7 @@ def learn(seed,heuristic,heuristic_param,maxfeval=500,popsize=50):
 
         # Acumular datos de interés.
         score = EvaluateFarm(transform_to_problem_dim(es.result.xbest),default_windFLO)
-        df.append([heuristic_param,seed,gen,-score,accuracy,threshold,np.var(list_scores),sw_proc.get_time(),sw_acc.get_time()-sw_acc_duplicate,sw_proc.get_time()+sw_acc.get_time()-sw_acc_duplicate])
+        df.append([heuristic_param,seed,gen,-score,accuracy,np.var(list_scores),sw_proc.get_time(),sw_acc.get_time()-sw_acc_duplicate,sw_proc.get_time()+sw_acc.get_time()-sw_acc_duplicate])
 
         gen+=1
 
@@ -362,7 +349,7 @@ def learn(seed,heuristic,heuristic_param,maxfeval=500,popsize=50):
 list_seeds=range(1,51,1)
 
 # Preparar lista de argumentos.
-list_arg=[[7,0.8],[7,0.95],[9,0.1],[9,0.3],[14,5],[14,10]]
+list_arg=[[7,0.8],[7,0.95],[9,0.1],[9,0.3],[12,5],[12,10]]
 
 # Construir bases de datos.
 for arg in list_arg:
@@ -375,7 +362,7 @@ for arg in list_arg:
     for seed in tqdm(list_seeds):
         learn(seed,heuristic,heuristic_param,maxfeval=500,popsize=50)
     
-    df=pd.DataFrame(df,columns=['heuristic_param','seed','n_gen','score','accuracy','threshold','variance','elapsed_time_proc','elapsed_time_acc','elapsed_time'])
+    df=pd.DataFrame(df,columns=['heuristic_param','seed','n_gen','score','accuracy','variance','elapsed_time_proc','elapsed_time_acc','elapsed_time'])
     df.to_csv('results/data/WindFLO/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_param'+str(heuristic_param)+'.csv')
 
 # Eliminar ficheros auxiliares.

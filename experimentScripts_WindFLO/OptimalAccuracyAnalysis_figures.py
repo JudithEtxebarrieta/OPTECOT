@@ -130,41 +130,36 @@ def draw_heuristic13_14_threshold_shape(df_train,type_time,curve):
 #==================================================================================================
 colors=px.colors.qualitative.D3
 
-# Definir tiempos de entrenamiento que se desean dibujar.
-max_time=np.load('results/data/WindFLO/ConstantAccuracyAnalysis/max_time.npy')
-df_acc_max=pd.read_csv('results/data/WindFLO/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis1.0.csv', index_col=0)
-df_h7=pd.read_csv('results/data/WindFLO/OptimalAccuracyAnalysis/df_train_OptimalAccuracyAnalysis_h7.csv', index_col=0)
-df_h9=pd.read_csv('results/data/WindFLO/OptimalAccuracyAnalysis/df_train_OptimalAccuracyAnalysis_h9.csv', index_col=0)
-df_h14=pd.read_csv('results/data/WindFLO/OptimalAccuracyAnalysis/df_train_OptimalAccuracyAnalysis_h14.csv', index_col=0)
-min_time_acc_max=max(df_acc_max.groupby('seed')['elapsed_time'].min())
-min_time_h7=max(df_h7.groupby('seed')['elapsed_time'].min())
-min_time_h9=max(df_h9.groupby('seed')['elapsed_time'].min())
-min_time_h14=max(df_h14.groupby('seed')['elapsed_time'].min())
-list_train_time=np.arange(max(min_time_acc_max,min_time_h7,min_time_h9,min_time_h14),max_time+0.03*50,0.03*50)
+
 
 # Función para dibujar y guardar las gráficas según el heurístico seleccionada.
 def draw_and_save_figures_per_heuristic(heuristic):
 
     global ax
 
+    # Definir tiempos de entrenamiento que se desean dibujar.
+    max_time=np.load('results/data/WindFLO/ConstantAccuracyAnalysis/max_time.npy')
+    df_max_acc=pd.read_csv('results/data/WindFLO/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis1.0.csv', index_col=0)
+    df_h7=pd.read_csv('results/data/WindFLO/OptimalAccuracyAnalysis/df_train_OptimalAccuracyAnalysis_h'+str(list_heuristics[0])+'.csv', index_col=0)
+    df_h9=pd.read_csv('results/data/WindFLO/OptimalAccuracyAnalysis/df_train_OptimalAccuracyAnalysis_h'+str(list_heuristics[1])+'.csv', index_col=0)
+    df_h12=pd.read_csv('results/data/WindFLO/OptimalAccuracyAnalysis/df_train_OptimalAccuracyAnalysis_h'+str(list_heuristics[2])+'.csv', index_col=0)
+    min_time_acc_max=max(df_max_acc.groupby('seed')['elapsed_time'].min())
+    min_time_h7=max(df_h7.groupby('seed')['elapsed_time'].min())
+    min_time_h9=max(df_h9.groupby('seed')['elapsed_time'].min())
+    min_time_h12=max(df_h12.groupby('seed')['elapsed_time'].min())
+    global list_train_time
+    list_train_time=np.arange(max(min_time_acc_max,min_time_h7,min_time_h9,min_time_h12),max_time+0.03*50,0.03*50)
+
     # Inicializar gráfica.
-    if heuristic in [7,9]:
-        plt.figure(figsize=[20,5])
-        plt.subplots_adjust(left=0.08,bottom=0.11,right=0.76,top=0.88,wspace=0.4,hspace=0.76)
-    if heuristic==14:
-        plt.figure(figsize=[22,5])
-        plt.subplots_adjust(left=0.04,bottom=0.11,right=0.87,top=0.88,wspace=0.37,hspace=0.76)
+    plt.figure(figsize=[20,5])
+    plt.subplots_adjust(left=0.08,bottom=0.11,right=0.76,top=0.88,wspace=0.4,hspace=0.76)
 
     #__________________________________________________________________________________________________
     # SUBGRÁFICA 1: scores durante el entrenamiento.
 
-    if heuristic in [7,9]:
-        ax=plt.subplot(132)
-    if heuristic ==14:
-        ax=plt.subplot(143)
+    ax=plt.subplot(132)
 
     # Lectura de bases de datos que se emplearán.
-    df_max_acc=pd.read_csv("results/data/WindFLO/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis1.0.csv", index_col=0) # Accuracy constante 1 (situación por defecto).
     df_optimal_acc=pd.read_csv('results/data/WindFLO/OptimalAccuracyAnalysis/df_train_OptimalAccuracyAnalysis_h'+str(heuristic)+'.csv', index_col=0) # Accuracy ascendente.
 
     # Inicializar número de curvas.
@@ -195,10 +190,8 @@ def draw_and_save_figures_per_heuristic(heuristic):
     #__________________________________________________________________________________________________
     # SUBGRÁFICA 2: scores durante el entrenamiento sin considerar el tiempo de evaluación extra
     # necesarios para reajustar el accuracy.
-    if heuristic in [7,9]:
-        ax=plt.subplot(133)
-    if heuristic ==14:
-        ax=plt.subplot(144)
+
+    ax=plt.subplot(133)
 
     # Inicializar número de curvas.
     curve=0
@@ -230,10 +223,8 @@ def draw_and_save_figures_per_heuristic(heuristic):
 
     #__________________________________________________________________________________________________
     # SUBGRÁFICA 3: representación gráfica del comportamiento del accuracy.
-    if heuristic in [7,9]:
-        ax=plt.subplot(131)
-    if heuristic ==14:
-        ax=plt.subplot(142)
+
+    ax=plt.subplot(131)
 
     # Inicializar número de curvas.
     curve=1
@@ -248,29 +239,11 @@ def draw_and_save_figures_per_heuristic(heuristic):
     ax.set_title('Behavior of optimal accuracy')
 
 
-    #______________________________________________________________________________________________
-    # SUBGRÁFICA 4:                                                                                                                                                                                                                                                                                                              
-    if heuristic ==14:
-        ax=plt.subplot(141)
-
-        # Inicializar número de curvas.
-        curve=1
-
-        # Dibujar curvas.
-        for param in list_params:
-            df=df_optimal_acc[df_optimal_acc['heuristic_param']==param]
-            draw_heuristic13_14_threshold_shape(df,'elapsed_time',curve)
-            curve+=1
-        ax.set_xlabel("Train time")
-        ax.set_ylabel("Threshold value")
-        ax.set_title('Behavior of bisection method threshold')
-
-
     plt.savefig('results/figures/WindFLO/OptimalAccuracyAnalysis_h'+str(heuristic)+'.png')
     plt.show()
     plt.close()
 
 # Llamar a la función.
-list_heuristics=[7,9,14]
+list_heuristics=[7,9,12]
 for heuristic in list_heuristics:
     draw_and_save_figures_per_heuristic(heuristic)
