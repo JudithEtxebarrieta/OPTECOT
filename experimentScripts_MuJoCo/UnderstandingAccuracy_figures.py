@@ -278,7 +278,9 @@ def from_data_to_figures_paper(df):
     color=color(np.linspace(0,1,3))
 
     ax=subfigs[0].subplots()
-    plt.barh(list_acc_str, [i*(-1) for i in all_means], align='center',color=color[0])
+    y=[i*(-1) for i in all_means]
+    y.reverse()
+    plt.barh(list_acc_str, y, align='center',color=color[0])
     plt.title("\n Cost per evaluation")
     plt.ylabel("Accuracy")
     plt.xlabel("Steps")
@@ -289,6 +291,7 @@ def from_data_to_figures_paper(df):
     for i in range(len(list_extra_eval)):
         if list_extra_eval[i]<0:
             list_extra_eval[i]=0
+    list_extra_eval.reverse()
     plt.barh(list_acc_str, list_extra_eval, align='center',color=color[1])
     plt.yticks([])
     plt.title("Extra evaluations in the same amount of \n time required for maximum accuracy")
