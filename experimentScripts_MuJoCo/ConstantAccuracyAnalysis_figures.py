@@ -38,12 +38,12 @@ def bootstrap_mean_and_confiance_interval(data,bootstrap_iterations=1000):
 # FUNCIÓN 2 (para la construcción de la gráfica de scores)
 # Parámetros:
 #   >df_train_acc: base de datos con datos de entrenamiento.
-#   >list_train_times: lista con límites de tiempo que se desean dibujar en la gráfica de scores.
+#   >list_train_steps: lista con límites de número de steps que se desean dibujar en la gráfica de rewards.
 # Devolver: 
-#   >all_mean: medias de los scores por límite de tiempos de entrenamiento fijados en list_train_times.
-#   >all_q05,all_q95: percentiles de los scores por límite de tiempos de entrenamiento.
+#   >all_mean: medias de los rewards por límite de steps de entrenamiento fijados en list_train_steps.
+#   >all_q05,all_q95: percentiles de los rewards por límite de steps de entrenamiento.
 
-def train_data_to_figure_data(df_train_acc,list_train_times):
+def train_data_to_figure_data(df_train_acc,list_train_steps):
 
     # Inicializar listas para la gráfica.
     all_mean=[]
@@ -51,16 +51,16 @@ def train_data_to_figure_data(df_train_acc,list_train_times):
     all_q95=[]
 
     # Rellenar listas.
-    for train_time in list_train_times:
+    for train_steps in list_train_steps:
 
-        # Indices de filas con un tiempo de entrenamiento menor que train_time.
-        ind_train=df_train_acc["n_steps"] <= train_time
+        # Indices de filas con un número de steps de entrenamiento menor que train_steps.
+        ind_train=df_train_acc["n_steps"] <= train_steps
         
         # Agrupar las filas anteriores por la semilla y quedarnos con la fila por grupo 
-        # que mayor valor de score tiene asociado.
+        # que mayor valor de reward tiene asociado.
         interest_rows=df_train_acc[ind_train].groupby("train_seed")["reward"].idxmax()
 
-        # Calcular la media y el intervalo de confianza del score.
+        # Calcular la media y el intervalo de confianza del reward.
         interest=list(df_train_acc['reward'][interest_rows])
         mean,q05,q95=bootstrap_mean_and_confiance_interval(interest)
 
@@ -77,7 +77,7 @@ def train_data_to_figure_data(df_train_acc,list_train_times):
 
 # Inicializar gráfica.
 plt.figure(figsize=[15,6])
-plt.subplots_adjust(left=0.09,bottom=0.11,right=0.84,top=0.88,wspace=0.17,hspace=0.2)
+plt.subplots_adjust(left=0.09,bottom=0.15,right=0.84,top=0.9,wspace=0.17,hspace=0.2)
 
 # Leer lista con valores de accuracy considerados.
 list_acc=np.load('results/data/MuJoCo/ConstantAccuracyAnalysis/list_acc.npy')
@@ -88,7 +88,7 @@ df_train_acc_max=pd.read_csv("results/data/MuJoCo/ConstantAccuracyAnalysis/df_Co
 max_steps=np.load('results/data/MuJoCo/ConstantAccuracyAnalysis/max_steps.npy')
 min_steps=max(df_train_acc_max.groupby("train_seed")["n_steps"].min())
 split_steps=max(df_train_acc_min.groupby("train_seed")["n_steps"].min())
-list_train_times=np.arange(min_steps,max_steps,split_steps)
+list_train_steps=np.arange(min_steps,max_steps,split_steps)
 
 #--------------------------------------------------------------------------------------------------
 # GRÁFICA 1 (Mejores resultados por valor de accuracy)
@@ -96,7 +96,7 @@ list_train_times=np.arange(min_steps,max_steps,split_steps)
 print('GRAFICA 1')
 
 # Conseguir datos para la gráfica.
-train_times=[]
+train_stepss=[]
 max_scores=[]
 for accuracy in list_acc:
 
@@ -104,9 +104,9 @@ for accuracy in list_acc:
     df_train_acc=pd.read_csv("results/data/MuJoCo/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis_acc"+str(accuracy)+".csv", index_col=0)
 
     # Extraer de la base de datos la información relevante.
-    all_mean_scores,all_q05_scores,all_q95_scores=train_data_to_figure_data(df_train_acc,list_train_times)
+    all_mean_scores,all_q05_scores,all_q95_scores=train_data_to_figure_data(df_train_acc,list_train_steps)
 
-    # Fijar límite de evaluación de alcance de score.
+    # Fijar límite de evaluación de alcance de reward.
     if accuracy==1:
         score_limit=all_mean_scores[-1]
 
@@ -116,20 +116,21 @@ for accuracy in list_acc:
         ind_min=limit_scores.index(True)
     else:
         ind_min=len(all_mean_scores)-1
-    train_times.append(int(list_train_times[ind_min]))
+    train_stepss.append(int(list_train_steps[ind_min]))
     max_scores.append(all_mean_scores[ind_min])
 
 
 # Dibujar la gráfica.
-ind_sort=np.argsort(train_times)
-train_times_sort=[str(i) for i in sorted(train_times)]
+ind_sort=np.argsort(train_stepss)
+train_stepss_sort=[str(i) for i in sorted(train_stepss)]
 max_scores_sort=[max_scores[i] for i in ind_sort]
 acc_sort=[np.arange(len(list_acc)/10,0,-0.1)[i] for i in ind_sort]
 acc_sort_str=[str(list_acc[i]) for i in ind_sort]
 colors=[list(mcolors.TABLEAU_COLORS.keys())[i] for i in ind_sort]
 
 ax=plt.subplot(121)
-ax.bar(train_times_sort,max_scores_sort,acc_sort,label=acc_sort_str,color=colors)
+ax.bar(train_stepss_sort,max_scores_sort,acc_sort,label=acc_sort_str,color=colors)
+ax.tick_params(axis='x', labelrotation = 45)
 ax.set_xlabel("Train steps")
 ax.set_ylabel("Reward")
 ax.set_title('Best results for each model')
@@ -150,16 +151,16 @@ for accuracy in list_acc:
     df_train_acc=pd.read_csv("results/data/MuJoCo/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis_acc"+str(accuracy)+".csv", index_col=0)
 
     # Extraer de la base de datos la información relevante.
-    all_mean_scores,all_q05_scores,all_q95_scores =train_data_to_figure_data(df_train_acc,list_train_times)
+    all_mean_scores,all_q05_scores,all_q95_scores =train_data_to_figure_data(df_train_acc,list_train_steps)
 
     # Dibujar curva.
-    ax.fill_between(list_train_times,all_q05_scores,all_q95_scores, alpha=.5, linewidth=0)
-    plt.plot(list_train_times, all_mean_scores, linewidth=2,label=str(accuracy))
+    ax.fill_between(list_train_steps,all_q05_scores,all_q95_scores, alpha=.5, linewidth=0)
+    plt.plot(list_train_steps, all_mean_scores, linewidth=2,label=str(accuracy))
 
 
 ax.set_xlabel("Train steps")
 ax.set_ylabel("Reward")
-ax.set_title('Model evaluation \n (train 10 seeds, test 10 episodes)')
+ax.set_title('Model evaluation \n (train 100 seeds, test 10 episodes)')
 ax.legend(title="Train time-step \n accuracy",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
 plt.axhline(y=score_limit,color='black', linestyle='--')
 # plt.xscale('log')

@@ -1,3 +1,9 @@
+
+# Mediante este script se aplica el algoritmo CMA-ES sobre el entorno Swimmer de MuJoCo, durante 
+# un número máximo de steps, considerando 10 valores diferentes de accuracy y 100 semillas para 
+# cada uno de ellos. Por cada valor de accuracy se construirá una base de datos con la información
+# relevante durante en entrenamiento.
+
 #==================================================================================================
 # LIBRERÍAS
 #==================================================================================================
@@ -53,7 +59,7 @@ import psutil as ps
 # FUNCIÓN 1 (validar una política)
 def evaluate_policy(agent,test_env,n_eval_episodes):
 
-    # Fijar semilla del entorno (para que los episodios a validar sena los mismos por cada 
+    # Fijar semilla del entorno (para que los episodios a validar sean los mismos por cada 
     # llamada a la función) y definir el estado inicial (obs) del primer episodio.
     test_env._env.seed(seed=test_env_seed)
     obs,_=test_env.reset()
@@ -128,9 +134,9 @@ def learn(ctxt=None, gymEnvName=None, action_space=None, max_episode_length=None
 #==================================================================================================
 # FUNCIONES DISEÑADAS PARA SUSTITUIR ALGUNAS YA EXISTENTES
 #==================================================================================================
-# FUNCIÓN 3 (para poder evaluar cada política de cada generación durante el entrenmiento con el mismo
+# FUNCIÓN 3 (para poder evaluar cada política de cada generación durante el entrenamiento con el mismo
 # conjunto de episodios, esta modificación hace que el proceso sea determinista y las comparaciones 
-# de individuos por generación sean justas).
+# entre individuos por generación sean justas).
 def start_episode(self):
     """Begin a new episode."""
 
@@ -225,8 +231,8 @@ policy_name='SwimmerPolicy'
 DTU=False # Criterio de parada dependiente de terminate_when_unhealthy.
 
 # Mallados y parámetros para el entrenamiento.
-list_train_seeds = list(range(2,12,1)) # Lista de semillas de entrenamiento.
-list_acc=[1.0,0.8,0.6,0.5,0.4,0.3]
+list_train_seeds = list(range(2,102,1)) # Lista de semillas de entrenamiento.
+list_acc=[1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1]
 train_env_seed=0 # Semilla para el entorno de entrenamiento.
 max_steps=1000000 # Límite de entrenamiento medido en steps (asumiendo que el coste de todos los steps es el mismo). (Referencia: https://huggingface.co/sb3/ppo-Swimmer-v3/tree/main)
 
@@ -249,7 +255,7 @@ def parallel_processing(arg):
     df_acc.to_csv('results/data/MuJoCo/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis_acc'+str(accuracy)+'.csv')
 
 # Procesamiento en paralelo.
-phisical_cpu=ps.cpu_count(logical=False)
+phisical_cpu=ps.cpu_count(logical=True)
 pool=mp.Pool(phisical_cpu)
 pool.map(parallel_processing,list_acc)
 pool.close()
@@ -259,6 +265,9 @@ np.save('results/data/MuJoCo/ConstantAccuracyAnalysis/list_acc',list_acc)
 
 # Guardar límite de entrenamiento.
 np.save('results/data/MuJoCo/ConstantAccuracyAnalysis/max_steps',max_steps)
+
+
+
 
 
 
