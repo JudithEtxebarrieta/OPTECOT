@@ -3,7 +3,7 @@ import sys
 base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../')
 sys.path.append(base_dir)
 sys.path.append(os.path.join(base_dir, 'cleanrl'))
-
+sys.path.append(os.path.sep.join(sys.path[0].split(os.path.sep)[:-2]))
 
 # https://docs.cleanrl.dev/rl-algorithms/rpo/
 
@@ -95,7 +95,7 @@ def run_experiment():
             # monitor_gym=True, no longer works for gymnasium
             save_code=True,
         )
-    writer = SummaryWriter(f"results/data/MuJoCo/runs/{run_name}")
+    writer = SummaryWriter(f"others/demoScripts/results/mujoco_PPO/{run_name}")
     writer.add_text(
         "hyperparameters",
         "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
@@ -191,7 +191,7 @@ def run_experiment():
         print("Evaluated with reward", policy_objective_value, " | ", global_step / args.total_timesteps)
 
 
-        with open("results/data/MuJoCo/test_resultmujoco_rpo.txt", "a") as f:
+        with open("others/demoScripts/results/mujoco_PPO/test_resultmujoco_rpo.txt", "a") as f:
             print( f"{args.env_id},{test_seed},{policy_objective_value},{global_step},{timestep}",file=f)
 
 

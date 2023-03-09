@@ -3,7 +3,7 @@ import sys
 
 
 os.chdir("WindFLO")
-sys.path.append(sys.path[0] + '/../WindFLO/Examples/Example1')
+sys.path.append(os.path.sep.join(sys.path[0].split(os.path.sep)[:-1])+ '/../WindFLO/Examples/Example1')
 print(sys.path)
 from example1 import main
 
