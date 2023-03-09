@@ -48,7 +48,14 @@ def from_argsort_to_ranking(list):
         i+=1
     return new_list
 
-# FUNCIÓN 3 (Cálculo de la distancia inversa normalizada de tau kendall entre dos rankings)
+# FUNCIÓN 3 (Ordenar lista según el orden para cada posición definido en argsort)
+def custom_sort(list,argsort):
+    new_list=[]
+    for index in argsort:
+        new_list.append(list[index])
+    return new_list
+
+# FUNCIÓN 4 (Cálculo de la distancia inversa normalizada de tau kendall entre dos rankings)
 def inverse_normalized_tau_kendall(x,y):
     # Número de pares con orden inverso.
     pairs_reverse_order=0
@@ -68,7 +75,7 @@ def inverse_normalized_tau_kendall(x,y):
 
     return 1-tau_kendall
 
-# FUNCIÓN 4 (Eliminar elementos en ciertas posiciones de una lista)
+# FUNCIÓN 5 (Eliminar elementos en ciertas posiciones de una lista)
 def remove_element_in_idx(list_elements,list_idx):
     new_list=[]
     for i in range(len(list_elements)):
@@ -76,7 +83,7 @@ def remove_element_in_idx(list_elements,list_idx):
             new_list.append(list_elements[i])
     return new_list
 
-# FUNCIÓN 5 (Construir las gráficas deseadas a partir de la base de datos)
+# FUNCIÓN 6 (Construir las gráficas deseadas a partir de la base de datos)
 def from_data_to_figures(df):
 
     # Inicializar gráfica.
@@ -119,7 +126,7 @@ def from_data_to_figures(df):
     for i in range(0,len(list_total_times)):
         # Ahorro de tiempo.
         save_time=list_total_times[-1]-list_total_times[i]
-        # Número de evaluaciones extra que se podrian hacer para agotar el tiempo que se necesita por defecto.
+        # Número de evaluaciones extra que se podrían hacer para agotar el tiempo que se necesita por defecto.
         extra_eval=int(save_time/all_means[i])
         list_extra_eval.append(extra_eval)
 
@@ -127,12 +134,23 @@ def from_data_to_figures(df):
     ax.set_xlabel('Accuracy')
     ax.set_ylabel('Number of extra evaluations')
     plt.xticks(rotation = 0)
-    ax.set_title('Extra evaluations in the same time required by maximum accuracy')
+    ax.set_title('Extra evaluations in the same amount of time required for maximum accuracy')
 
 
     #----------------------------------------------------------------------------------------------
     # GRÁFICA 3: ranking de las 100 soluciones con cada accuracy.
     #----------------------------------------------------------------------------------------------
+    def ranking_matrix_sorted_by_max_acc(ranking_matrix):
+        # Argumentos asociados al ranking del accuracy 1 ordenado de menor a mayor.
+        argsort_max_acc=np.argsort(ranking_matrix[-1])
+
+        # Reordenar filas de la matriz.
+        sorted_ranking_list=[]
+        for i in range(len(ranking_list)):
+            sorted_ranking_list.append(custom_sort(ranking_list[i],argsort_max_acc))
+
+        return sorted_ranking_list
+        
     ax=plt.subplot(223)
 
     ranking_list=[]
@@ -142,7 +160,7 @@ def from_data_to_figures(df):
         ranking=from_argsort_to_ranking(list(df_acc['score'].argsort()))
         ranking_list.append(ranking)
     
-    ranking_matrix=np.matrix(ranking_list)
+    ranking_matrix=np.matrix(ranking_matrix_sorted_by_max_acc(ranking_list))
 
     
     color = sns.cubehelix_palette(start=2, rot=0, dark=0, light=.95, reverse=True, as_cmap=True)
@@ -218,11 +236,132 @@ def from_data_to_figures(df):
     plt.show()
     plt.close()
 
+# FUNCIÓN 7 (Gráficas para el paper)
+def from_data_to_figures_paper(df):
+
+    # Inicializar gráfica.
+    fig=plt.figure(figsize=[15,3.5],constrained_layout=True)
+    # plt.subplots_adjust(left=0.06,bottom=0.21,right=0.95,top=0.78,wspace=0.1,hspace=0.69)
+    subfigs = fig.subfigures(1, 4, width_ratios=[2,2,0.1,4], wspace=0)
+
+    #----------------------------------------------------------------------------------------------
+    # GRÁFICA 1: tiempo de ejecución por accuracy y extra de evaluaciones.
+    #----------------------------------------------------------------------------------------------
+    list_acc=list(set(df['accuracy']))
+    list_acc.sort()
+    list_acc_str=[str(acc) for acc in list_acc]
+    list_acc_str.reverse()
+
+    # Tiempos de ejecución por evaluación.
+    all_means=[]
+    all_q05=[]
+    all_q95=[]
+
+    for accuracy in list_acc:
+        mean,q05,q95=bootstrap_mean_and_confidence_interval(list(df[df['accuracy']==accuracy]['time']))
+        all_means.append(mean)
+        all_q05.append(q05)
+        all_q95.append(q95)
+
+    # Evaluaciones extra.
+    list_total_times=list(df.groupby('accuracy')['time'].sum())
+    list_extra_eval=[]
+    for i in range(0,len(list_total_times)):
+        # Ahorro de tiempo.
+        save_time=list_total_times[-1]-list_total_times[i]
+        # Número de evaluaciones extra que se podrían hacer para agotar el tiempo que se necesita por defecto.
+        extra_eval=int(save_time/all_means[i])
+        list_extra_eval.append(extra_eval)
+
+    color = sns.cubehelix_palette(start=2, rot=0, dark=0, light=.95, reverse=True, as_cmap=True)
+    color=cm.get_cmap(color)
+    color=color(np.linspace(0,1,3))
+
+    ax=subfigs[0].subplots()
+    y=[i*(-1) for i in all_means]
+    y.reverse()
+    plt.barh(list_acc_str, y, align='center',color=color[0])
+    plt.title("\n Cost per evaluation")
+    plt.ylabel("Accuracy")
+    plt.xlabel("Steps")
+    ax.set_xticks(np.arange(0,-0.1,-0.02))
+    ax.set_xticklabels(np.arange(0,0.1,0.02),rotation=0)
+
+    ax=subfigs[1].subplots()
+    for i in range(len(list_extra_eval)):
+        if list_extra_eval[i]<0:
+            list_extra_eval[i]=0
+    list_extra_eval.reverse()
+    plt.barh(list_acc_str, list_extra_eval, align='center',color=color[1])
+    plt.yticks([])
+    plt.title("Extra evaluations in the same amount of \n time required for maximum accuracy")
+    # plt.ylabel("Accuracy")
+    plt.xlabel("Evaluations")
+
+
+
+    #----------------------------------------------------------------------------------------------
+    # GRÁFICA 2: perdida de calidad en las evaluaciones considerar accuracys menores y existencia 
+    # de un accuracy menor con el que se obtiene la máxima calidad.
+    #----------------------------------------------------------------------------------------------
+    def ranking_matrix_sorted_by_max_acc(ranking_matrix):
+        # Argumentos asociados al ranking del accuracy 1 ordenado de menor a mayor.
+        argsort_max_acc=np.argsort(ranking_matrix[-1])
+
+        # Reordenar filas de la matriz.
+        sorted_ranking_list=[]
+        for i in range(len(ranking_list)):
+            sorted_ranking_list.append(custom_sort(ranking_list[i],argsort_max_acc))
+
+        return sorted_ranking_list
+
+    def absolute_distance_matrix_between_rankings(ranking_matrix):
+        abs_dist_matrix=[]
+        for i in range(len(ranking_matrix)):
+            abs_dist_matrix.append(np.abs(list(np.array(ranking_matrix[i])-np.array(ranking_matrix[-1]))))
+
+        max_value=max(max(i) for i in abs_dist_matrix)
+        norm_abs_dist_matrix=list(np.array(abs_dist_matrix)/max_value)
+        
+        return norm_abs_dist_matrix
+
+    ax=subfigs[3].subplots()
+
+    ranking_list=[]
+
+    for accuracy in list_acc:
+        df_acc=df[df['accuracy']==accuracy]
+        ranking=from_argsort_to_ranking(list(df_acc['score'].argsort()))
+        ranking_list.append(ranking)
+
+    ranking_matrix=np.matrix(absolute_distance_matrix_between_rankings(ranking_matrix_sorted_by_max_acc(ranking_list)))
+    color = sns.cubehelix_palette(start=2, rot=0, dark=0, light=.95, reverse=False, as_cmap=True)
+
+    ax = sns.heatmap(ranking_matrix, cmap=color,linewidths=.5, linecolor='lightgray')
+
+    colorbar=ax.collections[0].colorbar
+    colorbar.set_label('Normalized distance')
+
+    ax.set_xlabel('Solution (sorted by the ranking of maximum accuracy)')
+    ax.set_xticks(range(0,ranking_matrix.shape[1],10))
+    ax.set_xticklabels(range(1,ranking_matrix.shape[1]+1,10),rotation=0)
+
+    ax.set_ylabel('Accuracy')
+    ax.set_title('Normalized absolute distances between the respective positions \n of the best and the rest rankings')
+    ax.set_yticks(np.arange(0.5,len(list_acc)+0.5,1))
+    ax.set_yticklabels(list_acc,rotation=0)
+
+    # Guardar imagen.
+    plt.savefig('results/figures/WindFLO/UnderstandingAccuracy_paper.png')
+    plt.show()
+    plt.close()
+
 #==================================================================================================
 # PROGRAMA PRINCIPAL
 #==================================================================================================
 # Leer base de datos.
-df=pd.read_csv('results/data/WindFLO/df_UnderstandingAccuracy.csv',index_col=0)
+df=pd.read_csv('results/data/WindFLO/UnderstandingAccuracy/df_UnderstandingAccuracy.csv',index_col=0)
 
 # Construir gráfica.
 from_data_to_figures(df)
+from_data_to_figures_paper(df)

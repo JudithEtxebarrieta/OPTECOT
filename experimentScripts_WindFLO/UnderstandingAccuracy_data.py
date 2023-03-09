@@ -115,6 +115,9 @@ def evaluate_solution_set(solution_set,accuracy):
 # Construir conjunto de 100 posibles soluciones.
 solution_set=build_solution_set(100,0)
 
+#--------------------------------------------------------------------------------------------------
+# Para el análisis de motivación.
+#--------------------------------------------------------------------------------------------------
 # Lista de accuracys a considerar.
 list_acc=[1.0,0.5,0.2,0.1,0.05,0.02,0.01,0.005,0.002,0.001] 
 
@@ -129,18 +132,62 @@ for accuracy in list_acc:
 
     # Guardar base de datos.
     df=pd.DataFrame(df,columns=['accuracy','n_solution','score','time'])
-    df.to_csv('results/data/WindFLO/df_UnderstandingAccuracy'+str(accuracy)+'.csv')
+    df.to_csv('results/data/WindFLO/UnderstandingAccuracy/df_UnderstandingAccuracy'+str(accuracy)+'.csv')
 
 # Eliminar ficheros auxiliares.
 os.remove(os.path.sep.join(sys.path[0].split(os.path.sep)[:-1])+'/terrain.dat')
 
 # Juntar bases de datos.
-df=pd.read_csv('results/data/WindFLO/df_UnderstandingAccuracy'+str(list_acc[0])+'.csv', index_col=0)
-os.remove('results/data/WindFLO/df_UnderstandingAccuracy'+str(list_acc[0])+'.csv')
+df=pd.read_csv('results/data/WindFLO/UnderstandingAccuracy/df_UnderstandingAccuracy'+str(list_acc[0])+'.csv', index_col=0)
+os.remove('results/data/WindFLO/UnderstandingAccuracy/df_UnderstandingAccuracy'+str(list_acc[0])+'.csv')
 for accuracy in list_acc[1:]:
     # Leer, eliminar y unir.
-    df_new=pd.read_csv('results/data/WindFLO/df_UnderstandingAccuracy'+str(accuracy)+'.csv', index_col=0)
-    os.remove('results/data/WindFLO/df_UnderstandingAccuracy'+str(accuracy)+'.csv')
+    df_new=pd.read_csv('results/data/WindFLO/UnderstandingAccuracy/df_UnderstandingAccuracy'+str(accuracy)+'.csv', index_col=0)
+    os.remove('results/data/WindFLO/UnderstandingAccuracy/df_UnderstandingAccuracy'+str(accuracy)+'.csv')
     df=pd.concat([df,df_new],ignore_index=True)
-df.to_csv('results/data/WindFLO/df_UnderstandingAccuracy.csv')
+# df.to_csv('results/data/WindFLO/UnderstandingAccuracy/df_UnderstandingAccuracy.csv')
 
+#--------------------------------------------------------------------------------------------------
+# Para la fijación del umbral del método de bisección.
+#--------------------------------------------------------------------------------------------------
+# Lista con los valores de accuracy que se considerarían por el método de bisección, teniendo en
+# cuenta que el criterio de parada es alcanzar un rango del intervalo de 0.1 y suponiendo que
+# en todas las iteraciones se acota el intervalo por arriba (caso más costoso).
+def upper_middle_point(lower,upper=1.0):
+    list=[] 
+    while abs(lower-upper)>0.1:       
+        middle=(lower+upper)/2
+        list.append(middle)
+        lower=middle
+    return list
+
+default_monteCarloPts=1000
+list_acc=upper_middle_point(1/default_monteCarloPts)+[1.0]
+
+# Guardar datos de scores y tiempos por evaluación usando diferentes valores de accuracy.
+for accuracy in list_acc:
+
+    # Inicializar base de datos donde se guardará la información.
+    df=[]
+
+    # Evaluar conjunto de puntos.
+    evaluate_solution_set(solution_set,accuracy)
+
+    # Guardar base de datos.
+    df=pd.DataFrame(df,columns=['accuracy','n_solution','score','cost_per_eval'])
+    df.to_csv('results/data/WindFLO/UnderstandingAccuracy/df_BisectionThreshold'+str(accuracy)+'.csv')
+
+# Eliminar ficheros auxiliares.
+os.remove(os.path.sep.join(sys.path[0].split(os.path.sep)[:-1])+'/terrain.dat')
+
+# Juntar bases de datos.
+df=pd.read_csv('results/data/WindFLO/UnderstandingAccuracy/df_BisectionThreshold'+str(list_acc[0])+'.csv', index_col=0)
+os.remove('results/data/WindFLO/UnderstandingAccuracy/df_BisectionThreshold'+str(list_acc[0])+'.csv')
+for accuracy in list_acc[1:]:
+    # Leer, eliminar y unir.
+    df_new=pd.read_csv('results/data/WindFLO/UnderstandingAccuracy/df_BisectionThreshold'+str(accuracy)+'.csv', index_col=0)
+    os.remove('results/data/WindFLO/UnderstandingAccuracy/df_BisectionThreshold'+str(accuracy)+'.csv')
+    df=pd.concat([df,df_new],ignore_index=True)
+df=df[['accuracy','cost_per_eval']]
+df=df.groupby('accuracy').mean()
+df.to_csv('results/data/WindFLO/UnderstandingAccuracy/df_BisectionThreshold.csv')
