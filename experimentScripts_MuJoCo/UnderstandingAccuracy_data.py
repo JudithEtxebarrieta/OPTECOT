@@ -162,7 +162,7 @@ df=pd.DataFrame(df,columns=['accuracy','n_policy','reward','steps'])
 df.to_csv('results/data/MuJoCo/UnderstandingAccuracy/df_UnderstandingAccuracy.csv')
 
 #--------------------------------------------------------------------------------------------------
-# Para la fijación del umbral del método de bisección.
+# Para la fijación del tamaño de muestra del método de bisección.
 #--------------------------------------------------------------------------------------------------
 # Lista con los valores de accuracy que se considerarían por el método de bisección, teniendo en
 # cuenta que el criterio de parada es alcanzar un rango del intervalo de 0.1 y suponiendo que
@@ -184,7 +184,7 @@ evaluate_policy_sample(n_sample=100)
 df_bisection=pd.DataFrame(df,columns=['accuracy','n_policy','reward','cost_per_eval'])
 df_bisection=df_bisection[['accuracy','cost_per_eval']]
 df_bisection=df_bisection.groupby('accuracy').mean()
-df_bisection.to_csv('results/data/MuJoCo/UnderstandingAccuracy/df_BisectionThreshold.csv')
+df_bisection.to_csv('results/data/MuJoCo/UnderstandingAccuracy/df_BisectionSample.csv')
 
 # Eliminar ficheros auxiliares.
 sys.path.append('data')
