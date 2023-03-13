@@ -1,15 +1,8 @@
 # Mediante este script se guarda en una base de datos la información relevante asociada a la 
 # evaluación de un conjunto de configuraciones/diseños de turbinas. El conjunto esta formado por
-# un total de 10 diseños de turbina escogidos de forma aleatoria, y todas las configuraciones del
-# mismo se evalúan considerando diferentes valores de N. Por cada evaluación en conjunto para  
-# un N se guarda la siguiente información:
-
-#1) N: el valor de N.
-#2) Scores: lista de scores asociados a cada evaluación de cada diseño de turbina que forma el conjunto.
-#3) Ranking: lista con el ranking de las turbinas que forman el conjunto (mayor score mejor).
-#4) Tiempos: lista de tiempos de ejecución asociados a cada evaluación de cada diseño que forma el conjunto.
-#5) Tiempo total: suma de los tiempos de la lista anterior.
-#6) Tiempo por evaluación: media de los tiempos de la lista anterior.
+# un total de 10 o 100 diseños de turbina escogidos de forma aleatoria, y todas las configuraciones del
+# mismo se evalúan considerando diferentes valores de N. Se construirán unas bases de datos con la 
+# información de scores y tiempos de ejecución por evaluación.
 
 #==================================================================================================
 # LIBRERÍAS
@@ -225,7 +218,7 @@ df=pd.DataFrame(df,columns=['accuracy','n_solution','score','time'])
 df.to_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyII.csv')
 
 #--------------------------------------------------------------------------------------------------
-# Para la fijación del umbral del método de bisección.
+# Para la fijación del tamaño de muestra del método de bisección.
 #--------------------------------------------------------------------------------------------------
 # Lista con los valores de accuracy que se considerarían por el método de bisección, teniendo en
 # cuenta que el criterio de parada es alcanzar un rango del intervalo de 0.1 y suponiendo que
@@ -249,6 +242,6 @@ for acc in tqdm(list_acc):
 
 df_bisection=pd.DataFrame(df,columns=['accuracy','n_solution','score','cost_per_eval'])
 df_bisection=df_bisection[['accuracy','cost_per_eval']]
-df_bisection.to_csv('results/data/Turbines/UnderstandingAccuracy/df_BisectionThreshold.csv')
+df_bisection.to_csv('results/data/Turbines/UnderstandingAccuracy/df_BisectionSample.csv')
 
 

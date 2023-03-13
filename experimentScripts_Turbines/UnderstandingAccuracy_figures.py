@@ -271,6 +271,8 @@ def from_data_to_figuresII(df):
         save_time=list_total_times[-1]-list_total_times[i]
         # Número de evaluaciones extra que se podrian hacer para agotar el tiempo que se necesita por defecto.
         extra_eval=int(save_time/all_means[i])
+        if extra_eval<0:
+            extra_eval=0
         list_extra_eval.append(extra_eval)
 
     plt.bar([str(acc) for acc in list_acc],list_extra_eval)
