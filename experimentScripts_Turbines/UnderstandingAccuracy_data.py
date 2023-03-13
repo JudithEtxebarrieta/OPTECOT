@@ -180,21 +180,21 @@ def from_argsort_to_ranking(list):
 #--------------------------------------------------------------------------------------------------
 # Para el análisis de motivación (PRIMER ANÁLISIS).
 #--------------------------------------------------------------------------------------------------
-# # Escoger aleatoriamente una conjunto de configuraciones.
-# list_seeds=range(0,10)#Fijar semillas para la reproducibilidad
-# set_turb_params = choose_random_configurations(list_seeds)
+# Escoger aleatoriamente una conjunto de configuraciones.
+list_seeds=range(0,10)#Fijar semillas para la reproducibilidad
+set_turb_params = choose_random_configurations(list_seeds)
 
-# # Mallado para N.
-# grid_N=[1000,900,800,700,600,500,400,300,200,100,50,45,40,35,30,25,20,15,10,5]
+# Mallado para N.
+grid_N=[1000,900,800,700,600,500,400,300,200,100,50,45,40,35,30,25,20,15,10,5]
 
-# # Guardar en una base de datos los datos asociados a la evaluación del conjunto de configuraciones/
-# # diseños para cada valor de N considerado.
-# df=[]
-# for n in tqdm(grid_N):
-# 	df.append(set_evaluation(set_turb_params,n))
+# Guardar en una base de datos los datos asociados a la evaluación del conjunto de configuraciones/
+# diseños para cada valor de N considerado.
+df=[]
+for n in tqdm(grid_N):
+	df.append(set_evaluation(set_turb_params,n))
 
-# df=pd.DataFrame(df,columns=['N','all_scores','ranking','all_times','total_time','time_per_eval'])
-# df.to_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyI.csv')
+df=pd.DataFrame(df,columns=['N','all_scores','ranking','all_times','total_time','time_per_eval'])
+df.to_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyI.csv')
 
 #--------------------------------------------------------------------------------------------------
 # Para el análisis de motivación (SEGUNDO ANÁLISIS).
@@ -240,8 +240,9 @@ for acc in tqdm(list_acc):
 	n=int(default_N*acc)
 	set_evaluation(set_turb_params,n,accuracy=acc)
 
-df_bisection=pd.DataFrame(df,columns=['accuracy','n_solution','score','cost_per_eval'])
-df_bisection=df_bisection[['accuracy','cost_per_eval']]
-df_bisection.to_csv('results/data/Turbines/UnderstandingAccuracy/df_BisectionSample.csv')
+df=pd.DataFrame(df,columns=['accuracy','n_solution','score','cost_per_eval'])
+df=df[['accuracy','cost_per_eval']]
+df=df.groupby('accuracy').mean()
+df.to_csv('results/data/Turbines/UnderstandingAccuracy/df_BisectionSample.csv')
 
 

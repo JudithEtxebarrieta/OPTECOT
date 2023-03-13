@@ -145,10 +145,10 @@ for accuracy in list_acc[1:]:
     df_new=pd.read_csv('results/data/WindFLO/UnderstandingAccuracy/df_UnderstandingAccuracy'+str(accuracy)+'.csv', index_col=0)
     os.remove('results/data/WindFLO/UnderstandingAccuracy/df_UnderstandingAccuracy'+str(accuracy)+'.csv')
     df=pd.concat([df,df_new],ignore_index=True)
-# df.to_csv('results/data/WindFLO/UnderstandingAccuracy/df_UnderstandingAccuracy.csv')
+df.to_csv('results/data/WindFLO/UnderstandingAccuracy/df_UnderstandingAccuracy.csv')
 
 #--------------------------------------------------------------------------------------------------
-# Para la fijación del umbral del método de bisección.
+# Para la fijación del tamaño de muestra del método de bisección.
 #--------------------------------------------------------------------------------------------------
 # Lista con los valores de accuracy que se considerarían por el método de bisección, teniendo en
 # cuenta que el criterio de parada es alcanzar un rango del intervalo de 0.1 y suponiendo que
@@ -175,19 +175,19 @@ for accuracy in list_acc:
 
     # Guardar base de datos.
     df=pd.DataFrame(df,columns=['accuracy','n_solution','score','cost_per_eval'])
-    df.to_csv('results/data/WindFLO/UnderstandingAccuracy/df_BisectionThreshold'+str(accuracy)+'.csv')
+    df.to_csv('results/data/WindFLO/UnderstandingAccuracy/df_BisectionSample'+str(accuracy)+'.csv')
 
 # Eliminar ficheros auxiliares.
 os.remove(os.path.sep.join(sys.path[0].split(os.path.sep)[:-1])+'/terrain.dat')
 
 # Juntar bases de datos.
-df=pd.read_csv('results/data/WindFLO/UnderstandingAccuracy/df_BisectionThreshold'+str(list_acc[0])+'.csv', index_col=0)
-os.remove('results/data/WindFLO/UnderstandingAccuracy/df_BisectionThreshold'+str(list_acc[0])+'.csv')
+df=pd.read_csv('results/data/WindFLO/UnderstandingAccuracy/df_BisectionSample'+str(list_acc[0])+'.csv', index_col=0)
+os.remove('results/data/WindFLO/UnderstandingAccuracy/df_BisectionSample'+str(list_acc[0])+'.csv')
 for accuracy in list_acc[1:]:
     # Leer, eliminar y unir.
-    df_new=pd.read_csv('results/data/WindFLO/UnderstandingAccuracy/df_BisectionThreshold'+str(accuracy)+'.csv', index_col=0)
-    os.remove('results/data/WindFLO/UnderstandingAccuracy/df_BisectionThreshold'+str(accuracy)+'.csv')
+    df_new=pd.read_csv('results/data/WindFLO/UnderstandingAccuracy/df_BisectionSample'+str(accuracy)+'.csv', index_col=0)
+    os.remove('results/data/WindFLO/UnderstandingAccuracy/df_BisectionSample'+str(accuracy)+'.csv')
     df=pd.concat([df,df_new],ignore_index=True)
 df=df[['accuracy','cost_per_eval']]
 df=df.groupby('accuracy').mean()
-df.to_csv('results/data/WindFLO/UnderstandingAccuracy/df_BisectionThreshold.csv')
+df.to_csv('results/data/WindFLO/UnderstandingAccuracy/df_BisectionSample.csv')
