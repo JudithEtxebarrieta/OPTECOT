@@ -1,5 +1,5 @@
 # Mediante este script se representan de forma gráfica los resultados numéricos obtenidos en 
-# "constant_tau_save_train_data.py".
+# "ConstantAccuracyAnalysis_data.py".
 
 #==================================================================================================
 # LIBRERÍAS
@@ -75,10 +75,15 @@ plt.figure(figsize=[15,6])
 plt.subplots_adjust(left=0.09,bottom=0.11,right=0.84,top=0.88,wspace=0.17,hspace=0.2)
 
 # Leer lista con valores de accuracy considerados.
-grid_acc=np.load('results/data/CartPole/grid_acc.npy')
+grid_acc=np.load('results/data/CartPole/ConstantAccuracyAnalysis/grid_acc.npy')
 
 # Lista con límites de steps de entrenamiento que se desean dibujar.
-list_train_steps=range(500,10500,500)
+df_train_acc_min=pd.read_csv("results/data/CartPole/ConstantAccuracyAnalysis/df_train_acc"+str(min(grid_acc))+".csv", index_col=0)
+df_train_acc_max=pd.read_csv("results/data/CartPole/ConstantAccuracyAnalysis/df_train_acc"+str(max(grid_acc))+".csv", index_col=0)
+max_train_steps=np.load('results/data/CartPole/ConstantAccuracyAnalysis/max_train_steps.npy')
+min_steps=max(df_train_acc_max.groupby("seed")["steps"].min())
+split_steps=max(df_train_acc_min.groupby("seed")["steps"].min())
+list_train_steps=np.arange(min_steps,max_train_steps,split_steps)
 
 #--------------------------------------------------------------------------------------------------
 # GRÁFICA 1 (mejores resultados por valor de accuracy)
@@ -90,7 +95,7 @@ train_steps=[]
 max_rewards=[]
 for accuracy in grid_acc:
     # Leer base de datos.
-    df_train_acc=pd.read_csv("results/data/CartPole/df_train_acc"+str(accuracy)+".csv", index_col=0)
+    df_train_acc=pd.read_csv("results/data/CartPole/ConstantAccuracyAnalysis/df_train_acc"+str(accuracy)+".csv", index_col=0)
 
     # Extraer de la base de datos la información relevante.
     all_mean_rewards,all_q05_rewards,all_q95_rewards=train_data_to_figure_data(df_train_acc,list_train_steps)
@@ -132,7 +137,7 @@ ax.set_title('Best results for each model')
 ax=plt.subplot(122)
 for accuracy in grid_acc:
     # Leer base de datos.
-    df_train_acc=pd.read_csv("results/data/CartPole/df_train_acc"+str(accuracy)+".csv", index_col=0)
+    df_train_acc=pd.read_csv("results/data/CartPole/ConstantAccuracyAnalysis/df_train_acc"+str(accuracy)+".csv", index_col=0)
 
     # Extraer de la base de datos la información relevante.
     all_mean_rewards,all_q05_rewards,all_q95_rewards=train_data_to_figure_data(df_train_acc,list_train_steps)
@@ -144,7 +149,7 @@ for accuracy in grid_acc:
 plt.axhline(y=score_limit,color='black', linestyle='--')
 ax.set_xlabel("Train steps")
 ax.set_ylabel("Mean reward")
-ax.set_title('Models evaluations (train 10 seeds, test 100 episodes)')
+ax.set_title('Models evaluations (train 30 seeds, test 100 episodes)')
 ax.legend(title="Train time-step \n accuracy",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
 
 
