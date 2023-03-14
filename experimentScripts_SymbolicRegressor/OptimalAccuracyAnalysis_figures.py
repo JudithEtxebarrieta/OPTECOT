@@ -200,7 +200,7 @@ def draw_and_save_figures_per_heuristic(heuristic):
     if heuristic==1:
         plt.figure(figsize=[20,9])
         plt.subplots_adjust(left=0.08,bottom=0.11,right=0.82,top=0.88,wspace=0.98,hspace=0.76)
-    if heuristic in [2,3,4,5,6,7,8,9,10,11,12]:
+    if heuristic in [2,3,4,5,6,7,8,9,10,11,12,'I','II','III']:
         plt.figure(figsize=[20,5])
         plt.subplots_adjust(left=0.08,bottom=0.11,right=0.76,top=0.88,wspace=0.4,hspace=0.76)
     if heuristic in [13,14]:
@@ -215,7 +215,7 @@ def draw_and_save_figures_per_heuristic(heuristic):
 
     if heuristic==1:
         ax=plt.subplot2grid((3, 6), (0,2), colspan=2,rowspan=2)
-    if heuristic in [2,3,4,5,6,7,8,9,10,11,12]:
+    if heuristic in [2,3,4,5,6,7,8,9,10,11,12,'I','II','III']:
         ax=plt.subplot(132)
     if heuristic in [13,14]:
         ax=plt.subplot(143)
@@ -247,12 +247,12 @@ def draw_and_save_figures_per_heuristic(heuristic):
 
     ax.set_xlabel("Train total evaluations")
     ax.set_ylabel("Mean score (MAE)")
-    if heuristic >6:
+    if heuristic in [7,8,9,10,11,12,13,14,'I','II','III']:
         ax.set_title('Comparison between optimal and constant accuracy \n (real surface '+str(eval_expr)+')')
     else:
         ax.set_title('Comparison between ascendant and constant accuracy \n (real surface '+str(eval_expr)+')')
 
-    ax.set_yscale('log')
+    # ax.set_yscale('log')
     ax.set_xscale('log')
 
     #__________________________________________________________________________________________________
@@ -260,7 +260,7 @@ def draw_and_save_figures_per_heuristic(heuristic):
     # necesarios para reajustar el accuracy.
     if heuristic==1:
         ax=plt.subplot2grid((3, 6), (0,4), colspan=2,rowspan=2)
-    if heuristic in [2,3,4,5,6,7,8,9,10,11,12]:
+    if heuristic in [2,3,4,5,6,7,8,9,10,11,12,'I','II','III']:
         ax=plt.subplot(133)
     if heuristic in [13,14]:
         ax=plt.subplot(144)
@@ -288,13 +288,13 @@ def draw_and_save_figures_per_heuristic(heuristic):
 
     ax.set_xlabel("Train evaluations (without extra)")
     ax.set_ylabel("Mean score (MAE)")
-    if heuristic >6:
+    if heuristic in [7,8,9,10,11,12,13,14,'I','II','III']:
         ax.set_title('Comparison between optimal and constant accuracy \n (real surface '+str(eval_expr)+')')
     else:
         ax.set_title('Comparison between ascendant and constant accuracy \n (real surface '+str(eval_expr)+')')
 
     ax.legend(title="Train set point size accuracy",bbox_to_anchor=(1.4, 0, 0, 1), loc='center')
-    ax.set_yscale('log')
+    # ax.set_yscale('log')
     ax.set_xscale('log')
 
 
@@ -302,7 +302,7 @@ def draw_and_save_figures_per_heuristic(heuristic):
     # SUBGRÁFICA 3: representación gráfica del comportamiento del accuracy.
     if heuristic==1:
         ax=plt.subplot2grid((3, 6), (0,0), colspan=2,rowspan=2)
-    if heuristic in [2,3,4,5,6,7,8,9,10,11,12]:
+    if heuristic in [2,3,4,5,6,7,8,9,10,11,12,'I','II','III']:
         ax=plt.subplot(131)
     if heuristic in [13,14]:
         ax=plt.subplot(142)
@@ -317,7 +317,7 @@ def draw_and_save_figures_per_heuristic(heuristic):
         curve+=1
     ax.set_xlabel("Train evaluations")
     ax.set_ylabel("Accuracy value")
-    if heuristic >6:
+    if heuristic in [7,8,9,10,11,12,13,14,'I','II','III']:
         ax.set_title('Behavior of optimal accuracy')
     else:
         ax.set_title('Ascendant behavior of accuracy')
@@ -349,6 +349,6 @@ def draw_and_save_figures_per_heuristic(heuristic):
     plt.close()
 
 # Llamar a la función.
-list_heuristics=[1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+list_heuristics=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,'I','II','III']
 for heuristic in list_heuristics:
     draw_and_save_figures_per_heuristic(heuristic)
