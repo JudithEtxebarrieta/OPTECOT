@@ -451,29 +451,14 @@ surf_sample=build_surface_sample(100)
 df=[]
 for accuracy in tqdm(list_acc):
     evaluate_surface_sample(surf_sample,accuracy)
-df=pd.DataFrame(df,columns=['accuracy','n_surf','score','n_eval'])
-df.to_csv('results/data/SymbolicRegressor/UnderstandingAccuracy/df_UnderstandingAccuracy.csv')
+df_motivation=pd.DataFrame(df,columns=['accuracy','n_surf','score','n_eval'])
+df_motivation.to_csv('results/data/SymbolicRegressor/UnderstandingAccuracy/df_UnderstandingAccuracy.csv')
 
 #--------------------------------------------------------------------------------------------------
-# Para la fijación del tamaño de muestra del método de bisección.
+# Para la definición de los valores (tiempo) sobre los cuales se aplicará la bisección.
 #--------------------------------------------------------------------------------------------------
-# Lista con los valores de accuracy que se considerarían por el método de bisección, teniendo en
-# cuenta que el criterio de parada es alcanzar un rango del intervalo de 0.1 y suponiendo que
-# en todas las iteraciones se acota el intervalo por arriba (caso más costoso).
-def upper_middle_point(lower,upper=1.0):
-    list=[] 
-    while abs(lower-upper)>0.1:       
-        middle=(lower+upper)/2
-        list.append(middle)
-        lower=middle
-    return list
-list_acc=upper_middle_point(1/default_n_pts)+[1.0]
-
-# Evaluar una muestra aleatoria usando los valores anteriores de accuracy.
-df=[]
-for accuracy in tqdm(list_acc):
-    evaluate_surface_sample(surf_sample,accuracy)
-df=pd.DataFrame(df,columns=['accuracy','n_surf','score','cost_per_eval'])
-df=df[['accuracy','cost_per_eval']]
-df=df.groupby('accuracy').mean()
-df.to_csv('results/data/SymbolicRegressor/UnderstandingAccuracy/df_BisectionSample.csv')
+# Guardar base de datos.
+df_bisection=pd.DataFrame(df,columns=['accuracy','n_surf','score','cost_per_eval'])
+df_bisection=df_bisection[['accuracy','cost_per_eval']]
+df_bisection=df_bisection.groupby('accuracy').mean()
+df_bisection.to_csv('results/data/SymbolicRegressor/UnderstandingAccuracy/df_Bisection.csv')

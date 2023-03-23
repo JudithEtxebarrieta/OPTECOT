@@ -118,8 +118,8 @@ solution_set=build_solution_set(100,0)
 #--------------------------------------------------------------------------------------------------
 # Para el análisis de motivación.
 #--------------------------------------------------------------------------------------------------
-# Lista de accuracys a considerar.
-list_acc=[1.0,0.5,0.2,0.1,0.05,0.02,0.01,0.005,0.002,0.001] 
+# Lista de accuracys a considerar (valores equidistantes para después facilitar la interpolación).
+list_acc=np.arange(0.001,1.0+(1.0-0.001)/9,(1.0-0.001)/9)
 
 # Guardar datos de scores y tiempos por evaluación usando diferentes valores de accuracy.
 for accuracy in list_acc:
@@ -148,46 +148,11 @@ for accuracy in list_acc[1:]:
 df.to_csv('results/data/WindFLO/UnderstandingAccuracy/df_UnderstandingAccuracy.csv')
 
 #--------------------------------------------------------------------------------------------------
-# Para la fijación del tamaño de muestra del método de bisección.
-#--------------------------------------------------------------------------------------------------
-# Lista con los valores de accuracy que se considerarían por el método de bisección, teniendo en
-# cuenta que el criterio de parada es alcanzar un rango del intervalo de 0.1 y suponiendo que
-# en todas las iteraciones se acota el intervalo por arriba (caso más costoso).
-def upper_middle_point(lower,upper=1.0):
-    list=[] 
-    while abs(lower-upper)>0.1:       
-        middle=(lower+upper)/2
-        list.append(middle)
-        lower=middle
-    return list
+# Para la definición de los valores (tiempo) sobre los cuales se aplicará la bisección.
+#-------------------------------------------------------------------------------------------------- 
 
-default_monteCarloPts=1000
-list_acc=upper_middle_point(1/default_monteCarloPts)+[1.0]
-
-# Guardar datos de scores y tiempos por evaluación usando diferentes valores de accuracy.
-for accuracy in list_acc:
-
-    # Inicializar base de datos donde se guardará la información.
-    df=[]
-
-    # Evaluar conjunto de puntos.
-    evaluate_solution_set(solution_set,accuracy)
-
-    # Guardar base de datos.
-    df=pd.DataFrame(df,columns=['accuracy','n_solution','score','cost_per_eval'])
-    df.to_csv('results/data/WindFLO/UnderstandingAccuracy/df_BisectionSample'+str(accuracy)+'.csv')
-
-# Eliminar ficheros auxiliares.
-os.remove(os.path.sep.join(sys.path[0].split(os.path.sep)[:-1])+'/terrain.dat')
-
-# Juntar bases de datos.
-df=pd.read_csv('results/data/WindFLO/UnderstandingAccuracy/df_BisectionSample'+str(list_acc[0])+'.csv', index_col=0)
-os.remove('results/data/WindFLO/UnderstandingAccuracy/df_BisectionSample'+str(list_acc[0])+'.csv')
-for accuracy in list_acc[1:]:
-    # Leer, eliminar y unir.
-    df_new=pd.read_csv('results/data/WindFLO/UnderstandingAccuracy/df_BisectionSample'+str(accuracy)+'.csv', index_col=0)
-    os.remove('results/data/WindFLO/UnderstandingAccuracy/df_BisectionSample'+str(accuracy)+'.csv')
-    df=pd.concat([df,df_new],ignore_index=True)
-df=df[['accuracy','cost_per_eval']]
-df=df.groupby('accuracy').mean()
-df.to_csv('results/data/WindFLO/UnderstandingAccuracy/df_BisectionSample.csv')
+# Guardar base de datos.
+df_bisection=df.rename(columns={'time':'cost_per_eval'})
+df_bisection=df_bisection[['accuracy','cost_per_eval']]
+df_bisection=df_bisection.groupby('accuracy').mean()
+df_bisection.to_csv('results/data/WindFLO/UnderstandingAccuracy/df_Bisection.csv')

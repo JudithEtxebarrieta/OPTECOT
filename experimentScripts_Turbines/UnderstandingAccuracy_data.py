@@ -177,34 +177,35 @@ def from_argsort_to_ranking(list):
 # PROGRAMA PRINCIPAL
 #==================================================================================================
 
+# #--------------------------------------------------------------------------------------------------
+# # Para el análisis de motivación (PRIMER ANÁLISIS).
+# #--------------------------------------------------------------------------------------------------
+# # Escoger aleatoriamente una conjunto de configuraciones.
+# list_seeds=range(0,10)#Fijar semillas para la reproducibilidad
+# set_turb_params = choose_random_configurations(list_seeds)
+
+# # Mallado para N.
+# grid_N=[1000,900,800,700,600,500,400,300,200,100,50,45,40,35,30,25,20,15,10,5]
+
+# # Guardar en una base de datos los datos asociados a la evaluación del conjunto de configuraciones/
+# # diseños para cada valor de N considerado.
+# df=[]
+# for n in tqdm(grid_N):
+# 	df.append(set_evaluation(set_turb_params,n))
+
+# df=pd.DataFrame(df,columns=['N','all_scores','ranking','all_times','total_time','time_per_eval'])
+# df.to_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyI.csv')
+
 #--------------------------------------------------------------------------------------------------
-# Para el análisis de motivación (PRIMER ANÁLISIS).
-#--------------------------------------------------------------------------------------------------
-# Escoger aleatoriamente una conjunto de configuraciones.
-list_seeds=range(0,10)#Fijar semillas para la reproducibilidad
-set_turb_params = choose_random_configurations(list_seeds)
-
-# Mallado para N.
-grid_N=[1000,900,800,700,600,500,400,300,200,100,50,45,40,35,30,25,20,15,10,5]
-
-# Guardar en una base de datos los datos asociados a la evaluación del conjunto de configuraciones/
-# diseños para cada valor de N considerado.
-df=[]
-for n in tqdm(grid_N):
-	df.append(set_evaluation(set_turb_params,n))
-
-df=pd.DataFrame(df,columns=['N','all_scores','ranking','all_times','total_time','time_per_eval'])
-df.to_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyI.csv')
-
-#--------------------------------------------------------------------------------------------------
-# Para el análisis de motivación (SEGUNDO ANÁLISIS).
+# Para comprobar si la diferencia de tiempo de evaluación entre los valor de N pares e impares
+# es debida a la diferencia de presencia de soluciones nulas (SEGUNDO ANÁLISIS).
 #--------------------------------------------------------------------------------------------------
 # Escoger aleatoriamente una conjunto de configuraciones.
 list_seeds=range(0,100)#Fijar semillas para la reproducibilidad
 set_turb_params = choose_random_configurations(list_seeds)
 
 # Mallado para N.
-list_acc=[1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2]
+list_acc=[1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1]
 
 # Guardar en una base de datos los datos asociados a la evaluación del conjunto de configuraciones/
 # diseños para cada valor de N considerado.
@@ -214,35 +215,39 @@ for acc in tqdm(list_acc):
 	n=int(default_N*acc)
 	set_evaluation(set_turb_params,n,accuracy=acc)
 
-df=pd.DataFrame(df,columns=['accuracy','n_solution','score','time'])
-df.to_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyII.csv')
+df_motivation=pd.DataFrame(df,columns=['accuracy','n_solution','score','time'])
+df_motivation.to_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyII.csv')
 
 #--------------------------------------------------------------------------------------------------
-# Para la fijación del tamaño de muestra del método de bisección.
+# Para el análisis de motivación (TERCER ANÁLISIS).
 #--------------------------------------------------------------------------------------------------
-# Lista con los valores de accuracy que se considerarían por el método de bisección, teniendo en
-# cuenta que el criterio de parada es alcanzar un rango del intervalo de 0.1 y suponiendo que
-# en todas las iteraciones se acota el intervalo por arriba (caso más costoso).
-def upper_middle_point(lower,upper=1.0):
-    list=[] 
-    while abs(lower-upper)>0.1:       
-        middle=(lower+upper)/2
-        list.append(middle)
-        lower=middle
-    return list
-list_acc=upper_middle_point(10/default_N)+[1.0]
-
-# Evaluar una muestra aleatoria usando los valores anteriores de accuracy.
+# Escoger aleatoriamente una conjunto de configuraciones.
 list_seeds=range(0,100)#Fijar semillas para la reproducibilidad
 set_turb_params = choose_random_configurations(list_seeds)
+
+# Mallado para N.
+list_acc=[1.0,0.92,0.84,0.76,0.68,0.6,0.52,0.44,0.36,0.28,0.2,0.12]
+
+# Guardar en una base de datos los datos asociados a la evaluación del conjunto de configuraciones/
+# diseños para cada valor de N considerado.
+default_N=50
 df=[]
 for acc in tqdm(list_acc):
 	n=int(default_N*acc)
 	set_evaluation(set_turb_params,n,accuracy=acc)
 
-df=pd.DataFrame(df,columns=['accuracy','n_solution','score','cost_per_eval'])
-df=df[['accuracy','cost_per_eval']]
-df=df.groupby('accuracy').mean()
-df.to_csv('results/data/Turbines/UnderstandingAccuracy/df_BisectionSample.csv')
+df_motivation=pd.DataFrame(df,columns=['accuracy','n_solution','score','time'])
+df_motivation.to_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyIII.csv')
+
+#--------------------------------------------------------------------------------------------------
+# Para la definición de los valores (tiempo) sobre los cuales se aplicará la bisección.
+#--------------------------------------------------------------------------------------------------
+# Guardar base de datos.
+df_bisection=pd.DataFrame(df,columns=['accuracy','n_solution','score','cost_per_eval'])
+df_bisection=df_bisection[['accuracy','cost_per_eval']]
+df_bisection=df_bisection.groupby('accuracy').mean()
+df_bisection.to_csv('results/data/Turbines/UnderstandingAccuracy/df_Bisection.csv')
+
+
 
 

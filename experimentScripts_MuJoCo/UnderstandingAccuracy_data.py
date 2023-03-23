@@ -106,10 +106,12 @@ def evaluate_policy(policy,accuracy):
 
     # Guardar reward por episodios evaluado.
     all_ep_reward=[]
+    all_ep_steps=[]
     steps=0
     for _ in range(10):
         # Evaluar episodio con la política y guardar el reward asociado.
         episode_reward=0
+        episode_steps=0
         done=False
         while not done:
             action,_=policy.get_action(obs)
@@ -117,12 +119,13 @@ def evaluate_policy(policy,accuracy):
             episode_reward+=env_step_info.reward
             done=env_step_info.last
             obs=env_step_info.observation
-            steps+=1
+            episode_steps+=1
         all_ep_reward.append(episode_reward)
+        all_ep_steps.append(episode_steps)
         obs,_=eval_env.reset()
 
     reward=np.mean(all_ep_reward)
-
+    steps=np.mean(all_ep_steps)
     return reward,steps
  
 #==================================================================================================
@@ -158,33 +161,18 @@ df=[]
 evaluate_policy_sample(n_sample=100)
 
 # Guardar base de datos.
-df=pd.DataFrame(df,columns=['accuracy','n_policy','reward','steps'])
-df.to_csv('results/data/MuJoCo/UnderstandingAccuracy/df_UnderstandingAccuracy.csv')
+df_motivation=pd.DataFrame(df,columns=['accuracy','n_policy','reward','steps'])
+df_motivation.to_csv('results/data/MuJoCo/UnderstandingAccuracy/df_UnderstandingAccuracy.csv')
+
 
 #--------------------------------------------------------------------------------------------------
-# Para la fijación del tamaño de muestra del método de bisección.
+# Para la definición de los valores (tiempo) sobre los cuales se aplicará la bisección.
 #--------------------------------------------------------------------------------------------------
-# Lista con los valores de accuracy que se considerarían por el método de bisección, teniendo en
-# cuenta que el criterio de parada es alcanzar un rango del intervalo de 0.1 y suponiendo que
-# en todas las iteraciones se acota el intervalo por arriba (caso más costoso).
-def upper_middle_point(lower,upper=1.0):
-    list=[] 
-    while abs(lower-upper)>0.1:       
-        middle=(lower+upper)/2
-        list.append(middle)
-        lower=middle
-    return list
-
-list_acc=upper_middle_point(1/max_episode_length)+[1.0]
-
-# Evaluar una muestra aleatoria usando los valores anteriores de accuracy.
-df=[]
-evaluate_policy_sample(n_sample=100)
-
+# Guardar base de datos.
 df_bisection=pd.DataFrame(df,columns=['accuracy','n_policy','reward','cost_per_eval'])
 df_bisection=df_bisection[['accuracy','cost_per_eval']]
 df_bisection=df_bisection.groupby('accuracy').mean()
-df_bisection.to_csv('results/data/MuJoCo/UnderstandingAccuracy/df_BisectionSample.csv')
+df_bisection.to_csv('results/data/MuJoCo/UnderstandingAccuracy/df_Bisection.csv')
 
 # Eliminar ficheros auxiliares.
 sys.path.append('data')
