@@ -648,6 +648,9 @@ np.save('results/data/SymbolicRegressor/ConstantAccuracyAnalysis/list_acc',list_
 # Guardar expresión de superficie.
 np.save('results/data/SymbolicRegressor/ConstantAccuracyAnalysis/expr_surf',expr_surf_real)
 
+# Guardar límite de entrenamiento.
+np.save('results/data/SymbolicRegressor/ConstantAccuracyAnalysis/max_n_eval',max_n_eval)
+
 # Función para ejecución en paralelo.
 def parallel_processing(arg):
 

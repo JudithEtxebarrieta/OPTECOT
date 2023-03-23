@@ -92,7 +92,12 @@ list_acc=np.load('results/data/SymbolicRegressor/ConstantAccuracyAnalysis/list_a
 eval_expr=str(np.load('results/data/SymbolicRegressor/ConstantAccuracyAnalysis/expr_surf.npy'))
 
 # Lista con límites de número de evaluaciones de entrenamiento que se desean dibujar.
-list_train_n_eval=range(50000,1000000,10000)
+df_train_acc_min=pd.read_csv("results/data/SymbolicRegressor/ConstantAccuracyAnalysis/df_train_acc"+str(min(list_acc))+".csv", index_col=0)
+df_train_acc_max=pd.read_csv("results/data/SymbolicRegressor/ConstantAccuracyAnalysis/df_train_acc"+str(max(list_acc))+".csv", index_col=0)
+max_n_eval=np.load('results/data/SymbolicRegressor/ConstantAccuracyAnalysis/max_n_eval.npy')
+min_n_eval=max(df_train_acc_max.groupby("train_seed")["n_eval"].min())
+split_n_eval=max(df_train_acc_min.groupby("train_seed")["n_eval"].min())
+list_train_n_eval=np.arange(min_n_eval,max_n_eval,split_n_eval)
 
 # Conseguir datos para la gráfica.
 train_times=[]
