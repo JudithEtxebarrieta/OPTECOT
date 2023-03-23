@@ -264,13 +264,12 @@ def from_data_to_figures_paper(df):
         all_q95.append(q95)
 
     # Evaluaciones extra.
-    list_total_times=list(df.groupby('accuracy')['time'].sum())
     list_extra_eval=[]
-    for i in range(0,len(list_total_times)):
+    for i in range(0,len(all_means)):
         # Ahorro de tiempo.
-        save_time=list_total_times[-1]-list_total_times[i]
+        save_time=all_means[-1]-all_means[i]
         # Número de evaluaciones extra que se podrían hacer para agotar el tiempo que se necesita por defecto.
-        extra_eval=int(save_time/all_means[i])
+        extra_eval=save_time/all_means[i]
         list_extra_eval.append(extra_eval)
 
     color = sns.cubehelix_palette(start=2, rot=0, dark=0, light=.95, reverse=True, as_cmap=True)
@@ -283,7 +282,7 @@ def from_data_to_figures_paper(df):
     plt.barh(list_acc_str, y, align='center',color=color[0])
     plt.title("\n Cost per evaluation")
     plt.ylabel("Accuracy")
-    plt.xlabel("Steps")
+    plt.xlabel("Time")
     ax.set_xticks(np.arange(0,-0.1,-0.02))
     ax.set_xticklabels(np.arange(0,0.1,0.02),rotation=0)
 

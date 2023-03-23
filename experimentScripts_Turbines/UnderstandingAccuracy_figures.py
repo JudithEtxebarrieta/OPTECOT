@@ -113,7 +113,6 @@ def from_data_to_figuresI(df):
     df['ranking']=form_str_col_to_float_list_col(df['ranking'],'int')
     df['all_times']=form_str_col_to_float_list_col(df['all_times'],'float')
 
-
     # Inicializar figura (tamaño y margenes)
     plt.figure(figsize=[12,9])
     plt.subplots_adjust(left=0.09,bottom=0.11,right=0.95,top=0.88,wspace=0.3,hspace=0.4)
@@ -189,7 +188,7 @@ def from_data_to_figuresI(df):
     y=[]
     best_scores=df['all_scores'][0]
     for i in range(0,df.shape[0]):
-        ind_best_turb=df['ranking'][i][-1]
+        ind_best_turb=df['ranking'][i].index(max(df['ranking'][i]))
         quality_loss=(max(best_scores)-best_scores[ind_best_turb])/max(best_scores)
         y.append(quality_loss)
 
@@ -226,6 +225,81 @@ def from_data_to_figuresI(df):
 
 # FUNCIÓN 8 (Gráfica de motivación II)
 def from_data_to_figuresII(df):
+
+    # Inicializar gráfica.
+    plt.figure(figsize=[17,5])
+    plt.subplots_adjust(left=0.06,bottom=0.11,right=0.95,top=0.88,wspace=0.3,hspace=0.69)
+
+    #----------------------------------------------------------------------------------------------
+    # GRÁFICA 1: tiempo de ejecución por accuracy.
+    #----------------------------------------------------------------------------------------------
+    ax=plt.subplot(131)
+
+    list_acc=list(set(df['accuracy']))
+    list_acc.sort()
+
+    all_means=[]
+    all_q05=[]
+    all_q95=[]
+
+    for accuracy in list_acc:
+        mean,q05,q95=bootstrap_mean_and_confidence_interval(list(df[df['accuracy']==accuracy]['time']))
+        all_means.append(mean)
+        all_q05.append(q05)
+        all_q95.append(q95)
+
+    ax.fill_between(list_acc,all_q05,all_q95, alpha=.5, linewidth=0)
+    plt.plot(list_acc, all_means, linewidth=2) 
+    ax.set_xlabel("Accuracy")
+    ax.set_ylabel("Time per evaluation")
+    ax.set_title('Evaluation cost depending on accuracy')
+
+
+    #----------------------------------------------------------------------------------------------
+    # GRÁFICA 2: extra de evaluaciones.
+    #----------------------------------------------------------------------------------------------
+    ax=plt.subplot(132)
+
+    list_extra_eval=[]
+    for i in range(0,len(all_means)):
+        # Ahorro de tiempo.
+        save_time=all_means[-1]-all_means[i]
+        # Número de evaluaciones extra que se podrian hacer para agotar el tiempo que se necesita por defecto.
+        extra_eval=save_time/all_means[i]
+        if extra_eval<0:
+            extra_eval=0
+        list_extra_eval.append(extra_eval)
+
+    plt.bar([str(acc) for acc in list_acc],list_extra_eval)
+    ax.set_xlabel('Accuracy')
+    ax.set_ylabel('Number of extra evaluations')
+    plt.xticks(rotation = 0)
+    ax.set_title('Extra evaluations in the same amount \n of time required for maximum accuracy')
+
+
+    #----------------------------------------------------------------------------------------------
+    # GRÁFICA 3: soluciones nulas por valor de accuracy.
+    #----------------------------------------------------------------------------------------------
+    ax=plt.subplot(133)
+
+    list_null_scores=[]
+    for accuracy in list_acc:
+        list_null_scores.append(sum(np.array(list(df[df['accuracy']==accuracy]['score']))==0)/100)
+
+    plt.bar([str(acc) for acc in list_acc],list_null_scores)
+    ax.set_xlabel('Accuracy')
+    ax.set_ylabel('Percentaje of null solutions')
+    plt.xticks(rotation = 0)
+    ax.set_title('Presence of null solutions')
+
+
+    # Guardar imagen.
+    plt.savefig('results/figures/Turbines/UnderstandingAccuracyII.png')
+    plt.show()
+    plt.close()
+
+# FUNCIÓN 9 (Gráfica de motivación III)
+def from_data_to_figuresIII(df):
 
     # Inicializar gráfica.
     plt.figure(figsize=[15,10])
@@ -376,10 +450,9 @@ def from_data_to_figuresII(df):
     # ax.set_xscale('log')
 
     # Guardar imagen.
-    plt.savefig('results/figures/Turbines/UnderstandingAccuracyII.png')
+    plt.savefig('results/figures/Turbines/UnderstandingAccuracyIII.png')
     plt.show()
     plt.close()
-
 
 # FUNCIÓN 9 (Gráfica para el paper)
 def from_data_to_figures_paper(df):
@@ -409,13 +482,12 @@ def from_data_to_figures_paper(df):
         all_q95.append(q95)
 
     # Evaluaciones extra.
-    list_total_times=list(df.groupby('accuracy')['time'].sum())
     list_extra_eval=[]
-    for i in range(0,len(list_total_times)):
+    for i in range(0,len(all_means)):
         # Ahorro de tiempo.
-        save_time=list_total_times[-1]-list_total_times[i]
+        save_time=all_means[-1]-all_means[i]
         # Número de evaluaciones extra que se podrían hacer para agotar el tiempo que se necesita por defecto.
-        extra_eval=int(save_time/all_means[i])
+        extra_eval=save_time/all_means[i]
         list_extra_eval.append(extra_eval)
 
     color = sns.cubehelix_palette(start=2, rot=0, dark=0, light=.95, reverse=True, as_cmap=True)
@@ -428,9 +500,9 @@ def from_data_to_figures_paper(df):
     plt.barh(list_acc_str, y, align='center',color=color[0])
     plt.title("\n Cost per evaluation")
     plt.ylabel("Accuracy")
-    plt.xlabel("Steps")
-    ax.set_xticks(np.arange(0,-3.5,-0.5))
-    ax.set_xticklabels(np.arange(0,3.5,0.5),rotation=0)
+    plt.xlabel("Time")
+    ax.set_xticks(np.arange(0,-2.5,-0.5))
+    ax.set_xticklabels(np.arange(0,2.5,0.5),rotation=0)
     
 
     ax=subfigs[1].subplots()
@@ -509,8 +581,11 @@ def from_data_to_figures_paper(df):
 # Lectura de datos.
 df1=pd.read_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyI.csv',index_col=0)
 df2=pd.read_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyII.csv',index_col=0)
+df3=pd.read_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyIII.csv',index_col=0)
 
 # Dibujar gráficas.
 from_data_to_figuresI(df1)
 from_data_to_figuresII(df2)
-from_data_to_figures_paper(df2)
+from_data_to_figuresIII(df3)
+from_data_to_figures_paper(df3)
+
