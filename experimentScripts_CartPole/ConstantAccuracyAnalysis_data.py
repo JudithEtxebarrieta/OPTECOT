@@ -93,31 +93,11 @@ def evaluate(model,eval_env,eval_seed,n_eval_episodes):
     
     return np.mean(all_episode_reward)
 
-# FUNCIÓN 2
-# Parámetros:
-#   >num_timesteps: número de steps "teóricos" que se han dado ya durante el entrenamiento.
-#   >list_eval_train_steps: lista con los números de steps en los cuales se desea evaluar el modelo.
-# Devuelve: "True" o "False" para indicar si el modelo  se debe o no evaluar en este punto 
-# del entrenamiento,respectivamente.
-
-def evaluate_true_or_false(num_timesteps,list_eval_train_steps):
-    #Inicialización de la variable a devolver
-    yes_no=False
-
-    #Encontrar el valor mayor más cercano y mirar si la diferencia es mayor que el salto.
-    list_dif=num_timesteps-np.array(list_eval_train_steps)
-    neg_dif=np.abs(list_dif[list_dif<=0])
-    split=model.n_steps
-    if (len(neg_dif)!=0) and (min(neg_dif)< split):
-        yes_no=True    
-
-    return yes_no
-
 
 #==================================================================================================
 # FUNCIONES EXISTENTES MODIFICADAS
 #==================================================================================================
-# FUNCIÓN 3
+# FUNCIÓN 2
 # Esta función es la versión adaptada de la función "_update_current_progress_remaining" ya existente.
 # Se define con intención de poder evaluar el modelo durante el proceso de entrenamiento y poder
 # recolectar información relevante (steps dados, evaluaciones hechas, calidad del modelo medida en
@@ -126,9 +106,6 @@ def evaluate_true_or_false(num_timesteps,list_eval_train_steps):
 def callback_in_each_iteration(self, num_timesteps: int, total_timesteps: int) -> None:
     # Pausar el tiempo durante la validación.
     sw.pause() 
-
-    # Mirar si en esta altura del entrenamiento deseamos evaluar en modelo o no.
-    # if evaluate_true_or_false(num_timesteps,list_eval_train_steps) :
 
     # Extraer la información relevante.
     mean_reward = evaluate(model,eval_env,eval_seed,n_eval_episodes)
@@ -150,7 +127,7 @@ def callback_in_each_iteration(self, num_timesteps: int, total_timesteps: int) -
     # Esta línea la usa la función que sustituimos: no cambiar esta línea.
     self._current_progress_remaining = 1.0 - float(num_timesteps) / float(total_timesteps) 
 
-# FUNCIÓN 4
+# FUNCIÓN 3
 # Esta función es la versión adaptada de la función "_setup_learn" ya existente.
 # Se modifica para que el límite al entrenamiento sea el número de steps de entrenamiento definido 
 # y no el número máximo de evaluaciones que viene fijado por defecto (número máximo de episodios,maxlen).
