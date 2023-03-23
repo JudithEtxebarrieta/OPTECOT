@@ -21,33 +21,6 @@ import multiprocessing as mp
 sys.path.append('WindFLO/API')
 from WindFLO import WindFLO
 
-
-#==================================================================================================
-# CLASES
-#==================================================================================================
-class stopwatch:
-    
-    def __init__(self):
-        self.reset()
-        self.paused = False
-
-    def reset(self):
-        self.start_t = time.time()
-        self.pause_t=0
-
-    def pause(self):
-        self.pause_start = time.time()
-        self.paused=True
-
-    def resume(self):
-        if self.paused:
-            self.pause_t += time.time() - self.pause_start
-            self.paused = False
-
-    def get_time(self):
-        return time.time() - self.start_t - self.pause_t
-
-
 #==================================================================================================
 # FUNCIONES
 #==================================================================================================
@@ -80,6 +53,7 @@ def from_scores_to_ranking(list_scores):
 # Devolver: lista con los scores asociados a cada solución que forma la generación.
 
 def generation_score_list(population,accuracy,count_time_acc=True,count_time_gen=False):
+    global time_acc,time_proc
 
     # Generar entorno con accuracy apropiado.
     windFLO=get_windFLO_with_accuracy(momentary_folder=folder_name+'/',accuracy=accuracy)
@@ -87,15 +61,13 @@ def generation_score_list(population,accuracy,count_time_acc=True,count_time_gen
     # Evaluar población.
     list_scores=[]
     for sol in population:
-        if count_time_acc and not count_time_gen:
-            sw_acc.resume()
-        if count_time_gen:
-            sw_proc.resume()
+        t=time.time()
         score=EvaluateFarm(sol,windFLO)
+        elapsed_time=time.time()-t
         if count_time_acc and not count_time_gen:
-            sw_acc.pause()
+            time_acc+=elapsed_time
         if count_time_gen:
-            sw_proc.pause()
+            time_proc+=elapsed_time
         list_scores.append(score)
 
     return list_scores
@@ -113,30 +85,31 @@ def generation_score_list(population,accuracy,count_time_acc=True,count_time_gen
 #   >prev_m: valor de accuracy seleccionado como óptimo.
 #   >last_time_acc_increase: tiempo de evaluación consumido en la última iteración del método de bisección.
 
-def bisection_method(init_acc,population,train_seed,threshold=0.95):
+def bisection_method(lower_time,upper_time,population,train_seed,sample_size,interpolation_expression,threshold=0.95):
 
     # Inicializar límite inferior y superior.
-    acc0=init_acc
-    acc1=1    
+    time0=lower_time
+    time1=upper_time   
 
     # Punto intermedio.
-    prev_m=init_acc
-    m=(acc0+acc1)/2
-    
-    # Función para calcular la correlación entre los rankings del 10% aleatorio de las superficies
+    prev_m=time0
+    m=(time0+time1)/2
+
+    # Función para calcular la correlación entre los rankings de las sample_size superficies aleatorias
     # usando el accuracy actual y el máximo.
     def similarity_between_current_best_acc(acc,population,train_seed,first_iteration):
+        global time_acc
 
-        # Seleccionar de forma aleatoria el 10% de las superficies que forman la generación.
+        # Seleccionar de forma aleatoria sample_size superficies que forman la generación.
         random.seed(train_seed)
-        ind_sol=random.sample(range(len(population)),int(len(population)*0.1))
+        ind_sol=random.sample(range(len(population)),sample_size)
         list_solutions=list(np.array(population)[ind_sol])
 
         # Guardar los scores asociados a cada solución seleccionada.
-        previous_time_acc=sw_acc.get_time()
+        t=time.time()
         best_scores=generation_score_list(list_solutions,1,count_time_acc=first_iteration)# Con el máximo accuracy. 
         new_scores=generation_score_list(list_solutions,acc)# Accuracy nuevo. 
-        last_time_acc_increase=sw_acc.get_time()-previous_time_acc
+        last_time_acc_increase=time.time()-t
 
         # Obtener vectores de rankings asociados.
         new_ranking=from_scores_to_ranking(new_scores)# Accuracy nuevo. 
@@ -145,24 +118,24 @@ def bisection_method(init_acc,population,train_seed,threshold=0.95):
         # Comparar ambos rankings.
         metric_value=spearman_corr(new_ranking,best_ranking)
 
-
         return metric_value,last_time_acc_increase
 
     # Reajustar límites del intervalo hasta que este tenga un rango lo suficientemente pequeño.
     first_iteration=True
-    while acc1-acc0>0.1:
-        metric_value,last_time_acc_increase=similarity_between_current_best_acc(m,population,train_seed,first_iteration)
+    stop_threshold=(time1-time0)*0.1
+    while time1-time0>stop_threshold:
+        metric_value,last_time_acc_increase=similarity_between_current_best_acc(eval(interpolation_expression),population,train_seed,first_iteration)
         if metric_value>=threshold:
-            acc1=m
+            time1=m
         else:
-            acc0=m
+            time0=m
 
         prev_m=m
-        m=(acc0+acc1)/2
-        
-        first_iteration=False
+        m=(time0+time1)/2
 
-    return prev_m,last_time_acc_increase
+        first_iteration=False
+    m=prev_m
+    return eval(interpolation_expression),last_time_acc_increase
 
 # FUNCIÓN 5 (Ejecutar heurísticos durante el proceso de entrenamiento)
 # Parámetros:
@@ -177,36 +150,55 @@ def bisection_method(init_acc,population,train_seed,threshold=0.95):
 # Devuelve: 
 #   >acc: valor de accuracy seleccionado como óptimo.
 #   >time_best_acc: tiempo de evaluación consumido en la última iteración del método de bisección.
-#   >threshold: umbral considerado para aplicar el método de bisección.
 
-def execute_heuristic(gen,min_acc,acc,population,train_seed,list_variances,heuristic,param):
-    global last_optimal_time
-    global sw_proc
-    global sw_acc
+def execute_heuristic(gen,acc,population,train_seed,list_variances,heuristic,param):
+
+    global time_proc
+    global time_acc
     global max_time
-    global time_best_acc
+    global last_time_heuristic_accepted
+    global unused_bisection_executions
 
-    # HEURÍSTICO 7 de Symbolic Regressor: Bisección de generación en generación (el umbral es el parámetro).
-    if heuristic==7: 
-        acc,time_best_acc=bisection_method(min_acc,population,train_seed,threshold=param)
+    heuristic_accepted=False
 
-    # HEURÍSTICO 9 de Symbolic Regressor: Bisección con frecuencia constante (parámetro) 
-    # de actualización de accuracy y umbral de método de bisección fijado en 0.95.
-    if heuristic==9: 
+    # Para el método de bisección: tamaño de muestra, frecuencia y expresión de interpolación.
+    df_sample_freq=pd.read_csv('results/data/general/sample_size_freq_'+str(sample_size_freq)+'.csv',index_col=0)
+    df_interpolation=pd.read_csv('results/data/general/bisection_interval_interpolation.csv',index_col=0)
+    sample_size=int(df_sample_freq[df_sample_freq['env_name']=='WindFLO']['sample_size'])
+    heuristic_freq=float(df_sample_freq[df_sample_freq['env_name']=='WindFLO']['frequency_time'])
+    interpolation_expression=list(df_interpolation[df_interpolation['env_name']=='WindFLO']['interpolation_expression'])[-1]
+    lower_time=float(df_interpolation[df_interpolation['env_name']=='WindFLO']['lower_time'])
+    upper_time=float(df_interpolation[df_interpolation['env_name']=='WindFLO']['upper_time'])
+
+   
+    # HEURÍSTICO I de Symbolic Regressor: Bisección de generación en generación (el umbral es el parámetro).
+    if heuristic=='I': 
         if gen==0:
-            acc,time_best_acc=bisection_method(min_acc,population,train_seed)
-            last_optimal_time=sw_proc.get_time()+sw_acc.get_time()
+            acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,interpolation_expression,threshold=param)
+            list_scores=generation_score_list(population,acc,count_time_gen=True)
+            time_acc-=time_best_acc
+            last_time_heuristic_accepted=time_proc+time_acc
+            heuristic_accepted=True
+            
         else:
-            if (sw_proc.get_time()+sw_acc.get_time())-last_optimal_time>=max_time*param:
+            if (time_acc+time_proc)-last_time_heuristic_accepted>=heuristic_freq:
+                acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,interpolation_expression,threshold=param)
+                list_scores=generation_score_list(population,acc,count_time_gen=True)
+                time_acc-=time_best_acc
+                last_time_heuristic_accepted=time_proc+time_acc
+                heuristic_accepted=True
 
-                acc,time_best_acc=bisection_method(min_acc,population,train_seed)
-                last_optimal_time=sw_proc.get_time()+sw_acc.get_time()
 
-    # HEURÍSTICO 12 de Symbolic Regressor: Bisección con definición automática para frecuencia 
+    # HEURÍSTICO II de Symbolic Regressor: Bisección con definición automática para frecuencia 
     # de actualización de accuracy (depende de parámetro) y umbral del método de bisección fijado en 0.95.
-    if heuristic==12: 
+    if heuristic=='II': 
         if gen==0: 
-            acc,time_best_acc=bisection_method(min_acc,population,train_seed)
+            acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,interpolation_expression)
+            list_scores=generation_score_list(population,acc,count_time_gen=True)
+            time_acc-=time_best_acc
+            last_time_heuristic_accepted=time_proc+time_acc
+            unused_bisection_executions=0
+            heuristic_accepted=True
         else:
             if len(list_variances)>=param+1:
                 # Función para calcular el intervalo de confianza.
@@ -219,12 +211,39 @@ def execute_heuristic(gen,min_acc,acc,population,train_seed,list_variances,heuri
 
                 variance_q05,variance_q95=bootstrap_confidence_interval(list_variances[(-2-param):-2])
                 last_variance=list_variances[-1]
-
+                
                 # Calcular el mínimo accuracy con el que se obtiene la máxima calidad.
                 if last_variance<variance_q05 or last_variance>variance_q95:
-                    acc,time_best_acc=bisection_method(min_acc,population,train_seed)
 
-    return acc,time_best_acc
+                    if (time_proc+time_acc)-last_time_heuristic_accepted>=heuristic_freq:   
+                        unused_bisection_executions+=int((time_proc+time_acc-last_time_heuristic_accepted)/heuristic_freq)-1
+
+                        acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,interpolation_expression)
+                        list_scores=generation_score_list(population,acc,count_time_gen=True)
+                        time_acc-=time_best_acc
+                        last_time_heuristic_accepted=time_proc+time_acc
+                        heuristic_accepted=True
+
+                    else:
+                        if unused_bisection_executions>0:
+                            acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,interpolation_expression)
+                            list_scores=generation_score_list(population,acc,count_time_gen=True)
+                            time_acc-=time_best_acc
+                            last_time_heuristic_accepted=time_proc+time_acc
+                            unused_bisection_executions-=1
+                            heuristic_accepted=True
+            else:
+                if (time_acc+time_proc)-last_time_heuristic_accepted>=heuristic_freq:
+                    acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,interpolation_expression,threshold=param)
+                    list_scores=generation_score_list(population,acc,count_time_gen=True)
+                    time_acc-=time_best_acc
+                    last_time_heuristic_accepted=time_proc+time_acc
+                    heuristic_accepted=True
+
+    if heuristic_accepted==False:
+        list_scores=generation_score_list(population,acc,count_time_gen=True)
+                            
+    return acc,list_scores
     
 
 #--------------------------------------------------------------------------------------------------
@@ -277,8 +296,6 @@ def learn(seed,heuristic,heuristic_param,maxfeval=500,popsize=50):
     # Inicializar el terreno y las turbinas que se desean colocar sobre el mismo.
     default_windFLO = get_windFLO_with_accuracy(momentary_folder=folder_name+'/')
 
-    # Accuracy mínimo.
-    min_acc=1/default_windFLO.montecarlopts
 
     # Máximo tiempo de ejecución.
     global max_time
@@ -291,15 +308,11 @@ def learn(seed,heuristic,heuristic_param,maxfeval=500,popsize=50):
         return lbound + list_coord*(ubound - lbound)
 
     # Inicializar contadores de tiempo.
-    global sw_proc
-    sw_proc=stopwatch()
-    sw_proc.pause()
+    global time_proc
+    time_proc=0
 
-    global sw_acc
-    sw_acc = stopwatch()
-    sw_acc.pause()
-
-    sw_acc_duplicate=0
+    global time_acc
+    time_acc=0
 
     # Otras inicializaciones.
     gen=0
@@ -309,7 +322,7 @@ def learn(seed,heuristic,heuristic_param,maxfeval=500,popsize=50):
     np.random.seed(seed)
     es = cma.CMAEvolutionStrategy(np.random.random(default_windFLO.nTurbines*2), 0.33, inopts={'bounds': [0, 1],'seed':seed,'maxiter':1e9, 'maxfevals':maxfeval, 'popsize':popsize})
     
-    while sw_proc.get_time()+sw_acc.get_time()<max_time:
+    while time_proc+time_acc<max_time:
 
         # Construir generación.
         solutions = es.ask()
@@ -319,23 +332,19 @@ def learn(seed,heuristic,heuristic_param,maxfeval=500,popsize=50):
 
         # Reajustar el accuracy según el heurístico seleccionado.
         if gen==0:
-            accuracy,time_best_acc_bisection=execute_heuristic(gen,min_acc,accuracy,real_solutions,seed,[],heuristic,heuristic_param)
+            accuracy,list_scores=execute_heuristic(gen,accuracy,real_solutions,seed,[],heuristic,heuristic_param)
 
         else:
             df_seed=pd.DataFrame(df)
             df_seed=df_seed[df_seed[1]==seed]
-            accuracy,time_best_acc_bisection=execute_heuristic(gen,min_acc,accuracy,real_solutions,seed,list(df_seed[5]),heuristic,heuristic_param)
-
-        # Lista de scores asociados a la generación.
-        list_scores=generation_score_list(real_solutions,accuracy,count_time_gen=True)
-        sw_acc_duplicate+=time_best_acc_bisection
+            accuracy,list_scores=execute_heuristic(gen,accuracy,real_solutions,seed,list(df_seed[5]),heuristic,heuristic_param)
 
         # Para construir la siguiente generación.
-        es.tell(solutions, list_scores)
+        es.tell(solutions,list_scores)
 
         # Acumular datos de interés.
         score = EvaluateFarm(transform_to_problem_dim(es.result.xbest),default_windFLO)
-        df.append([heuristic_param,seed,gen,-score,accuracy,np.var(list_scores),sw_proc.get_time(),sw_acc.get_time()-sw_acc_duplicate,sw_proc.get_time()+sw_acc.get_time()-sw_acc_duplicate])
+        df.append([heuristic_param,seed,gen,-score,accuracy,np.var(list_scores),time_proc,time_acc,time_acc+time_proc])
 
         gen+=1
 
@@ -349,10 +358,12 @@ def learn(seed,heuristic,heuristic_param,maxfeval=500,popsize=50):
 list_seeds=range(1,51,1)
 
 # Preparar lista de argumentos.
-list_arg=[[7,0.8],[7,0.95],[9,0.1],[9,0.3],[12,5],[12,10]]
+# sample_size_freq='BisectionAndPopulation'
+sample_size_freq='BisectionOnly'
+list_arg=[['II',5],['II',10]]#['I',0.8],['I',0.95],
 
 # Construir bases de datos.
-for arg in list_arg:
+for arg in tqdm(list_arg):
     
     df=[]
 
@@ -395,6 +406,6 @@ def concat_same_heuristic_df(list_arg):
                 os.remove('results/data/WindFLO/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(key)+'_param'+str(param)+'.csv')
                 df=pd.concat([df,df_new],ignore_index=True)
 
-        df.to_csv('results/data/WindFLO/OptimalAccuracyAnalysis/df_train_OptimalAccuracyAnalysis_h'+str(key)+'.csv')
+        df.to_csv('results/data/WindFLO/OptimalAccuracyAnalysis/df_train_OptimalAccuracyAnalysis_h'+str(key)+'_'+str(sample_size_freq)+'.csv')
 
 concat_same_heuristic_df(list_arg)
