@@ -1,0 +1,4 @@
+,env_name,popsize,n_gen_max_acc,sample_size,frequency_gen,frequency_time,max_update_acc
+0,SymbolicRegressor,1000,19,115,1,50000.0,19
+1,MuJoCo,20,49,10,5,100000.0,9
+2,WindFLO,50,10,10,3,12.303940057754506,3
