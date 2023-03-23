@@ -109,9 +109,8 @@ def learn(seed, accuracy,maxfeval=500,popsize=50):
         return lbound + list_coord*(ubound - lbound)
 
     # Inicializar contador de tiempo.
-    global sw
-    sw = stopwatch()
-    sw.pause()
+    global eval_time
+    eval_time=0
 
     global n_evaluations
     n_evaluations=0
@@ -134,9 +133,9 @@ def learn(seed, accuracy,maxfeval=500,popsize=50):
         list_scores=[]
         for sol in real_solutions:
 
-            sw.resume()
+            t=time.time()
             fitness=EvaluateFarm(sol,windFLO)
-            sw.pause()
+            eval_time+=time.time()-t
 
             list_scores.append(fitness)
             n_evaluations+=1
@@ -146,14 +145,14 @@ def learn(seed, accuracy,maxfeval=500,popsize=50):
 
         # Acumular datos de interés.
         score = EvaluateFarm(transform_to_problem_dim(es.result.xbest),default_windFLO)
-        df_acc.append([accuracy,seed,n_gen,-score,sw.get_time()])
+        df_acc.append([accuracy,seed,n_gen,-score,eval_time])
 
         n_gen+=1
   
     os.rmdir(folder_name)
 
     if accuracy==1:
-        return sw.get_time()
+        return eval_time
 
 # FUNCIÓN 4 (Criterio de parada para accuracy=1)
 def new_stop_max_acc(self, check=True, ignore_list=(), check_in_same_iteration=False,
@@ -167,7 +166,7 @@ def new_stop_max_acc(self, check=True, ignore_list=(), check_in_same_iteration=F
 def new_stop_lower_acc(self, check=True, ignore_list=(), check_in_same_iteration=False,
              get_value=None):
 	stop={}
-	if sw.get_time()>max_time:
+	if eval_time>max_time:
 		stop={'TIME RUN OUT':max_time}
 	return stop
 
