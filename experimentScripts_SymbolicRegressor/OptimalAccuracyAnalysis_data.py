@@ -399,7 +399,7 @@ def set_initial_accuracy(init_acc,list_surf_gen,train_seed,metric,threshold=0.95
 # Funciones asociadas al método de bisección para los heurísticos finales (I y II)
 #--------------------------------------------------------------------------------------------------
 # FUNCIÓN 13 (Implementación adaptada del método de bisección)
-def customized_bisection_method(lower_time,upper_time,list_surf_gen,train_seed,threshold,sample_size,interpolation_expression):
+def customized_bisection_method(lower_time,upper_time,list_surf_gen,train_seed,threshold,sample_size,interpolation_pts):
 
     # Inicializar límite inferior y superior.
     time0=lower_time
@@ -439,7 +439,7 @@ def customized_bisection_method(lower_time,upper_time,list_surf_gen,train_seed,t
     stop_threshold=(time1-time0)*0.1
 
     while time1-time0>stop_threshold and continue_bisection_method:
-        metric_value=similarity_between_current_best_acc(eval(interpolation_expression),list_surf_gen,train_seed,first_iteration)
+        metric_value=similarity_between_current_best_acc(np.interp(m,interpolation_pts[0],interpolation_pts[1]),list_surf_gen,train_seed,first_iteration)
         if metric_value>=threshold:
             time1=m
         else:
@@ -449,15 +449,15 @@ def customized_bisection_method(lower_time,upper_time,list_surf_gen,train_seed,t
         m=(time0+time1)/2
         
         first_iteration=False
-    m=prev_m
 
-    return eval(interpolation_expression)
+
+    return np.interp(prev_m,interpolation_pts[0],interpolation_pts[1])
 
 # FUNCIÓN 14 (ajustar con el método de bisección el accuracy en la primera generación)
-def customized_set_initial_accuracy(lower_time,upper_time,list_surf_gen,train_seed,sample_size,interpolation_expression,threshold=0.95):
+def customized_set_initial_accuracy(lower_time,upper_time,list_surf_gen,train_seed,sample_size,interpolation_pts,threshold=0.95):
 
     # Calcular el mínimo accuracy con el que se obtiene la máxima calidad.
-    acc=customized_bisection_method(lower_time,upper_time,list_surf_gen,train_seed,threshold,sample_size,interpolation_expression)
+    acc=customized_bisection_method(lower_time,upper_time,list_surf_gen,train_seed,threshold,sample_size,interpolation_pts)
 
     # Calcular conjunto de entrenamiento correspondiente.
     train_n_pts=int(default_train_n_pts*acc)
@@ -1215,7 +1215,7 @@ def update_accuraccy_heuristic14(acc,init_acc,X,y,list_variances,list_surf_gen,t
 # aplicar el método de bisección).
 
 # HEURISTICO I (aplicar el método de bisección todas las veces que sea posible)
-def update_accuracy_heuristicI(acc,lower_time,upper_time,X,y,list_surf_gen,train_seed,fitness,heuristic_param,sample_size,heuristic_freq,interpolation_expression):
+def update_accuracy_heuristicI(acc,lower_time,upper_time,X,y,list_surf_gen,train_seed,fitness,heuristic_param,sample_size,heuristic_freq,interpolation_pts):
     global n_evaluations
     global n_evaluations_acc
     global last_time_heuristic_accepted
@@ -1223,7 +1223,7 @@ def update_accuracy_heuristicI(acc,lower_time,upper_time,X,y,list_surf_gen,train
     if (n_evaluations+n_evaluations_acc)-last_time_heuristic_accepted>=heuristic_freq:
         # Calcular el mínimo accuracy con el que se obtiene la máxima calidad.
         prev_acc=acc
-        acc=customized_bisection_method(lower_time,upper_time,list_surf_gen,train_seed,heuristic_param,sample_size,interpolation_expression)
+        acc=customized_bisection_method(lower_time,upper_time,list_surf_gen,train_seed,heuristic_param,sample_size,interpolation_pts)
 
         # Calcular nuevo conjunto de entrenamiento.
         train_n_pts=int(default_train_n_pts*acc)
@@ -1251,7 +1251,7 @@ def update_accuracy_heuristicI(acc,lower_time,upper_time,X,y,list_surf_gen,train
 
 
 # HEURÍSTICO II (aplicar el método de bisección con frecuencia de actualización de accuracy definida automáticamente)
-def update_accuracy_heuristicII(acc,lower_time,upper_time,X,y,list_variances,list_surf_gen,train_seed,fitness,param,sample_size,heuristic_freq,interpolation_expression):
+def update_accuracy_heuristicII(acc,lower_time,upper_time,X,y,list_variances,list_surf_gen,train_seed,fitness,param,sample_size,heuristic_freq,interpolation_pts):
     global n_evaluations
     global n_evaluations_acc
     global last_time_heuristic_accepted
@@ -1278,7 +1278,7 @@ def update_accuracy_heuristicII(acc,lower_time,upper_time,X,y,list_variances,lis
                 unused_bisection_executions+=int((n_evaluations+n_evaluations_acc-last_time_heuristic_accepted)/heuristic_freq)-1
 
                 # Calcular el mínimo accuracy con el que se obtiene la máxima calidad.
-                acc=customized_bisection_method(lower_time,upper_time,list_surf_gen,train_seed,0.95,sample_size,interpolation_expression)
+                acc=customized_bisection_method(lower_time,upper_time,list_surf_gen,train_seed,0.95,sample_size,interpolation_pts)
 
                 # Calcular nuevo conjunto de entrenamiento.
                 train_n_pts=int(default_train_n_pts*acc)
@@ -1294,7 +1294,7 @@ def update_accuracy_heuristicII(acc,lower_time,upper_time,X,y,list_variances,lis
                 if unused_bisection_executions>0:
                     
                     # Calcular el mínimo accuracy con el que se obtiene la máxima calidad.
-                    acc=customized_bisection_method(lower_time,upper_time,list_surf_gen,train_seed,0.95,sample_size,interpolation_expression)
+                    acc=customized_bisection_method(lower_time,upper_time,list_surf_gen,train_seed,0.95,sample_size,interpolation_pts)
 
                     # Calcular nuevo conjunto de entrenamiento.
                     train_n_pts=int(default_train_n_pts*acc)
@@ -1318,7 +1318,7 @@ def update_accuracy_heuristicII(acc,lower_time,upper_time,X,y,list_variances,lis
         if (n_evaluations+n_evaluations_acc)-last_time_heuristic_accepted>=heuristic_freq:
 
             # Calcular el mínimo accuracy con el que se obtiene la máxima calidad.
-            acc=customized_bisection_method(lower_time,upper_time,list_surf_gen,train_seed,0.95,sample_size,interpolation_expression)
+            acc=customized_bisection_method(lower_time,upper_time,list_surf_gen,train_seed,0.95,sample_size,interpolation_pts)
 
             # Calcular nuevo conjunto de entrenamiento.
             train_n_pts=int(default_train_n_pts*acc)
@@ -1351,12 +1351,13 @@ def execute_heuristic(heuristic,heuristic_param,train_seed,gen,population,init_a
 
     # Para el método de bisección en los heurísticos finales (tamaño de muestra, frecuencia y expresión de interpolación).
     df_sample_freq=pd.read_csv('results/data/general/sample_size_freq_'+str(sample_size_freq)+'.csv',index_col=0)
-    df_interpolation=pd.read_csv('results/data/general/bisection_interval_interpolation.csv',index_col=0)
+    df_interpolation=pd.read_csv('results/data/SymbolicRegressor/UnderstandingAccuracy/df_Bisection.csv')
     sample_size=int(df_sample_freq[df_sample_freq['env_name']=='SymbolicRegressor']['sample_size'])
     heuristic_freq=int(df_sample_freq[df_sample_freq['env_name']=='SymbolicRegressor']['frequency_time'])
-    interpolation_expression=list(df_interpolation[df_interpolation['env_name']=='SymbolicRegressor']['interpolation_expression'])[-1]
-    lower_time=int(df_interpolation[df_interpolation['env_name']=='SymbolicRegressor']['lower_time'])
-    upper_time=int(df_interpolation[df_interpolation['env_name']=='SymbolicRegressor']['upper_time'])
+    interpolation_acc=list(df_interpolation['accuracy'])
+    interpolation_time=list(df_interpolation['cost_per_eval'])
+    lower_time=min(interpolation_time)
+    upper_time=max(interpolation_time)
 
  
     # Fijar accuracy de la generación inicial.
@@ -1380,7 +1381,7 @@ def execute_heuristic(heuristic,heuristic_param,train_seed,gen,population,init_a
 
 
         if heuristic in ['I','II']:
-            acc,X,y,fitness,threshold,variance=customized_set_initial_accuracy(lower_time,upper_time,list(population),train_seed,sample_size,interpolation_expression,threshold=0.95)
+            acc,X,y,fitness,threshold,variance=customized_set_initial_accuracy(lower_time,upper_time,list(population),train_seed,sample_size,[interpolation_time,interpolation_acc],threshold=0.95)
             last_time_heuristic_accepted=n_evaluations+n_evaluations_acc
             if heuristic=='II':
                 unused_bisection_executions=0
@@ -1429,11 +1430,11 @@ def execute_heuristic(heuristic,heuristic_param,train_seed,gen,population,init_a
             acc,X,y,fitness,threshold,next_threshold,variance=update_accuraccy_heuristic14(acc,init_acc,X,y,list(df_seed[3]),list(population),train_seed,fitness,next_threshold,heuristic_param[1])
     
         if heuristic=='I':
-            acc,X,y,fitness=update_accuracy_heuristicI(acc,lower_time,upper_time,X,y,list(population),train_seed,fitness,heuristic_param,sample_size,heuristic_freq,interpolation_expression)
+            acc,X,y,fitness=update_accuracy_heuristicI(acc,lower_time,upper_time,X,y,list(population),train_seed,fitness,heuristic_param,sample_size,heuristic_freq,[interpolation_time,interpolation_acc])
         if heuristic=='II':
             df_seed=pd.DataFrame(df_train)
             df_seed=df_seed[df_seed[1]==train_seed]
-            acc,X,y,fitness,threshold,variance=update_accuracy_heuristicII(acc,lower_time,upper_time,X,y,list(df_seed[3]),list(population),train_seed,fitness,heuristic_param,sample_size,heuristic_freq,interpolation_expression)
+            acc,X,y,fitness,threshold,variance=update_accuracy_heuristicII(acc,lower_time,upper_time,X,y,list(df_seed[3]),list(population),train_seed,fitness,heuristic_param,sample_size,heuristic_freq,[interpolation_time,interpolation_acc])
 
 
     return acc,X,y,fitness,threshold,variance
