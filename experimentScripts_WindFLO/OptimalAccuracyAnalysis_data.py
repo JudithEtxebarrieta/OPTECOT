@@ -85,7 +85,7 @@ def generation_score_list(population,accuracy,count_time_acc=True,count_time_gen
 #   >prev_m: valor de accuracy seleccionado como óptimo.
 #   >last_time_acc_increase: tiempo de evaluación consumido en la última iteración del método de bisección.
 
-def bisection_method(lower_time,upper_time,population,train_seed,sample_size,interpolation_expression,threshold=0.95):
+def bisection_method(lower_time,upper_time,population,train_seed,sample_size,interpolation_pts,threshold=0.95):
 
     # Inicializar límite inferior y superior.
     time0=lower_time
@@ -124,7 +124,7 @@ def bisection_method(lower_time,upper_time,population,train_seed,sample_size,int
     first_iteration=True
     stop_threshold=(time1-time0)*0.1
     while time1-time0>stop_threshold:
-        metric_value,last_time_acc_increase=similarity_between_current_best_acc(eval(interpolation_expression),population,train_seed,first_iteration)
+        metric_value,last_time_acc_increase=similarity_between_current_best_acc(np.interp(m,interpolation_pts[0],interpolation_pts[1]),population,train_seed,first_iteration)
         if metric_value>=threshold:
             time1=m
         else:
@@ -134,8 +134,7 @@ def bisection_method(lower_time,upper_time,population,train_seed,sample_size,int
         m=(time0+time1)/2
 
         first_iteration=False
-    m=prev_m
-    return eval(interpolation_expression),last_time_acc_increase
+    return np.interp(prev_m,interpolation_pts[0],interpolation_pts[1]),last_time_acc_increase
 
 # FUNCIÓN 5 (Ejecutar heurísticos durante el proceso de entrenamiento)
 # Parámetros:
@@ -163,18 +162,19 @@ def execute_heuristic(gen,acc,population,train_seed,list_variances,heuristic,par
 
     # Para el método de bisección: tamaño de muestra, frecuencia y expresión de interpolación.
     df_sample_freq=pd.read_csv('results/data/general/sample_size_freq_'+str(sample_size_freq)+'.csv',index_col=0)
-    df_interpolation=pd.read_csv('results/data/general/bisection_interval_interpolation.csv',index_col=0)
+    df_interpolation=pd.read_csv('results/data/WindFLO/UnderstandingAccuracy/df_Bisection.csv')
     sample_size=int(df_sample_freq[df_sample_freq['env_name']=='WindFLO']['sample_size'])
     heuristic_freq=float(df_sample_freq[df_sample_freq['env_name']=='WindFLO']['frequency_time'])
-    interpolation_expression=list(df_interpolation[df_interpolation['env_name']=='WindFLO']['interpolation_expression'])[-1]
-    lower_time=float(df_interpolation[df_interpolation['env_name']=='WindFLO']['lower_time'])
-    upper_time=float(df_interpolation[df_interpolation['env_name']=='WindFLO']['upper_time'])
+    interpolation_acc=list(df_interpolation['accuracy'])
+    interpolation_time=list(df_interpolation['cost_per_eval'])
+    lower_time=min(interpolation_time)
+    upper_time=max(interpolation_time)
 
    
     # HEURÍSTICO I de Symbolic Regressor: Bisección de generación en generación (el umbral es el parámetro).
     if heuristic=='I': 
         if gen==0:
-            acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,interpolation_expression,threshold=param)
+            acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc],threshold=param)
             list_scores=generation_score_list(population,acc,count_time_gen=True)
             time_acc-=time_best_acc
             last_time_heuristic_accepted=time_proc+time_acc
@@ -182,7 +182,7 @@ def execute_heuristic(gen,acc,population,train_seed,list_variances,heuristic,par
             
         else:
             if (time_acc+time_proc)-last_time_heuristic_accepted>=heuristic_freq:
-                acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,interpolation_expression,threshold=param)
+                acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc],threshold=param)
                 list_scores=generation_score_list(population,acc,count_time_gen=True)
                 time_acc-=time_best_acc
                 last_time_heuristic_accepted=time_proc+time_acc
@@ -193,7 +193,7 @@ def execute_heuristic(gen,acc,population,train_seed,list_variances,heuristic,par
     # de actualización de accuracy (depende de parámetro) y umbral del método de bisección fijado en 0.95.
     if heuristic=='II': 
         if gen==0: 
-            acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,interpolation_expression)
+            acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc])
             list_scores=generation_score_list(population,acc,count_time_gen=True)
             time_acc-=time_best_acc
             last_time_heuristic_accepted=time_proc+time_acc
@@ -218,7 +218,7 @@ def execute_heuristic(gen,acc,population,train_seed,list_variances,heuristic,par
                     if (time_proc+time_acc)-last_time_heuristic_accepted>=heuristic_freq:   
                         unused_bisection_executions+=int((time_proc+time_acc-last_time_heuristic_accepted)/heuristic_freq)-1
 
-                        acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,interpolation_expression)
+                        acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc])
                         list_scores=generation_score_list(population,acc,count_time_gen=True)
                         time_acc-=time_best_acc
                         last_time_heuristic_accepted=time_proc+time_acc
@@ -226,7 +226,7 @@ def execute_heuristic(gen,acc,population,train_seed,list_variances,heuristic,par
 
                     else:
                         if unused_bisection_executions>0:
-                            acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,interpolation_expression)
+                            acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc])
                             list_scores=generation_score_list(population,acc,count_time_gen=True)
                             time_acc-=time_best_acc
                             last_time_heuristic_accepted=time_proc+time_acc
@@ -234,7 +234,7 @@ def execute_heuristic(gen,acc,population,train_seed,list_variances,heuristic,par
                             heuristic_accepted=True
             else:
                 if (time_acc+time_proc)-last_time_heuristic_accepted>=heuristic_freq:
-                    acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,interpolation_expression,threshold=param)
+                    acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc])
                     list_scores=generation_score_list(population,acc,count_time_gen=True)
                     time_acc-=time_best_acc
                     last_time_heuristic_accepted=time_proc+time_acc
@@ -358,9 +358,9 @@ def learn(seed,heuristic,heuristic_param,maxfeval=500,popsize=50):
 list_seeds=range(1,51,1)
 
 # Preparar lista de argumentos.
-# sample_size_freq='BisectionAndPopulation'
-sample_size_freq='BisectionOnly'
-list_arg=[['II',5],['II',10]]#['I',0.8],['I',0.95],
+sample_size_freq='BisectionAndPopulation'
+# sample_size_freq='BisectionOnly'
+list_arg=[['I',0.8],['I',0.95],['II',5],['II',10]]
 
 # Construir bases de datos.
 for arg in tqdm(list_arg):

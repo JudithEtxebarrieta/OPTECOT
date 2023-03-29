@@ -279,8 +279,8 @@ def draw_comparative_figure(heuristic_param_list):
 colors=px.colors.qualitative.D3
 
 # Parámetro.
-sample_size_freq='BisectionAndPopulation'
-# sample_size_freq='BisectionOnly'
+# sample_size_freq='BisectionAndPopulation'
+sample_size_freq='BisectionOnly'
 
 # Definir tiempos de entrenamiento que se desean dibujar.
 df_max_acc=pd.read_csv('results/data/WindFLO/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis1.0.csv', index_col=0)
