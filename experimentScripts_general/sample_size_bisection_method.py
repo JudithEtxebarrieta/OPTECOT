@@ -14,6 +14,8 @@ import numpy as np
 #==================================================================================================
 # FUNCIONES
 #==================================================================================================
+# FUNCIÓN 1 (Obtener lista de puntos intermedios que se seleccionan en 4 iteraciones del método de 
+# bisección, en el pero caso y en el caso medio)
 def bisection_middle_points(lower,upper,type_cost='max'):
 	list=[] 
 	stop_threshold=(upper-lower)*0.1
@@ -29,7 +31,7 @@ def bisection_middle_points(lower,upper,type_cost='max'):
 				first=False
 			else:
 				upper=middle
-	# En todas las iteraciones se acota el intervalo por arriba (caso más costoso).
+	# En todas las iteraciones se acota el intervalo por abajo (caso más costoso).
 	if type_cost=='max':
 		while abs(lower-upper)>stop_threshold:       
 			middle=(lower+upper)/2
@@ -38,8 +40,8 @@ def bisection_middle_points(lower,upper,type_cost='max'):
 
 	return list+[max_value]
 
-# Calcular el tamaño de muestra para el método de bisección y la frecuencia con la que se deberá 
-# tener en cuenta las indicaciones del heurístico que nos indica cuando debemos reajustar el accuracy.
+# FUNCIÓN 2 (Calcular el tamaño de muestra para el método de bisección y la frecuencia con la que se deberá 
+# tener en cuenta las indicaciones del heurístico que nos indica cuando debemos reajustar el accuracy)
 def sample_size_and_frequency(env_name,popsize,perc_cost,bisection_cost_type='max',only_bisection=True):
 
 	df_acc_eval_cost=pd.read_csv('results/data/'+str(env_name)+'/UnderstandingAccuracy/df_Bisection.csv')
@@ -77,7 +79,7 @@ def sample_size_and_frequency(env_name,popsize,perc_cost,bisection_cost_type='ma
 
 	return sample_size,freq_gen,freq_time
 
-# Construir base de datos con la información de interés.
+# FUNCIÓN 3 (Construir base de datos con la información de interés)
 def build_interest_info_df(list_envs_popsize,perc_cost,bisection_cost_type,only_bisection,csv_name):
 	df=[]
 	for env_name in list(list_envs_popsize.keys()):
@@ -115,10 +117,12 @@ perc_total_cost=0.95 # Porcentaje del coste por defecto que se desea considerar 
 perc_bisec_cost=0.05 # Porcentaje del coste por defecto que se desea considerar únicamente para la aplicación del método de bisección.
 min_sample_size=10 # Tamaño mínimo
 
-# Construir tabla para en el caso en que se pretende que el coste de aplicar el heurístico en total sea com mucho un 95% del coste por defecto.
+# Construir tabla para el caso en que el coste de aplicar la bisección y evaluar después la población con
+# el accuracy seleccionado sea un 95% del coste que supone evaluar una población entera por defecto.
 build_interest_info_df(list_envs_popsize,perc_total_cost,'mean',False,'BisectionAndPopulation')
 
-# Construir tabla para en el caso en que se pretende que el coste de aplicar el heurístico en total sea com mucho un 5% más del coste por defecto.
+# Construir tabla para en el caso en que el coste de aplicar la bisección sea como mucho un 5% más 
+# que el coste de evaluar una población por defecto.
 build_interest_info_df(list_envs_popsize,perc_total_cost,'max',True,'BisectionOnly')
 
 
