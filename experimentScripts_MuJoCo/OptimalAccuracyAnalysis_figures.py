@@ -1,0 +1,281 @@
+# Mediante este script se representan gráficamente los resultados numéricos calculados por 
+# "OptimaltAccuracyAnalysis_data.py".
+
+#==================================================================================================
+# LIBRERÍAS
+#==================================================================================================
+import numpy as np
+from scipy.stats import norm
+import time
+from tqdm import tqdm as tqdm
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+import random
+import pandas as pd
+from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes,mark_inset
+import plotly.express as px
+
+#==================================================================================================
+# FUNCIONES
+#==================================================================================================
+
+# FUNCIÓN 1
+# Parámetros:
+#   >data: datos sobre los cuales se calculará el rango entre percentiles.
+#   >bootstrap_iterations: número de submuestras que se considerarán de data para poder calcular el 
+#    rango entre percentiles de sus medias.
+# Devolver: la media de los datos originales junto a los percentiles de las medias obtenidas del 
+# submuestreo realizado sobre data.
+
+def bootstrap_mean_and_confiance_interval(data,bootstrap_iterations=1000):
+    mean_list=[]
+    for i in range(bootstrap_iterations):
+        sample = np.random.choice(data, len(data), replace=True) 
+        mean_list.append(np.mean(sample))
+    return np.mean(data),np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
+
+# FUNCIÓN 2 (construcción de la gráfica de scores)
+def train_data_to_figure_data(df_train,type_eval,seed_name='seed'):
+
+    # Inicializar listas para la gráfica.
+    all_mean=[]
+    all_q05=[]
+    all_q95=[]
+
+    # Rellenar listas.
+    for train_time in list_train_time:
+
+        # Indices de filas con el tiempo de entrenamiento menor que train_time.
+        ind_train=df_train[type_eval] <= train_time
+  
+        # Agrupar las filas anteriores por la semilla y quedarnos con la fila por grupo 
+        # que mayor valor de score tiene asociado.
+        interest_rows=df_train[ind_train].groupby(seed_name)['reward'].idxmax()
+
+        # Calcular la media y el intervalo de confianza del score.
+        interest=list(df_train[ind_train].loc[interest_rows]['reward'])
+        mean,q05,q95=bootstrap_mean_and_confiance_interval(interest)
+
+        # Guardar datos.
+        all_mean.append(mean)
+        all_q05.append(q05)
+        all_q95.append(q95)
+
+    return all_mean,all_q05,all_q95,list_train_time
+
+# FUNCIÓN 3 (construcción de las curvas que muestran el comportamiento del accuracy durante el entrenamiento)
+def draw_accuracy_behaviour(df_train,type_time,curve):
+    # Inicializar listas para la gráfica.
+    all_mean=[]
+    all_q05=[]
+    all_q95=[]
+
+    # Rellenar listas.
+    for train_time in list_train_time:
+
+        # Indices de filas con el tiempo de entrenamiento más cercano a train_time.
+        ind_down=df_train[type_time] <= train_time
+        ind_per_seed=df_train[ind_down].groupby('seed')[type_time].idxmax()
+
+        # Agrupar las filas anteriores por semillas y quedarnos con los valores de accuracy.
+        list_acc=list(df_train[ind_down].loc[ind_per_seed]['accuracy'])
+
+        # Calcular la media y el intervalo de confianza del accuracy.
+        mean,q05,q95=bootstrap_mean_and_confiance_interval(list_acc)
+
+        # Guardar datos.
+        all_mean.append(mean)
+        all_q05.append(q05)
+        all_q95.append(q95)
+    
+    # Dibujar gráfica
+    ax.fill_between(list_train_time,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
+    plt.plot(list_train_time, all_mean, linewidth=2,color=colors[curve])
+
+# FUNCIÓN 4 (dibujar y guardar las gráficas según el heurístico seleccionada)
+def draw_and_save_figures_per_heuristic(heuristic):
+
+    global ax
+
+    # Inicializar gráfica.
+    plt.figure(figsize=[20,5])
+    plt.subplots_adjust(left=0.08,bottom=0.11,right=0.76,top=0.88,wspace=0.4,hspace=0.76)
+
+    #__________________________________________________________________________________________________
+    # SUBGRÁFICA 1: scores durante el entrenamiento.
+
+    ax=plt.subplot(132)
+
+    # Lectura de bases de datos que se emplearán.
+    df_optimal_acc=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_'+str(sample_size_freq)+'.csv', index_col=0) # Accuracy ascendente.
+
+    # Inicializar número de curvas.
+    curve=0
+
+    # Uso constante de la precisión.
+    all_mean,all_q05,all_q95,list_train_time=train_data_to_figure_data(df_max_acc,'n_steps','train_seed')
+    ax.fill_between(list_train_time,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
+    plt.plot(list_train_time, all_mean, linewidth=2,label='1',color=colors[curve])
+    curve+=1
+
+    # Uso ascendente de la precisión.
+    list_params=list(set(df_optimal_acc['heuristic_param']))
+    for param in list_params:
+        df=df_optimal_acc[df_optimal_acc['heuristic_param']==param]
+        all_mean,all_q05,all_q95,list_train_time=train_data_to_figure_data(df,'n_steps')
+        ax.fill_between(list_train_time,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
+        plt.plot(list_train_time, all_mean, linewidth=2,label='Optimal h'+str(heuristic)+' ('+str(param)+')',color=colors[curve])
+        curve+=1
+
+    ax.set_xlabel("Total train steps")
+    ax.set_ylabel("Reward")
+    ax.set_xticks(range(100000,900000,200000))
+    ax.set_title('Comparison between optimal and constant accuracy')
+
+    #__________________________________________________________________________________________________
+    # SUBGRÁFICA 2: scores durante el entrenamiento sin considerar el tiempo de evaluación extra
+    # necesarios para reajustar el accuracy.
+
+    ax=plt.subplot(133)
+
+    # Inicializar número de curvas.
+    curve=0
+
+    # Uso constante de la precisión.
+    all_mean,all_q05,all_q95,list_train_time=train_data_to_figure_data(df_max_acc,'n_steps','train_seed')
+    ax.fill_between(list_train_time,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
+    plt.plot(list_train_time, all_mean, linewidth=2,label='1',color=colors[curve])
+    curve+=1
+
+    # Uso ascendente de la precisión.
+    list_params=list(set(df_optimal_acc['heuristic_param']))
+    for param in list_params:
+        df=df_optimal_acc[df_optimal_acc['heuristic_param']==param]
+        all_mean,all_q05,all_q95,list_train_time=train_data_to_figure_data(df,'n_steps_proc')
+        ax.fill_between(list_train_time,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
+        plt.plot(list_train_time, all_mean, linewidth=2,label='Optimal h'+str(heuristic)+' ('+str(param)+')',color=colors[curve])
+        curve+=1
+
+    ax.set_xlabel("Train steps (without extra)")
+    ax.set_ylabel("Reward")
+    ax.set_xticks(range(100000,900000,200000))
+    ax.set_title('Comparison between optimal and constant accuracy')
+    ax.legend(title="Train time-step \n accuracy",bbox_to_anchor=(1.4, 0, 0, 1), loc='center')
+
+
+
+    #__________________________________________________________________________________________________
+    # SUBGRÁFICA 3: representación gráfica del comportamiento del accuracy.
+
+    ax=plt.subplot(131)
+
+    # Inicializar número de curvas.
+    curve=1
+
+    # Dibujar curvas.
+    for param in list_params:
+        df=df_optimal_acc[df_optimal_acc['heuristic_param']==param]
+        draw_accuracy_behaviour(df,'n_steps',curve)
+        curve+=1
+    ax.set_xlabel("Train steps")
+    ax.set_ylabel("Accuracy value")
+    ax.set_xticks(range(100000,900000,200000))
+    ax.set_title('Behavior of optimal accuracy')
+
+
+    plt.savefig('results/figures/MuJoCo/OptimalAccuracyAnalysis_h'+str(heuristic)+'_'+str(sample_size_freq)+'.png')
+    plt.show()
+    plt.close()
+
+# FUNCIÓN 6 (dibujar gráfica comparativa)
+def draw_comparative_figure(heuristic_param_list):
+    global ax
+
+    # Inicializar gráfica.
+    plt.figure(figsize=[15,5])
+    plt.subplots_adjust(left=0.12,bottom=0.11,right=0.73,top=0.88,wspace=0.4,hspace=0.76)
+
+    #__________________________________________________________________________________________________
+    # SUBGRÁFICA 1: scores durante el entrenamiento.
+
+    ax=plt.subplot(122)
+
+    # Caso por defecto.
+    df_max_acc=pd.read_csv('results/data/MuJoCo/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis_acc1.0.csv', index_col=0)
+    curve=0
+    all_mean,all_q05,all_q95,list_train_time=train_data_to_figure_data(df_max_acc,'n_steps','train_seed')
+    ax.fill_between(list_train_time,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
+    plt.plot(list_train_time, all_mean, linewidth=2,label='1',color=colors[curve])
+    curve+=1
+
+    # Heuristicos seleccionados.
+    for heuristic_param in heuristic_param_list:
+        heuristic=heuristic_param[0]
+        param=heuristic_param[1]
+        df=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_'+str(sample_size_freq)+'.csv', index_col=0)
+        all_mean,all_q05,all_q95,list_train_time=train_data_to_figure_data(df[df['heuristic_param']==param],'n_steps')
+        ax.fill_between(list_train_time,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
+        plt.plot(list_train_time, all_mean, linewidth=2,label='Optimal h'+str(heuristic)+' ('+str(param)+')',color=colors[curve])
+        curve+=1
+    
+    ax.set_xlabel("Train steps")
+    ax.set_ylabel("Reward")
+    ax.set_xticks(range(100000,900000,200000))
+    ax.set_title('Comparison of heuristics and default case')
+    ax.legend(title="Train time-step \n accuracy",bbox_to_anchor=(1.4, 0, 0, 1), loc='center')
+
+    #__________________________________________________________________________________________________
+    # SUBGRÁFICA 2: representación gráfica del comportamiento del accuracy.
+
+    ax=plt.subplot(121)
+
+    # Inicializar número de curvas.
+    curve=1
+
+    # Dibujar curvas.
+    for heuristic_param in heuristic_param_list:
+        heuristic=heuristic_param[0]
+        param=heuristic_param[1]
+        df=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_'+str(sample_size_freq)+'.csv', index_col=0)
+        draw_accuracy_behaviour(df[df['heuristic_param']==param],'n_steps',curve)
+        curve+=1
+    ax.set_xlabel("Train steps")
+    ax.set_ylabel("Accuracy value")
+    ax.set_xticks(range(100000,900000,200000))
+    ax.set_title('Behavior of accuracy')
+
+    plt.savefig('results/figures/MuJoCo/OptimalAccuracyAnalysis_comparison_'+str(sample_size_freq)+'.png')
+    plt.show()
+    plt.close()
+
+#==================================================================================================
+# PROGRAMA PRINCIPAL
+#==================================================================================================
+# Lista de colores.
+colors=px.colors.qualitative.D3
+
+# Parámetro.
+sample_size_freq='BisectionOnly'
+
+# Definir tiempos de entrenamiento que se desean dibujar.
+df_max_acc=pd.read_csv('results/data/MuJoCo/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis_acc1.0.csv', index_col=0)
+df_hI=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_hI_'+str(sample_size_freq)+'.csv', index_col=0)
+df_hII=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_hII_'+str(sample_size_freq)+'.csv', index_col=0)
+min_time_acc_max=max(df_max_acc.groupby('train_seed')['n_steps'].min())
+min_time_hI=max(df_hI.groupby('seed')['n_steps'].min())
+min_time_hII=max(df_hII.groupby('seed')['n_steps'].min())
+max_time_acc_max=min(df_max_acc.groupby('train_seed')['n_steps'].max())
+max_time_hI=min(df_hI.groupby('seed')['n_steps_proc'].max())
+max_time_hII=min(df_hII.groupby('seed')['n_steps_proc'].max())
+
+df_cost_per_acc=pd.read_csv('results/data/MuJoCo/UnderstandingAccuracy/df_Bisection.csv',index_col=0)
+time_split=list(df_cost_per_acc['cost_per_eval'])[0]*20
+
+list_train_time=np.arange(max(min_time_acc_max,min_time_hI,min_time_hII),min(max_time_acc_max,max_time_hI,max_time_hII)+time_split,time_split)
+
+# Llamar a la función.
+list_heuristics=['I','II']
+heuristic_param_list=[['I',0.95],['II',5]]
+for heuristic in list_heuristics:
+    draw_and_save_figures_per_heuristic(heuristic)
+draw_comparative_figure(heuristic_param_list)
