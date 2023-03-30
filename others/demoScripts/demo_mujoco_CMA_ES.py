@@ -150,6 +150,6 @@ for index,gymEnvName, action_space, max_episode_length, is_reward_monotone in zi
 
     print('ENVIRONMENT: '+str(gymEnvName))
     for seed in list_train_seeds:
-        res_filepath = f"others/demoScripts/results/mujoco_PPO/mujoco_CMA_ES/gymEnvName_{gymEnvName}_{seed}.txt"
+        res_filepath = f"others/demoScripts/results/mujoco_CMA_ES/gymEnvName_{gymEnvName}_{seed}.txt"
         launch_from_python(seed=seed, gymEnvName=gymEnvName, action_space=action_space, max_episode_length=max_episode_length,index=index) 
 
