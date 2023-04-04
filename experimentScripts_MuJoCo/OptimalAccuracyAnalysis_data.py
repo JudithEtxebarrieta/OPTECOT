@@ -533,7 +533,7 @@ policy_name='SwimmerPolicy'
 DTU=False # Criterio de parada dependiente de terminate_when_unhealthy.
 
 # Mallados y parámetros para el entrenamiento.
-list_train_seeds = list(range(7,22,1)) # Lista de semillas de entrenamiento.
+list_train_seeds = list(range(2,102,1)) # Lista de semillas de entrenamiento.
 train_env_seed=0 # Semilla para el entorno de entrenamiento.
 max_steps=1000000 # Límite de entrenamiento medido en steps (asumiendo que el coste de todos los steps es el mismo). (Referencia: https://huggingface.co/sb3/ppo-Swimmer-v3/tree/main)
 
@@ -564,7 +564,7 @@ def parallel_processing(arg):
 
     # Guardar base de datos.
     df=pd.DataFrame(df,columns=['heuristic_param','seed','n_gen','reward','accuracy','variance','n_steps_proc','n_steps_acc','n_steps'])
-    df.to_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_param'+str(heuristic_param)+'_2.csv')
+    df.to_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_param'+str(heuristic_param)+'.csv')
 
 # Procesamiento en paralelo.
 phisical_cpu=ps.cpu_count(logical=False)
@@ -572,10 +572,3 @@ pool=mp.Pool(phisical_cpu)
 pool.map(parallel_processing,list_arg)
 pool.close()
 
-# Unir bases de datos.
-# df1=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_hI_param0.8_1.csv', index_col=0)
-# df2=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_hI_param0.8_2.csv', index_col=0)
-# df3=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_hI_param0.95_1.csv', index_col=0)
-# df4=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_hI_param0.95_2.csv', index_col=0)
-# df=pd.concat([df1,df2,df3,df4],ignore_index=True)
-# df.to_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_hI_'+str(sample_size_freq)+'.csv')
