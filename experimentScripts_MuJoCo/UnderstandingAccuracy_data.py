@@ -1,10 +1,10 @@
-# Mediante este script se evalúan 100 políticas aleatorias (asociadas a una precisión máxima) 
-# sobre 10 episodios de un entorno definido con 10 valores de accuracy diferentes para el parámetro
+# Mediante este script se evaluan 100 politicas aleatorias (asociadas a una precision maxima) 
+# sobre 10 episodios de un entorno definido con 10 valores de accuracy diferentes para el parametro
 # timesteps (tiempo transcurrido entre frame y frame de un episodio). Los datos relevantes (medias 
-# de rewards y número de steps por evaluación) se almacenan para después poder acceder a ellos.
+# de rewards y numero de steps por evaluacion) se almacenan para despues poder acceder a ellos.
 
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
 import os
 import sys
@@ -38,16 +38,16 @@ import psutil as ps
 #==================================================================================================
 # FUNCIONES
 #==================================================================================================
-# FUNCIÓN 1 (Esta función es una modificación de otra ya existente, con la modificación se pretenden
-# ir almacenando los datos de interés).
+# FUNCION 1 (Esta funcion es una modificacion de otra ya existente, con la modificacion se pretenden
+# ir almacenando los datos de interes).
 def rollout(self):
 
     self.start_episode()
     while not self.step_episode():
         pass
 
-    # MODIFICACIÓN: cada vez que se entre en esta función estaremos trabajando con una política nueva,
-    # por tanto es el momento en donde debemos evaluar la política y guardar la información de interés.
+    # MODIFICACION: cada vez que se entre en esta funcion estaremos trabajando con una politica nueva,
+    # por tanto es el momento en donde debemos evaluar la politica y guardar la informacion de interes.
     global n_policy,global_n_sample
     print('Policy: '+str(n_policy)+str('/')+str(global_n_sample))
     for accuracy in tqdm(list_acc):
@@ -57,8 +57,8 @@ def rollout(self):
 
     return self.collect_episode()
 
-# FUNCIÓN 2 (evaluar una muestra aleatoria de políticas, para ello se considerarán los 
-# individuos de una única generación del algoritmo CMA-ES)
+# FUNCION 2 (evaluar una muestra aleatoria de politicas, para ello se consideraran los 
+# individuos de una unica generacion del algoritmo CMA-ES)
 @wrap_experiment
 def evaluate_policy_sample(ctxt=None,n_sample=100):
 
@@ -69,16 +69,16 @@ def evaluate_policy_sample(ctxt=None,n_sample=100):
 
         set_seed(0)
 
-        # Inicializar entorno sobre el cual se definirán las políticas (con máximo accuracy).
+        # Inicializar entorno sobre el cual se definiran las politicas (con maximo accuracy).
         env = GymEnv(gymEnvName, max_episode_length=max_episode_length)
         env._env.seed(seed=0)
 
-        # En caso de usar un entorno con criterio de parada dependiente del parámetro 
+        # En caso de usar un entorno con criterio de parada dependiente del parametro 
         # terminate_when_unhealthy, anular este tipo de parada.
         if DTU:
             env._env.env._terminate_when_unhealthy = False 
 
-        # Evaluar muestra aleatoria de 100 políticas con los accuracys seleccionados.
+        # Evaluar muestra aleatoria de 100 politicas con los accuracys seleccionados.
         global n_policy
         n_policy=1
         is_action_space_discrete=bool(["continuous", "discrete"].index(action_space))
@@ -90,16 +90,16 @@ def evaluate_policy_sample(ctxt=None,n_sample=100):
         sampler = LocalSampler(agents=policy, envs=env, max_episode_length=env.spec.max_episode_length, is_tf_worker=True)
         algo= CMAES(env_spec=env.spec, policy=policy, sampler=sampler, n_samples=n_sample)
         trainer.setup(algo, env)
-        trainer.train(n_epochs=1, batch_size=env.spec.max_episode_length) # Esta función llamará internamente a "rollout".
+        trainer.train(n_epochs=1, batch_size=env.spec.max_episode_length) # Esta funcion llamara internamente a "rollout".
 
-# FUNCIÓN 3 (evaluar una política)
+# FUNCION 3 (evaluar una politica)
 def evaluate_policy(policy,accuracy):
 
-    # Inicializar entorno de validación fijando el valor de accuracy adecuado.
+    # Inicializar entorno de validacion fijando el valor de accuracy adecuado.
     eval_env = GymEnv(gymEnvName, max_episode_length=max_episode_length*accuracy)
     eval_env._env.unwrapped.model.opt.timestep=default_frametime/accuracy
 
-    # Fijar semilla para que los episodios a evaluar sean los mismos por cada llamada a la función 
+    # Fijar semilla para que los episodios a evaluar sean los mismos por cada llamada a la funcion 
     # y definir el estado inicial (obs) del primer episodio.
     eval_env._env.seed(seed=0)
     obs,_=eval_env.reset()
@@ -109,7 +109,7 @@ def evaluate_policy(policy,accuracy):
     all_ep_steps=[]
     steps=0
     for _ in range(10):
-        # Evaluar episodio con la política y guardar el reward asociado.
+        # Evaluar episodio con la politica y guardar el reward asociado.
         episode_reward=0
         episode_steps=0
         done=False
@@ -131,32 +131,32 @@ def evaluate_policy(policy,accuracy):
 #==================================================================================================
 # PROGRAMA PRINCIPAL
 #==================================================================================================
-# Modificación de función existente (para guardar datos durante el entrenamiento).
+# Modificacion de funcion existente (para guardar datos durante el entrenamiento).
 garage.sampler.default_worker.DefaultWorker.rollout = rollout
-# Modificación de función existente ( para no perder tiempo).
+# Modificacion de funcion existente ( para no perder tiempo).
 garage.trainer.Trainer.save = lambda self, epoch: "skipp save."
-# Modificación de función existente (para no imprimir información de episodio durante el entrenamiento).
+# Modificacion de funcion existente (para no imprimir informacion de episodio durante el entrenamiento).
 Logger.log= lambda self, data: 'skipp info message.'
 warnings.filterwarnings("ignore")
 
-# Características del entorno (para ejecutar el script con otro entorno MuJoCo estas son las únicas 
-# variables que habrá que modificar).
+# Caracteristicas del entorno (para ejecutar el script con otro entorno MuJoCo estas son las unicas 
+# variables que habra que modificar).
 gymEnvName='Swimmer-v3'
 action_space="continuous"
 max_episode_length=1000
-default_frametime=0.01 # Parámetro del que se modificará el accuracy.
+default_frametime=0.01 # Parametro del que se modificara el accuracy.
 policy_name='SwimmerPolicy'
 DTU=False # Criterio de parada dependiente de terminate_when_unhealthy.
 
 #--------------------------------------------------------------------------------------------------
-# Para el análisis de motivación.
+# Para el analisis de motivacion.
 #--------------------------------------------------------------------------------------------------
 
-# Lista de accuracys con los que se evaluará la muestra anterior.
+# Lista de accuracys con los que se evaluara la muestra anterior.
 list_acc=[1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1]
 
-# Evaluar una muestra aleatoria de 100 políticas usando diferentes valores de accuracy y construir una 
-# base de datos con los scores (rewards) y tiempos de ejecución (steps) por evaluación.
+# Evaluar una muestra aleatoria de 100 politicas usando diferentes valores de accuracy y construir una 
+# base de datos con los scores (rewards) y tiempos de ejecucion (steps) por evaluacion.
 df=[]
 evaluate_policy_sample(n_sample=100)
 
@@ -166,7 +166,7 @@ df_motivation.to_csv('results/data/MuJoCo/UnderstandingAccuracy/df_Understanding
 
 
 #--------------------------------------------------------------------------------------------------
-# Para la definición de los valores (tiempo) sobre los cuales se aplicará la bisección.
+# Para la definicion de los valores (tiempo) sobre los cuales se aplicara la biseccion.
 #--------------------------------------------------------------------------------------------------
 # Guardar base de datos.
 df_bisection=pd.DataFrame(df,columns=['accuracy','n_policy','reward','cost_per_eval'])

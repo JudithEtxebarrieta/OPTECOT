@@ -1,8 +1,8 @@
-# Mediante este script se representan gráficamente los resultados numéricos calculados por 
+# Mediante este script se representan graficamente los resultados numericos calculados por 
 # "UnderstandingAccuracyShape.py".
 
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
 import numpy as np
 from scipy.stats import norm
@@ -18,10 +18,10 @@ import plotly.express as px
 #==================================================================================================
 # FUNCIONES
 #==================================================================================================
-# FUNCIÓN 1
-# Parámetros:
-#   >data: datos sobre los cuales se calculará el rango entre percentiles.
-#   >bootstrap_iterations: número de submuestras que se considerarán de data para poder calcular el 
+# FUNCION 1
+# Parametros:
+#   >data: datos sobre los cuales se calculara el rango entre percentiles.
+#   >bootstrap_iterations: numero de submuestras que se consideraran de data para poder calcular el 
 #    rango entre percentiles de sus medias.
 # Devolver: la media de los datos originales junto a los percentiles de las medias obtenidas del 
 # submuestreo realizado sobre data.
@@ -33,9 +33,9 @@ def bootstrap_mean_and_confiance_interval(data,bootstrap_iterations=1000):
         mean_list.append(np.mean(sample))
     return np.mean(data),np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
 
-# FUNCIÓN 2 (transformar datos en figura)
-# Parámetros: list_threshold_corr, lista con los umbrales de correlación ideal considerados.
-# Devolver: nada, construye directamente la gráica.
+# FUNCION 2 (transformar datos en figura)
+# Parametros: list_threshold_corr, lista con los umbrales de correlacion ideal considerados.
+# Devolver: nada, construye directamente la graica.
 
 def from_data_to_figure(list_threshold_corr):
     # Lista de colores.
@@ -45,7 +45,7 @@ def from_data_to_figure(list_threshold_corr):
     plt.figure(figsize=[13,5])
     plt.subplots_adjust(left=0.09,bottom=0.11,right=0.85,top=0.88,wspace=0.40,hspace=0.76)
 
-    # SUBGRÁFICA 1
+    # SUBGRAFICA 1
     ax=plt.subplot(121)
 
     curve=1
@@ -70,7 +70,7 @@ def from_data_to_figure(list_threshold_corr):
     ax.set_ylabel("Accuracy")
     ax.set_title('Ascendant accuracy shape depending \n on correlation threshold')
 
-    # SUBGRÁFICA 2
+    # SUBGRAFICA 2
     ax=plt.subplot(122)
 
     curve=1

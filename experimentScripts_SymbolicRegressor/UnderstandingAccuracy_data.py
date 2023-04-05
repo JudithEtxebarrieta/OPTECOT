@@ -1,12 +1,12 @@
-# Mediante este script se evalúa una muestra aleatoria de 100 superficies usando 10 valores 
-# diferentes de accuracy. Se construye una base de datos con la información de score y número de 
-# puntos evaluados por evaluación. Al mismo tiempo, se guarda la información del número de puntos 
-# que se evalúan por evaluación (coste por evaluación) al considerar los valores de accuracy 
-# correspondientes a la aplicación más costosa del método de bisección (esta tabla será útil para
-# definir los futuros heurísticos).
+# Mediante este script se evalua una muestra aleatoria de 100 superficies usando 10 valores 
+# diferentes de accuracy. Se construye una base de datos con la informacion de score y numero de 
+# puntos evaluados por evaluacion. Al mismo tiempo, se guarda la informacion del numero de puntos 
+# que se evaluan por evaluacion (coste por evaluacion) al considerar los valores de accuracy 
+# correspondientes a la aplicacion mas costosa del metodo de biseccion (esta tabla sera util para
+# definir los futuros heuristicos).
 
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
 from gplearn.genetic import SymbolicRegressor
 from sklearn.utils.random import check_random_state
@@ -34,7 +34,7 @@ from gplearn.genetic import _parallel_evolve, MAX_INT
 #==================================================================================================
 # NUEVAS FUNCIONES
 #==================================================================================================
-# FUNCIÓN 1 (construir conjunto de puntos extraído de una superficie)
+# FUNCION 1 (construir conjunto de puntos extraido de una superficie)
 def build_pts_sample(n_sample,seed,expr_surf):
 
     # Fijar la semilla.
@@ -53,13 +53,13 @@ def build_pts_sample(n_sample,seed,expr_surf):
 
     return pts_sample
 
-# FUNCIÓN 2 (construir una muestra aleatoria con expresiones de superficies)
+# FUNCION 2 (construir una muestra aleatoria con expresiones de superficies)
 def build_surface_sample(n_sample=100):
 
-    # Definición del algoritmo genético a partir del cual se construirá la generación que se usará como muestra.
+    # Definicion del algoritmo genetico a partir del cual se construira la generacion que se usara como muestra.
     est_surf=SymbolicRegressor(random_state=0,generations=1,population_size=n_sample)
 
-    # Construcción de la población.
+    # Construccion de la poblacion.
     df_pts=build_pts_sample(default_n_pts,0,'x**2-y**2+y-1')
     xy_train=df_pts[:,[0,1]]
     z_train=df_pts[:,2]
@@ -67,7 +67,7 @@ def build_surface_sample(n_sample=100):
 
     return population 
 
-# FUNCIÓN 3 (evaluar una superficie con un valor de accuracy concreto)
+# FUNCION 3 (evaluar una superficie con un valor de accuracy concreto)
 def evaluate_surface(surf,accuracy):
     # Construir conjunto de puntos.
     df_pts=build_pts_sample(int(default_n_pts*accuracy),0,'x**2-y**2+y-1')
@@ -80,13 +80,13 @@ def evaluate_surface(surf,accuracy):
     # Calcular score asociado al conjunto de puntos para la superficie seleccionada.
     score=sum(abs(z_test-z_pred))/len(z_test)
 
-    # Calcular número de evaluaciones hechas.
+    # Calcular numero de evaluaciones hechas.
     n_eval=int(default_n_pts*accuracy)
 
 
     return score,n_eval
 
-# FUNCIÓN 4 (evaluar una muestra de superficies con un valor de accuracy concreto)
+# FUNCION 4 (evaluar una muestra de superficies con un valor de accuracy concreto)
 def evaluate_surface_sample(surf_sample,accuracy):
     for i in range(len(surf_sample)):
         score,n_eval=evaluate_surface(surf_sample[i],accuracy)
@@ -95,7 +95,7 @@ def evaluate_surface_sample(surf_sample,accuracy):
 #==================================================================================================
 # FUNCIONES EXISTENTES
 #==================================================================================================
-# FUNCIÓN 5
+# FUNCION 5
 # -Original: fit
 # -Script: genetic.py
 # -Clase: BaseSymbolic
@@ -424,21 +424,21 @@ def fit(self, X, y, sample_weight=None):
             else:
                 self._program = self._programs[-1][np.argmin(fitness)]
 
-        return self,population #MODIFICACIÓN: devolver también la población.
+        return self,population #MODIFICACION: devolver tambien la poblacion.
 
 
 #==================================================================================================
 # PROGRAMA PRINCIPAL
 #==================================================================================================
-# Usar la función fit modificada (para poder acceder a la población)
+# Usar la funcion fit modificada (para poder acceder a la poblacion)
 from gplearn.genetic import BaseSymbolic
 BaseSymbolic.fit=fit
 
-# parámetro por defecto
+# parametro por defecto
 default_n_pts=50
 
 #--------------------------------------------------------------------------------------------------
-# Para el análisis de motivación.
+# Para el analisis de motivacion.
 #--------------------------------------------------------------------------------------------------
 
 # Lista de accuracys.
@@ -447,7 +447,7 @@ list_acc=[1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1]
 # Construir muestra de superficies.
 surf_sample=build_surface_sample(100)
 
-# Construir base de datos con información de scores y número de evaluaciones gastadas por evaluación.
+# Construir base de datos con informacion de scores y numero de evaluaciones gastadas por evaluacion.
 df=[]
 for accuracy in tqdm(list_acc):
     evaluate_surface_sample(surf_sample,accuracy)
@@ -455,7 +455,7 @@ df_motivation=pd.DataFrame(df,columns=['accuracy','n_surf','score','n_eval'])
 df_motivation.to_csv('results/data/SymbolicRegressor/UnderstandingAccuracy/df_UnderstandingAccuracy.csv')
 
 #--------------------------------------------------------------------------------------------------
-# Para la definición de los valores (tiempo) sobre los cuales se aplicará la bisección.
+# Para la definicion de los valores (tiempo) sobre los cuales se aplicara la biseccion.
 #--------------------------------------------------------------------------------------------------
 # Guardar base de datos.
 df_bisection=pd.DataFrame(df,columns=['accuracy','n_surf','score','cost_per_eval'])

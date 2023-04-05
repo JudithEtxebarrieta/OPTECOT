@@ -1,8 +1,8 @@
-# Mediante este script se representan gráficamente los resultados numéricos calculados por 
+# Mediante este script se representan graficamente los resultados numericos calculados por 
 # "ConstantAccuracyAnalysis_data.py".
 
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
 import numpy as np
 from scipy.stats import norm
@@ -19,10 +19,10 @@ import plotly.express as px
 # FUNCIONES
 #==================================================================================================
 
-# FUNCIÓN 1
-# Parámetros:
-#   >data: datos sobre los cuales se calculará el rango entre percentiles.
-#   >bootstrap_iterations: número de submuestras que se considerarán de data para poder calcular el 
+# FUNCION 1
+# Parametros:
+#   >data: datos sobre los cuales se calculara el rango entre percentiles.
+#   >bootstrap_iterations: numero de submuestras que se consideraran de data para poder calcular el 
 #    rango entre percentiles de sus medias.
 # Devolver: la media de los datos originales junto a los percentiles de las medias obtenidas del 
 # submuestreo realizado sobre data.
@@ -34,17 +34,17 @@ def bootstrap_mean_and_confiance_interval(data,bootstrap_iterations=1000):
         mean_list.append(np.mean(sample))
     return np.mean(data),np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
 
-# FUNCIÓN 2
-# Parámetros:
-#   >df_train_acc: base de datos con información extraído del proceso de búsqueda de la superficie 
+# FUNCION 2
+# Parametros:
+#   >df_train_acc: base de datos con informacion extraido del proceso de busqueda de la superficie 
 #    para un valor concreto de accuracy (un tamaño del conjunto de puntos inicial).
-#   >list_train_n_eval: lista con el número de evaluaciones que se desean dibujar en la gráfica.
-# Devolver: lista de medias e intervalos de confianza asociados a cada número de evaluaciones destacado
+#   >list_train_n_eval: lista con el numero de evaluaciones que se desean dibujar en la grafica.
+# Devolver: lista de medias e intervalos de confianza asociados a cada numero de evaluaciones destacado
 # en list_train_n_eval, y calculados a partir de los datos df_train_acc almacenados para cada semilla.
 
 def train_data_to_figure_data(df_train_acc,list_train_n_eval):
 
-    # Inicializar listas para la gráfica.
+    # Inicializar listas para la grafica.
     all_mean=[]
     all_q05=[]
     all_q95=[]
@@ -52,7 +52,7 @@ def train_data_to_figure_data(df_train_acc,list_train_n_eval):
     # Rellenar listas.
     for train_n_eval in list_train_n_eval:
 
-        # Indices de filas con un número de evaluaciones de entrenamiento menor que train_n_eval.
+        # Indices de filas con un numero de evaluaciones de entrenamiento menor que train_n_eval.
         ind_train=df_train_acc["n_eval"] <= train_n_eval
         
         # Agrupar las filas anteriores por la semilla y quedarnos con la fila por grupo 
@@ -76,22 +76,22 @@ def train_data_to_figure_data(df_train_acc,list_train_n_eval):
 colors=px.colors.qualitative.D3+['#FFB90F']
 
 
-# Inicializar gráfica.
+# Inicializar grafica.
 plt.figure(figsize=[15,6])
 plt.subplots_adjust(left=0.09,bottom=0.11,right=0.84,top=0.88,wspace=0.3,hspace=0.2)
 
 #--------------------------------------------------------------------------------------------------
-# GRÁFICA 1 (Mejores resultados por valor de accuracy)
+# GRAFICA 1 (Mejores resultados por valor de accuracy)
 #--------------------------------------------------------------------------------------------------
 print('GRAFICA 1')
 
 # Leer lista con valores de accuracy considerados.
 list_acc=np.load('results/data/SymbolicRegressor/ConstantAccuracyAnalysis/list_acc.npy')
 
-# Leer expresión de superficie real.
+# Leer expresion de superficie real.
 eval_expr=str(np.load('results/data/SymbolicRegressor/ConstantAccuracyAnalysis/expr_surf.npy'))
 
-# Lista con límites de número de evaluaciones de entrenamiento que se desean dibujar.
+# Lista con limites de numero de evaluaciones de entrenamiento que se desean dibujar.
 df_train_acc_min=pd.read_csv("results/data/SymbolicRegressor/ConstantAccuracyAnalysis/df_train_acc"+str(min(list_acc))+".csv", index_col=0)
 df_train_acc_max=pd.read_csv("results/data/SymbolicRegressor/ConstantAccuracyAnalysis/df_train_acc"+str(max(list_acc))+".csv", index_col=0)
 max_n_eval=np.load('results/data/SymbolicRegressor/ConstantAccuracyAnalysis/max_n_eval.npy')
@@ -99,7 +99,7 @@ min_n_eval=max(df_train_acc_max.groupby("train_seed")["n_eval"].min())
 split_n_eval=max(df_train_acc_min.groupby("train_seed")["n_eval"].min())
 list_train_n_eval=np.arange(min_n_eval,max_n_eval,split_n_eval)
 
-# Conseguir datos para la gráfica.
+# Conseguir datos para la grafica.
 train_times=[]
 max_scores=[]
 for accuracy in list_acc:
@@ -107,14 +107,14 @@ for accuracy in list_acc:
     # Leer base de datos.
     df_train_acc=pd.read_csv("results/data/SymbolicRegressor/ConstantAccuracyAnalysis/df_train_acc"+str(accuracy)+".csv", index_col=0)
 
-    # Extraer de la base de datos la información relevante.
+    # Extraer de la base de datos la informacion relevante.
     all_mean_scores,all_q05_scores,all_q95_scores=train_data_to_figure_data(df_train_acc,list_train_n_eval)
 
-    # Fijar límite de evaluación de alcance de score.
+    # Fijar limite de evaluacion de alcance de score.
     if accuracy==1:
         score_limit=all_mean_scores[-1]
 
-    # Encontrar cuando se da el límite de score prefijado por primera vez.
+    # Encontrar cuando se da el limite de score prefijado por primera vez.
     limit_scores=list(np.array(all_mean_scores)<=score_limit)
     if True in limit_scores:
         ind_min=limit_scores.index(True)
@@ -123,7 +123,7 @@ for accuracy in list_acc:
     train_times.append(list_train_n_eval[ind_min])
     max_scores.append(all_mean_scores[ind_min])
 
-# Dibujar la gráfica.
+# Dibujar la grafica.
 ind_sort=np.argsort(train_times)
 train_times_sort=[str(i) for i in sorted(train_times)]
 max_scores_sort=[max_scores[i] for i in ind_sort]
@@ -140,7 +140,7 @@ ax.set_title('Best results for each model \n (real surface '+str(eval_expr)+')')
 plt.axhline(y=score_limit,color='black', linestyle='--')
 
 #--------------------------------------------------------------------------------------------------
-# GRÁFICA 2 (Resultados generales scores)
+# GRAFICA 2 (Resultados generales scores)
 #--------------------------------------------------------------------------------------------------
 print('GRAFICA 2')
 
@@ -152,7 +152,7 @@ for accuracy in list_acc:
     # Leer base de datos.
     df_train_acc=pd.read_csv("results/data/SymbolicRegressor/ConstantAccuracyAnalysis/df_train_acc"+str(accuracy)+".csv", index_col=0)
 
-    # Extraer de la base de datos la información relevante.
+    # Extraer de la base de datos la informacion relevante.
     all_mean_scores,all_q05_scores,all_q95_scores =train_data_to_figure_data(df_train_acc,list_train_n_eval)
 
     # Dibujar curva.

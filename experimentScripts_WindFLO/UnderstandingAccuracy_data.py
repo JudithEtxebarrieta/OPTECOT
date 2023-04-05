@@ -1,9 +1,9 @@
-# Mediante este script se evalúan 100 soluciones aleatorias considerando 10 valores de accuracy
-# diferentes para el parámetro monteCarloPts. Los datos relevantes (scores y tiempos de ejecución
-# por evaluación) se almacenan para después poder acceder a ellos.
+# Mediante este script se evaluan 100 soluciones aleatorias considerando 10 valores de accuracy
+# diferentes para el parametro monteCarloPts. Los datos relevantes (scores y tiempos de ejecucion
+# por evaluacion) se almacenan para despues poder acceder a ellos.
 
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
 import os
 import sys
@@ -27,19 +27,19 @@ from WindFLO import WindFLO
 # FUNCIONES
 #==================================================================================================
 
-# FUNCIÓN 1 (Inicializar las características del terreno y las turbinas sobre los cuales se aplicará la optimización)
+# FUNCION 1 (Inicializar las caracteristicas del terreno y las turbinas sobre los cuales se aplicara la optimizacion)
 def get_windFLO_with_accuracy(momentary_folder='',accuracy=1):
 
-    # Configuración y parámetros de WindFLO.
+    # Configuracion y parametros de WindFLO.
     windFLO = WindFLO(
     inputFile = 'WindFLO/Examples/Example1/WindFLO.dat', # Archivo input para leer.
-    libDir = 'WindFLO/release/', # Ruta a la librería compartida libWindFLO.so.
-    turbineFile = 'WindFLO/Examples/Example1/V90-3MW.dat',# Parámetros de las turbinas.
+    libDir = 'WindFLO/release/', # Ruta a la libreria compartida libWindFLO.so.
+    turbineFile = 'WindFLO/Examples/Example1/V90-3MW.dat',# Parametros de las turbinas.
     terrainfile = 'WindFLO/Examples/Example1/terrain.dat', # Archivo del terreno.
     runDir=momentary_folder,
-    nTurbines = 25, # Número de turbinas.
+    nTurbines = 25, # Numero de turbinas.
 
-    monteCarloPts = round(1000*accuracy)# Parámetro del cual se modificará su precisión.
+    monteCarloPts = round(1000*accuracy)# Parametro del cual se modificara su precision.
     )
 
     # Cambiar el modelo de terreno predeterminado de RBF a IDW.
@@ -47,7 +47,7 @@ def get_windFLO_with_accuracy(momentary_folder='',accuracy=1):
 
     return windFLO
 
-# FUNCIÓN 2 (Evaluar el desempeño del diseño del parque eólico)
+# FUNCION 2 (Evaluar el desempeño del diseño del parque eolico)
 def EvaluateFarm(x, windFLO):
     
     k = 0
@@ -62,13 +62,13 @@ def EvaluateFarm(x, windFLO):
 
     return windFLO.farmPower
 
-# FUNCIÓN 3 (Generar conjunto de soluciones)
+# FUNCION 3 (Generar conjunto de soluciones)
 def build_solution_set(n_sample,seed):
 
     # Construir entorno por defecto.
     windFLO=get_windFLO_with_accuracy()
 
-    # Función para tranformar solución al
+    # Funcion para tranformar solucion al
     def transform_to_problem_dim(x):
         lbound = np.zeros(windFLO.nTurbines*2)    
         ubound = np.ones(windFLO.nTurbines*2)*2000
@@ -82,11 +82,11 @@ def build_solution_set(n_sample,seed):
 
     return solution_set
 
-# FUNCIÓN 4 (Evaluar un conjunto de soluciones)
+# FUNCION 4 (Evaluar un conjunto de soluciones)
 def evaluate_solution_set(solution_set,accuracy):
 
-    # Crear carpeta auxiliar para guardar en cada ejecución en paralelo sus propios archivos 
-    # auxiliares, y no se mezclen con los de las demás ejecuciones.
+    # Crear carpeta auxiliar para guardar en cada ejecucion en paralelo sus propios archivos 
+    # auxiliares, y no se mezclen con los de las demas ejecuciones.
     folder_name='File'+str(accuracy)
     os.makedirs(folder_name)
 
@@ -94,14 +94,14 @@ def evaluate_solution_set(solution_set,accuracy):
     windFLO = get_windFLO_with_accuracy(momentary_folder=folder_name+'/',accuracy=accuracy)
 
     
-    # Evaluar las soluciones e ir guardando la información relevante.
+    # Evaluar las soluciones e ir guardando la informacion relevante.
     for i in tqdm(range(len(solution_set))):
-        # Evaluación.
+        # Evaluacion.
         t=time.time()
         score=EvaluateFarm(solution_set[i], windFLO)
         elapsed=time.time()-t
 
-        # Guardar información.
+        # Guardar informacion.
         df.append([accuracy,i+1,score,elapsed])
 
     # Borrar carpeta auxiliar.
@@ -116,15 +116,15 @@ def evaluate_solution_set(solution_set,accuracy):
 solution_set=build_solution_set(100,0)
 
 #--------------------------------------------------------------------------------------------------
-# Para el análisis de motivación.
+# Para el analisis de motivacion.
 #--------------------------------------------------------------------------------------------------
-# Lista de accuracys a considerar (valores equidistantes para después facilitar la interpolación).
+# Lista de accuracys a considerar (valores equidistantes para despues facilitar la interpolacion).
 list_acc=np.arange(0.001,1.0+(1.0-0.001)/9,(1.0-0.001)/9)
 
-# Guardar datos de scores y tiempos por evaluación usando diferentes valores de accuracy.
+# Guardar datos de scores y tiempos por evaluacion usando diferentes valores de accuracy.
 for accuracy in list_acc:
 
-    # Inicializar base de datos donde se guardará la información.
+    # Inicializar base de datos donde se guardara la informacion.
     df=[]
 
     # Evaluar conjunto de puntos.
@@ -148,7 +148,7 @@ for accuracy in list_acc[1:]:
 df.to_csv('results/data/WindFLO/UnderstandingAccuracy/df_UnderstandingAccuracy.csv')
 
 #--------------------------------------------------------------------------------------------------
-# Para la definición de los valores (tiempo) sobre los cuales se aplicará la bisección.
+# Para la definicion de los valores (tiempo) sobre los cuales se aplicara la biseccion.
 #-------------------------------------------------------------------------------------------------- 
 
 # Guardar base de datos.

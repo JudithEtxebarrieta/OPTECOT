@@ -8,7 +8,7 @@ sys.path.append(os.path.sep.join(sys.path[0].split(os.path.sep)[:-2]))
 # https://docs.cleanrl.dev/rl-algorithms/rpo/
 
 # @article{huang2022cleanrl,
-#   author  = {Shengyi Huang and Rousslan Fernand Julien Dossa and Chang Ye and Jeff Braga and Dipam Chakraborty and Kinal Mehta and João G.M. Araújo},
+#   author  = {Shengyi Huang and Rousslan Fernand Julien Dossa and Chang Ye and Jeff Braga and Dipam Chakraborty and Kinal Mehta and João G.M. Araujo},
 #   title   = {CleanRL: High-quality Single-file Implementations of Deep Reinforcement Learning Algorithms},
 #   journal = {Journal of Machine Learning Research},
 #   year    = {2022},

@@ -1,5 +1,5 @@
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
 import os
 import sys
@@ -28,11 +28,11 @@ from WindFLO import WindFLO
 # Funciones auxiliares para definir el accuracy apropiado en cada momento del proceso.
 #--------------------------------------------------------------------------------------------------
 
-# FUNCIÓN 1 (Cálculo de la correlación de Spearman entre dos secuencias)
+# FUNCION 1 (Calculo de la correlacion de Spearman entre dos secuencias)
 def spearman_corr(x,y):
     return sc.stats.spearmanr(x,y)[0]
 
-# FUNCIÓN 2 (Convertir vector de scores en vector de ranking)
+# FUNCION 2 (Convertir vector de scores en vector de ranking)
 def from_scores_to_ranking(list_scores):
     list_pos_ranking=np.argsort(np.array(list_scores))
     ranking=[0]*len(list_pos_ranking)
@@ -42,15 +42,15 @@ def from_scores_to_ranking(list_scores):
         i+=1
     return ranking
 
-# FUNCIÓN 3 (Generar lista con los scores asociados a cada superficie que forma la generación)
-# Parámetros:
-#   >population: lista con las soluciones que forman la generación.
-#   >accuracy: accuracy fijado como óptimo en la generación anterior.
-#   >count_time_acc: True o False si se quieren sumar o no respectivamente, el tiempo de evaluación
+# FUNCION 3 (Generar lista con los scores asociados a cada superficie que forma la generacion)
+# Parametros:
+#   >population: lista con las soluciones que forman la generacion.
+#   >accuracy: accuracy fijado como optimo en la generacion anterior.
+#   >count_time_acc: True o False si se quieren sumar o no respectivamente, el tiempo de evaluacion
 #    como tiempo adicional para ajustar el accuracy.
-#   >count_time_gen: True o False si se quiere sumar o no respectivamente, el tiempo de evaluación
-#    como tiempo natural para la evaluación de la generación.
-# Devolver: lista con los scores asociados a cada solución que forma la generación.
+#   >count_time_gen: True o False si se quiere sumar o no respectivamente, el tiempo de evaluacion
+#    como tiempo natural para la evaluacion de la generacion.
+# Devolver: lista con los scores asociados a cada solucion que forma la generacion.
 
 def generation_score_list(population,accuracy,count_time_acc=True,count_time_gen=False):
     global time_acc,time_proc
@@ -58,7 +58,7 @@ def generation_score_list(population,accuracy,count_time_acc=True,count_time_gen
     # Generar entorno con accuracy apropiado.
     windFLO=get_windFLO_with_accuracy(momentary_folder=folder_name+'/',accuracy=accuracy)
 
-    # Evaluar población.
+    # Evaluar poblacion.
     list_scores=[]
     for sol in population:
         t=time.time()
@@ -73,21 +73,21 @@ def generation_score_list(population,accuracy,count_time_acc=True,count_time_gen
     return list_scores
 
 #--------------------------------------------------------------------------------------------------
-# Funciones asociadas a los heurísticos que se aplicarán para ajustar el accuracy..
+# Funciones asociadas a los heuristicos que se aplicaran para ajustar el accuracy..
 #--------------------------------------------------------------------------------------------------
-# FUNCIÓN 4 (Implementación adaptada del método de bisección)
-# Parámetros:
-#   >init_acc: accuracy inicial (el mínimo considerado).
-#   >population: lista con las soluciones que forman la generación.
+# FUNCION 4 (Implementacion adaptada del metodo de biseccion)
+# Parametros:
+#   >init_acc: accuracy inicial (el minimo considerado).
+#   >population: lista con las soluciones que forman la generacion.
 #   >train_seed: semilla de entrenamiento.
-#   >threshold: umbral del método de bisección con el que se irá actualizando el intervalo que contiene el valor de accuracy óptimo.
+#   >threshold: umbral del metodo de biseccion con el que se ira actualizando el intervalo que contiene el valor de accuracy optimo.
 # Devuelve: 
-#   >prev_m: valor de accuracy seleccionado como óptimo.
-#   >last_time_acc_increase: tiempo de evaluación consumido en la última iteración del método de bisección.
+#   >prev_m: valor de accuracy seleccionado como optimo.
+#   >last_time_acc_increase: tiempo de evaluacion consumido en la ultima iteracion del metodo de biseccion.
 
 def bisection_method(lower_time,upper_time,population,train_seed,sample_size,interpolation_pts,threshold=0.95):
 
-    # Inicializar límite inferior y superior.
+    # Inicializar limite inferior y superior.
     time0=lower_time
     time1=upper_time   
 
@@ -95,32 +95,32 @@ def bisection_method(lower_time,upper_time,population,train_seed,sample_size,int
     prev_m=time0
     m=(time0+time1)/2
 
-    # Función para calcular la correlación entre los rankings de las sample_size superficies aleatorias
-    # usando el accuracy actual y el máximo.
+    # Funcion para calcular la correlacion entre los rankings de las sample_size superficies aleatorias
+    # usando el accuracy actual y el maximo.
     def similarity_between_current_best_acc(acc,population,train_seed,first_iteration):
         global time_acc
 
-        # Seleccionar de forma aleatoria sample_size superficies que forman la generación.
+        # Seleccionar de forma aleatoria sample_size superficies que forman la generacion.
         random.seed(train_seed)
         ind_sol=random.sample(range(len(population)),sample_size)
         list_solutions=list(np.array(population)[ind_sol])
 
-        # Guardar los scores asociados a cada solución seleccionada.
+        # Guardar los scores asociados a cada solucion seleccionada.
         t=time.time()
-        best_scores=generation_score_list(list_solutions,1,count_time_acc=first_iteration)# Con el máximo accuracy. 
+        best_scores=generation_score_list(list_solutions,1,count_time_acc=first_iteration)# Con el maximo accuracy. 
         new_scores=generation_score_list(list_solutions,acc)# Accuracy nuevo. 
         last_time_acc_increase=time.time()-t
 
         # Obtener vectores de rankings asociados.
         new_ranking=from_scores_to_ranking(new_scores)# Accuracy nuevo. 
-        best_ranking=from_scores_to_ranking(best_scores)# Máximo accuracy. 
+        best_ranking=from_scores_to_ranking(best_scores)# Maximo accuracy. 
                 
         # Comparar ambos rankings.
         metric_value=spearman_corr(new_ranking,best_ranking)
 
         return metric_value,last_time_acc_increase
 
-    # Reajustar límites del intervalo hasta que este tenga un rango lo suficientemente pequeño.
+    # Reajustar limites del intervalo hasta que este tenga un rango lo suficientemente pequeño.
     first_iteration=True
     stop_threshold=(time1-time0)*0.1
     while time1-time0>stop_threshold:
@@ -136,19 +136,19 @@ def bisection_method(lower_time,upper_time,population,train_seed,sample_size,int
         first_iteration=False
     return np.interp(prev_m,interpolation_pts[0],interpolation_pts[1]),last_time_acc_increase
 
-# FUNCIÓN 5 (Ejecutar heurísticos durante el proceso de entrenamiento)
-# Parámetros:
-#   >gen: número de generación en el algoritmo CMA-ES.
-#   >min_acc: accuracy mínimo a considerar en el método de bisección.
-#   >acc: accuracy asociado a la generación anterior.
-#   >population: lista con las soluciones que forman la generación.
+# FUNCION 5 (Ejecutar heuristicos durante el proceso de entrenamiento)
+# Parametros:
+#   >gen: numero de generacion en el algoritmo CMA-ES.
+#   >min_acc: accuracy minimo a considerar en el metodo de biseccion.
+#   >acc: accuracy asociado a la generacion anterior.
+#   >population: lista con las soluciones que forman la generacion.
 #   >train_seed: semilla de entrenamiento.
 #   >list_variances: lista con las varianzas de los scores de las anteriores generaciones.
-#   >heuristic: número que identifica al heurístico que se desea considerar.
-#   >param: valor del parámetro asociado al heurístico que se desea aplicar.
+#   >heuristic: numero que identifica al heuristico que se desea considerar.
+#   >param: valor del parametro asociado al heuristico que se desea aplicar.
 # Devuelve: 
-#   >acc: valor de accuracy seleccionado como óptimo.
-#   >time_best_acc: tiempo de evaluación consumido en la última iteración del método de bisección.
+#   >acc: valor de accuracy seleccionado como optimo.
+#   >time_best_acc: tiempo de evaluacion consumido en la ultima iteracion del metodo de biseccion.
 
 def execute_heuristic(gen,acc,population,train_seed,list_variances,heuristic,param):
 
@@ -160,7 +160,7 @@ def execute_heuristic(gen,acc,population,train_seed,list_variances,heuristic,par
 
     heuristic_accepted=False
 
-    # Para el método de bisección: tamaño de muestra, frecuencia y expresión de interpolación.
+    # Para el metodo de biseccion: tamaño de muestra, frecuencia y expresion de interpolacion.
     df_sample_freq=pd.read_csv('results/data/general/sample_size_freq_'+str(sample_size_freq)+'.csv',index_col=0)
     df_interpolation=pd.read_csv('results/data/WindFLO/UnderstandingAccuracy/df_Bisection.csv')
     sample_size=int(df_sample_freq[df_sample_freq['env_name']=='WindFLO']['sample_size'])
@@ -171,7 +171,7 @@ def execute_heuristic(gen,acc,population,train_seed,list_variances,heuristic,par
     upper_time=max(interpolation_time)
 
    
-    # HEURÍSTICO I de Symbolic Regressor: Bisección de generación en generación (el umbral es el parámetro).
+    # HEURISTICO I de Symbolic Regressor: Biseccion de generacion en generacion (el umbral es el parametro).
     if heuristic=='I': 
         if gen==0:
             acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc],threshold=param)
@@ -189,8 +189,8 @@ def execute_heuristic(gen,acc,population,train_seed,list_variances,heuristic,par
                 heuristic_accepted=True
 
 
-    # HEURÍSTICO II de Symbolic Regressor: Bisección con definición automática para frecuencia 
-    # de actualización de accuracy (depende de parámetro) y umbral del método de bisección fijado en 0.95.
+    # HEURISTICO II de Symbolic Regressor: Biseccion con definicion automatica para frecuencia 
+    # de actualizacion de accuracy (depende de parametro) y umbral del metodo de biseccion fijado en 0.95.
     if heuristic=='II': 
         if gen==0: 
             acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc])
@@ -201,7 +201,7 @@ def execute_heuristic(gen,acc,population,train_seed,list_variances,heuristic,par
             heuristic_accepted=True
         else:
             if len(list_variances)>=param+1:
-                # Función para calcular el intervalo de confianza.
+                # Funcion para calcular el intervalo de confianza.
                 def bootstrap_confidence_interval(data,bootstrap_iterations=1000):
                     mean_list=[]
                     for i in range(bootstrap_iterations):
@@ -212,7 +212,7 @@ def execute_heuristic(gen,acc,population,train_seed,list_variances,heuristic,par
                 variance_q05,variance_q95=bootstrap_confidence_interval(list_variances[(-2-param):-2])
                 last_variance=list_variances[-1]
                 
-                # Calcular el mínimo accuracy con el que se obtiene la máxima calidad.
+                # Calcular el minimo accuracy con el que se obtiene la maxima calidad.
                 if last_variance<variance_q05 or last_variance>variance_q95:
 
                     if (time_proc+time_acc)-last_time_heuristic_accepted>=heuristic_freq:   
@@ -247,22 +247,22 @@ def execute_heuristic(gen,acc,population,train_seed,list_variances,heuristic,par
     
 
 #--------------------------------------------------------------------------------------------------
-# Funciones para el proceso de aprendizaje o búsqueda de la óptima distribución de molinos.
+# Funciones para el proceso de aprendizaje o busqueda de la optima distribucion de molinos.
 #--------------------------------------------------------------------------------------------------
 
-# FUNCIÓN 6 (Inicializar las características del terreno y las turbinas sobre los cuales se aplicará la optimización)
+# FUNCION 6 (Inicializar las caracteristicas del terreno y las turbinas sobre los cuales se aplicara la optimizacion)
 def get_windFLO_with_accuracy(momentary_folder='',accuracy=1):
 
-    # Configuración y parámetros de WindFLO.
+    # Configuracion y parametros de WindFLO.
     windFLO = WindFLO(
     inputFile = 'WindFLO/Examples/Example1/WindFLO.dat', # Archivo input para leer.
-    libDir = 'WindFLO/release/', # Ruta a la librería compartida libWindFLO.so.
-    turbineFile = 'WindFLO/Examples/Example1/V90-3MW.dat',# Parámetros de las turbinas.
+    libDir = 'WindFLO/release/', # Ruta a la libreria compartida libWindFLO.so.
+    turbineFile = 'WindFLO/Examples/Example1/V90-3MW.dat',# Parametros de las turbinas.
     terrainfile = 'WindFLO/Examples/Example1/terrain.dat', # Archivo del terreno.
     runDir=momentary_folder,
-    nTurbines = 25, # Número de turbinas.
+    nTurbines = 25, # Numero de turbinas.
 
-    monteCarloPts = round(1000*accuracy)# Parámetro del cual se modificará su precisión.
+    monteCarloPts = round(1000*accuracy)# Parametro del cual se modificara su precision.
     )
 
     # Cambiar el modelo de terreno predeterminado de RBF a IDW.
@@ -270,7 +270,7 @@ def get_windFLO_with_accuracy(momentary_folder='',accuracy=1):
 
     return windFLO
 
-# FUNCIÓN 7 (Evaluar el desempeño del diseño del parque eólico)
+# FUNCION 7 (Evaluar el desempeno del diseño del parque eolico)
 def EvaluateFarm(x, windFLO):
     
     k = 0
@@ -286,7 +286,7 @@ def EvaluateFarm(x, windFLO):
     return -windFLO.farmPower
 
 
-# FUNCIÓN 8 (Aprender la solución)
+# FUNCION 8 (Aprender la solucion)
 def learn(seed,heuristic,heuristic_param,maxfeval=500,popsize=50): 
 
     global folder_name
@@ -297,14 +297,14 @@ def learn(seed,heuristic,heuristic_param,maxfeval=500,popsize=50):
     default_windFLO = get_windFLO_with_accuracy(momentary_folder=folder_name+'/')
 
 
-    # Máximo tiempo de ejecución.
+    # Maximo tiempo de ejecucion.
     global max_time
     max_time=np.load('results/data/WindFLO/ConstantAccuracyAnalysis/max_time.npy')
     
-    # Función para transformar el valor escalado de los parámetros en los valores reales.
+    # Funcion para transformar el valor escalado de los parametros en los valores reales.
     def transform_to_problem_dim(list_coord):
-        lbound = np.zeros(default_windFLO.nTurbines*2) # Límite inferior real.
-        ubound = np.ones(default_windFLO.nTurbines*2)*2000 # Límite superior real.
+        lbound = np.zeros(default_windFLO.nTurbines*2) # Limite inferior real.
+        ubound = np.ones(default_windFLO.nTurbines*2)*2000 # Limite superior real.
         return lbound + list_coord*(ubound - lbound)
 
     # Inicializar contadores de tiempo.
@@ -318,19 +318,19 @@ def learn(seed,heuristic,heuristic_param,maxfeval=500,popsize=50):
     gen=0
     accuracy=1
 
-    # Aplicar algoritmo CMA-ES para la búsqueda de la solución.
+    # Aplicar algoritmo CMA-ES para la busqueda de la solucion.
     np.random.seed(seed)
     es = cma.CMAEvolutionStrategy(np.random.random(default_windFLO.nTurbines*2), 0.33, inopts={'bounds': [0, 1],'seed':seed,'maxiter':1e9, 'maxfevals':maxfeval, 'popsize':popsize})
     
     while time_proc+time_acc<max_time:
 
-        # Construir generación.
+        # Construir generacion.
         solutions = es.ask()
 
-        # Transformar los valores escalados de los parámetros a los valores reales.
+        # Transformar los valores escalados de los parametros a los valores reales.
         real_solutions=[transform_to_problem_dim(list_coord) for list_coord in solutions]
 
-        # Reajustar el accuracy según el heurístico seleccionado.
+        # Reajustar el accuracy segun el heuristico seleccionado.
         if gen==0:
             accuracy,list_scores=execute_heuristic(gen,accuracy,real_solutions,seed,[],heuristic,heuristic_param)
 
@@ -339,10 +339,10 @@ def learn(seed,heuristic,heuristic_param,maxfeval=500,popsize=50):
             df_seed=df_seed[df_seed[1]==seed]
             accuracy,list_scores=execute_heuristic(gen,accuracy,real_solutions,seed,list(df_seed[5]),heuristic,heuristic_param)
 
-        # Para construir la siguiente generación.
+        # Para construir la siguiente generacion.
         es.tell(solutions,list_scores)
 
-        # Acumular datos de interés.
+        # Acumular datos de interes.
         score = EvaluateFarm(transform_to_problem_dim(es.result.xbest),default_windFLO)
         df.append([heuristic_param,seed,gen,-score,accuracy,np.var(list_scores),time_proc,time_acc,time_acc+time_proc])
 

@@ -1,20 +1,20 @@
-# Mediante este script se guarda la información relevante extraída del proceso de entrenamiento 
-# de diferentes políticas sobre el entorno CartPole. Cada políticas se entrena con un 
+# Mediante este script se guarda la informacion relevante extraida del proceso de entrenamiento 
+# de diferentes politicas sobre el entorno CartPole. Cada politicas se entrena con un 
 # time-step diferente (en total se consideran 10 valores diferentes de accuracy) considerando un 
-# total de 30 semillas (30 formas diferentes de definir los episodios sobre los cuales se entrena la política).
+# total de 30 semillas (30 formas diferentes de definir los episodios sobre los cuales se entrena la politica).
 # Las validaciones se hacen sobre un entorno independiente al de entrenamiento (100 episodios) con
-# una máxima precisión del time-step.
+# una maxima precision del time-step.
 
 # Basado en: https://colab.research.google.com/github/Stable-Baselines-Team/rl-colab-notebooks/blob/sb3/stable_baselines_getting_started.ipynb
 
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
-import stable_baselines3 # Librería que sirve para crear un modelo RL, entrenarlo y evaluarlo.
+import stable_baselines3 # Libreria que sirve para crear un modelo RL, entrenarlo y evaluarlo.
 import gym # Stable-Baselines funciona en entornos que siguen la interfaz gym.
 from stable_baselines3 import PPO # Importar el modelo RL.
-from stable_baselines3.ppo import MlpPolicy # Importar la clase de política que se usará para crear las redes.
-                                            # Elegimos MlpPolicy porque la entrada de CartPole es un vector de características, no imágenes.
+from stable_baselines3.ppo import MlpPolicy # Importar la clase de politica que se usara para crear las redes.
+                                            # Elegimos MlpPolicy porque la entrada de CartPole es un vector de caracteristicas, no imagenes.
 import numpy as np
 from scipy.stats import norm
 from sklearn.neighbors import KernelDensity
@@ -33,7 +33,7 @@ from stable_baselines3.common.callbacks import BaseCallback, CallbackList, Conve
 # CLASES
 #==================================================================================================
 # CLASE 1
-# Se definen los métodos necesarios para medir el tiempo de ejecución durante el entrenamiento.
+# Se definen los metodos necesarios para medir el tiempo de ejecucion durante el entrenamiento.
 class stopwatch:
     
     def __init__(self):
@@ -59,30 +59,30 @@ class stopwatch:
 # NUEVAS FUNCIONES
 #==================================================================================================
 
-# FUNCIÓN 1
-# Parámetros:
+# FUNCION 1
+# Parametros:
 #   >model: modelo que se desea evaluar.
-#   >eval_env: entorno de evaluación.
-#   >init_obs: estado inicial del primer episodio/evaluación del entorno de evaluación.
-#   >seed: semilla del entorno de evaluación.
-#   >n_eval_episodes: número de episodios (evaluaciones) en los que se evaluará el modelo.
+#   >eval_env: entorno de evaluacion.
+#   >init_obs: estado inicial del primer episodio/evaluacion del entorno de evaluacion.
+#   >seed: semilla del entorno de evaluacion.
+#   >n_eval_episodes: numero de episodios (evaluaciones) en los que se evaluara el modelo.
 # Devuelve: media de las recompensa obtenida en los n_eval_episodes episodios.
 
 def evaluate(model,eval_env,eval_seed,n_eval_episodes):
     #Para guardar el reward por episodio.
     all_episode_reward=[]
 
-    #Para garantizar que en cada llamada a la función se usarán los mismos episodios.
+    #Para garantizar que en cada llamada a la funcion se usaran los mismos episodios.
     eval_env.seed(eval_seed)
     obs=eval_env.reset()
     
     for i in range(n_eval_episodes):
 
         episode_rewards = 0
-        done = False # Parámetro que nos indica después de cada acción si la evaluación sigue (False) o se ha acabado (True).
+        done = False # Parametro que nos indica despues de cada accion si la evaluacion sigue (False) o se ha acabado (True).
         while not done:
-            action, _states = model.predict(obs, deterministic=True) # Se predice la acción que se debe tomar con el modelo.         
-            obs, reward, done, info = eval_env.step(action) # Se aplica la acción en el entorno.
+            action, _states = model.predict(obs, deterministic=True) # Se predice la accion que se debe tomar con el modelo.         
+            obs, reward, done, info = eval_env.step(action) # Se aplica la accion en el entorno.
             episode_rewards+=reward # Se guarda la recompensa.
 
         # Guardar reward total de episodio.
@@ -97,17 +97,17 @@ def evaluate(model,eval_env,eval_seed,n_eval_episodes):
 #==================================================================================================
 # FUNCIONES EXISTENTES MODIFICADAS
 #==================================================================================================
-# FUNCIÓN 2
-# Esta función es la versión adaptada de la función "_update_current_progress_remaining" ya existente.
-# Se define con intención de poder evaluar el modelo durante el proceso de entrenamiento y poder
-# recolectar información relevante (steps dados, evaluaciones hechas, calidad del modelo medida en
+# FUNCION 2
+# Esta funcion es la version adaptada de la funcion "_update_current_progress_remaining" ya existente.
+# Se define con intencion de poder evaluar el modelo durante el proceso de entrenamiento y poder
+# recolectar informacion relevante (steps dados, evaluaciones hechas, calidad del modelo medida en
 # reward, tiempo computacional gastado, semilla utilizada,...) asociado a ese momento del entrenamiento. 
 
 def callback_in_each_iteration(self, num_timesteps: int, total_timesteps: int) -> None:
-    # Pausar el tiempo durante la validación.
+    # Pausar el tiempo durante la validacion.
     sw.pause() 
 
-    # Extraer la información relevante.
+    # Extraer la informacion relevante.
     mean_reward = evaluate(model,eval_env,eval_seed,n_eval_episodes)
     info=pd.DataFrame(model.ep_info_buffer)
     info_steps=sum(info['r'])
@@ -118,19 +118,19 @@ def callback_in_each_iteration(self, num_timesteps: int, total_timesteps: int) -
     #Reanudar el tiempo.
     sw.resume()
 
-    #Guardar la información extraída.
+    #Guardar la informacion extraida.
     df_train_acc.append([num_timesteps, info_steps,model.seed,n_eval,max_step_per_eval,sw.get_time(),info_time,mean_reward])
 
     #Reanudar el tiempo.
     sw.resume()
 
-    # Esta línea la usa la función que sustituimos: no cambiar esta línea.
+    # Esta linea la usa la funcion que sustituimos: no cambiar esta linea.
     self._current_progress_remaining = 1.0 - float(num_timesteps) / float(total_timesteps) 
 
-# FUNCIÓN 3
-# Esta función es la versión adaptada de la función "_setup_learn" ya existente.
-# Se modifica para que el límite al entrenamiento sea el número de steps de entrenamiento definido 
-# y no el número máximo de evaluaciones que viene fijado por defecto (número máximo de episodios,maxlen).
+# FUNCION 3
+# Esta funcion es la version adaptada de la funcion "_setup_learn" ya existente.
+# Se modifica para que el limite al entrenamiento sea el numero de steps de entrenamiento definido 
+# y no el numero maximo de evaluaciones que viene fijado por defecto (numero maximo de episodios,maxlen).
 def _setup_learn(
         self,
         total_timesteps: int,
@@ -153,8 +153,8 @@ def _setup_learn(
 
         if self.ep_info_buffer is None or reset_num_timesteps:
             # Initialize buffers if they don't exist, or reinitialize if resetting counters
-            self.ep_info_buffer = deque(maxlen=max_train_steps)#MODIFICACIÓN(antes:maxlen=100)
-            self.ep_success_buffer = deque(maxlen=max_train_steps)#MODIFICACIÓN (antes:maxlen=100)
+            self.ep_info_buffer = deque(maxlen=max_train_steps)#MODIFICACION(antes:maxlen=100)
+            self.ep_success_buffer = deque(maxlen=max_train_steps)#MODIFICACION (antes:maxlen=100)
 
         if self.action_noise is not None:
             self.action_noise.reset()
@@ -189,23 +189,23 @@ def _setup_learn(
 #==================================================================================================
 # PROGRAMA PRINCIPAL
 #==================================================================================================
-# Para usar la función callback modificada.
+# Para usar la funcion callback modificada.
 import stable_baselines3.common.base_class
 stable_baselines3.common.base_class.BaseAlgorithm._update_current_progress_remaining = callback_in_each_iteration
-# Para usar la función _setup_learn modificada.
+# Para usar la funcion _setup_learn modificada.
 from stable_baselines3.common.base_class import *
 BaseAlgorithm._setup_learn=_setup_learn
     
-# Variables y parámetros de entrenamiento.
+# Variables y parametros de entrenamiento.
 train_env = gym.make('CartPole-v1')
 max_train_steps=10000
 
-# Variables y parámetros de validación.
+# Variables y parametros de validacion.
 eval_env = gym.make('CartPole-v1')
 eval_seed=0
 n_eval_episodes=100
 
-# Parámetros por defecto.
+# Parametros por defecto.
 default_tau = 0.02
 default_max_episode_steps = 500
 
@@ -213,14 +213,14 @@ default_max_episode_steps = 500
 grid_acc=[1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1]
 grid_seed=range(1,31,1)
 
-# Función para ejecución en paralelo.
+# Funcion para ejecucion en paralelo.
 def parallel_processing(accuracy):
-    # Actualizar parámetros del entorno de entrenamiento.
+    # Actualizar parametros del entorno de entrenamiento.
     train_env.env.tau = default_tau / accuracy
     train_env.env.spec.max_episode_steps = int(default_max_episode_steps*accuracy)
     train_env._max_episode_steps = train_env.unwrapped.spec.max_episode_steps
     
-    # Guardar en una base de datos la información del proceso de entrenamiento para el accuracy seleccionado.
+    # Guardar en una base de datos la informacion del proceso de entrenamiento para el accuracy seleccionado.
     global df_train_acc,seed
     df_train_acc=[]
 
@@ -244,10 +244,10 @@ pool=mp.Pool(mp.cpu_count())
 pool.map(parallel_processing,grid_acc)
 pool.close()
 
-# Guardar los demás datos que se usarán para las gráficas.
+# Guardar los demas datos que se usaran para las graficas.
 np.save('results/data/CartPole/ConstantAccuracyAnalysis/grid_acc',grid_acc)
 
-# Guardar número máximo de steps de entrenamiento.
+# Guardar numero maximo de steps de entrenamiento.
 np.save('results/data/CartPole/ConstantAccuracyAnalysis/max_train_steps',max_train_steps)
 
 

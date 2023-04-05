@@ -1,10 +1,10 @@
-# Mediante este script se pretende estudiar cual es el comportamiento óptimo del accuracy 
+# Mediante este script se pretende estudiar cual es el comportamiento optimo del accuracy 
 # durante el proceso de entrenamiento.
 
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
-# Para mi código.
+# Para mi codigo.
 from gplearn.genetic import SymbolicRegressor
 from sklearn.utils.random import check_random_state
 from mpl_toolkits.mplot3d import Axes3D
@@ -44,10 +44,10 @@ import multiprocessing as mp
 # NUEVAS FUNCIONES
 #==================================================================================================
 #--------------------------------------------------------------------------------------------------
-# Funciones para el proceso de aprendizaje o búsqueda de la superficie.
+# Funciones para el proceso de aprendizaje o busqueda de la superficie.
 #--------------------------------------------------------------------------------------------------
-# FUNCIÓN 1
-# Parámetros:
+# FUNCION 1
+# Parametros:
 #   >z_test: terceras coordenadas reales de los puntos de la superficie.
 #   >z_pred: terceras coordenadas obtenidas a partir de la superficie predicha.
 # Devuelve: el error absoluto medio de las dos listas anteriores.
@@ -55,11 +55,11 @@ import multiprocessing as mp
 def mean_abs_err(z_test,z_pred):
     return sum(abs(z_test-z_pred))/len(z_test)
 
-# FUNCIÓN 2
-# Parámetros:
-#   >n_sample: número de puntos que se desean construir.
-#   >seed: semilla para la selección aleatoria de los puntos.
-#   >expr_surf: expresión de la superficie de la cual se quiere extraer la muestra de puntos.
+# FUNCION 2
+# Parametros:
+#   >n_sample: numero de puntos que se desean construir.
+#   >seed: semilla para la seleccion aleatoria de los puntos.
+#   >expr_surf: expresion de la superficie de la cual se quiere extraer la muestra de puntos.
 # Devuelve: base de datos con las tres coordenadas de los puntos de la muestra.
 
 def build_pts_sample(n_sample,seed,expr_surf):
@@ -80,10 +80,10 @@ def build_pts_sample(n_sample,seed,expr_surf):
 
     return pts_sample
 
-# FUNCIÓN 3
-# Parámetros:
+# FUNCION 3
+# Parametros:
 #   >df_test_pts: base de datos con las tres coordenadas de los puntos que forman el 
-#    conjunto de validación.
+#    conjunto de validacion.
 #   >est_surf: superficie seleccionada en el proceso GA de entrenamiento.
 # Devuelve: error absoluto medio.
 
@@ -101,10 +101,10 @@ def evaluate(df_test_pts,est_surf):
 
     return score   
 
-# FUNCIÓN 4
-# Parámetros:
+# FUNCION 4
+# Parametros:
 #   >inti_acc: valor del accuracy inicial.
-#   >threshold_corr: umbral de correlación ideal.
+#   >threshold_corr: umbral de correlacion ideal.
 #   >train_seed: semilla de entrenamiento.
 # Devuelve: superficie seleccionada.
 
@@ -116,7 +116,7 @@ def learn(init_acc,threshold_corr,train_seed):
     # Inicializar conjunto de entrenamiento.
     df_train_pts=build_pts_sample(train_n_pts,train_pts_seed,expr_surf_real)
 
-    # Definición del algoritmo genético con el cual se encontrarán la superficie.
+    # Definicion del algoritmo genetico con el cual se encontraran la superficie.
     est_surf=SymbolicRegressor(random_state=train_seed)
     
     # Ajustar la superficie a los puntos.
@@ -129,11 +129,11 @@ def learn(init_acc,threshold_corr,train_seed):
 #--------------------------------------------------------------------------------------------------
 # Funciones auxiliares para definir el accuracy  apropiado en cada momento del proceso.
 #--------------------------------------------------------------------------------------------------
-# FUNCIÓN 5 (Cálculo de la correlación de Spearman entre dos secuencias)
+# FUNCION 5 (Calculo de la correlacion de Spearman entre dos secuencias)
 def spearman_corr(x,y):
     return sc.stats.spearmanr(x,y)[0]
 
-# FUNCIÓN 6 (Convertir vector de scores en vector de rankings)
+# FUNCION 6 (Convertir vector de scores en vector de rankings)
 def from_scores_to_ranking(list_scores):
     list_pos_ranking=np.argsort(np.array(list_scores))
     ranking=[0]*len(list_pos_ranking)
@@ -143,9 +143,9 @@ def from_scores_to_ranking(list_scores):
         i+=1
     return ranking
 
-# FUNCIÓN 7 (Generar lista con los scores asociados a cada superficie que forma la generación)
-# Parámetros:
-#   >list_surfaces: lista con las expresiones de las superficies que forman la generación.
+# FUNCION 7 (Generar lista con los scores asociados a cada superficie que forma la generacion)
+# Parametros:
+#   >list_surfaces: lista con las expresiones de las superficies que forman la generacion.
 #   >df_pts: conjunto de puntos sobre el que se desea evaluar cada superficie.
 # Devuelve: lista de scores.
 
@@ -158,7 +158,7 @@ def generation_score_list(list_surfaces,df_pts):
     X=df_pts[:,[0,1]]
     y=df_pts[:,2]
 
-    # Evaluar cada superficie que forma la generación con el accuracy indicado.
+    # Evaluar cada superficie que forma la generacion con el accuracy indicado.
     for expr_surf in list_surfaces:
 
         # Calcular el valor de las terceras coordenadas con las superficie seleccionada.
@@ -172,23 +172,23 @@ def generation_score_list(list_surfaces,df_pts):
      
     return list_scores
 
-# FUNCIÓN 8 (definir el accuracy óptimo por generación)
-# Parámetros:
-#   >threshold_corr: umbral de correlación ideal.
-#   >acc: accuracy mínimo.
+# FUNCION 8 (definir el accuracy optimo por generacion)
+# Parametros:
+#   >threshold_corr: umbral de correlacion ideal.
+#   >acc: accuracy minimo.
 #   >acc_type: 'Ascendant' o 'Optimal', si se define un accuracy ascendente o no, respectivamente.
-#   >list_surfaces: lista con las expresiones de las superficies que forman la generación.
-# Devuelve: valor de accuracy seleccionado como óptimo.
+#   >list_surfaces: lista con las expresiones de las superficies que forman la generacion.
+# Devuelve: valor de accuracy seleccionado como optimo.
 
 def accuracy_behaviour_shape(threshold_corr,acc,acc_type,list_surf_gen):
 
-    # Calcular ranking de las superficies que forman la generación usando el máximo accuracy.
+    # Calcular ranking de las superficies que forman la generacion usando el maximo accuracy.
     default_df_train_pts=build_pts_sample(default_train_n_pts,train_pts_seed,expr_surf_real)
     best_scores=generation_score_list(list_surf_gen,default_df_train_pts)
     best_ranking=from_scores_to_ranking(best_scores)
 
-    # Hasta que la correlación entre el ranking anterior y el asociado a un accuracy menor
-    # no supere el umbral definido, se seguirá probando con un accuracy superior.
+    # Hasta que la correlacion entre el ranking anterior y el asociado a un accuracy menor
+    # no supere el umbral definido, se seguira probando con un accuracy superior.
     acc_located=False
     if acc_type=='Ascendant':
         next_acc=acc
@@ -201,10 +201,10 @@ def accuracy_behaviour_shape(threshold_corr,acc,acc_type,list_surf_gen):
         new_scores=generation_score_list(list_surf_gen,new_df_train_pts)
         new_ranking=from_scores_to_ranking(new_scores)
 
-        # Correlación de Spearman:
+        # Correlacion de Spearman:
         corr=spearman_corr(best_ranking,new_ranking)
 
-        # Comprobar si se debe parar con el proceso de búsqueda del accuracy.
+        # Comprobar si se debe parar con el proceso de busqueda del accuracy.
         if corr>=threshold_corr:
             acc_located=True
         else:
@@ -217,8 +217,8 @@ def accuracy_behaviour_shape(threshold_corr,acc,acc_type,list_surf_gen):
 # FUNCIONES DISEÑADAS A PARTIR DE ALGUNAS YA EXISTENTES
 #==================================================================================================
 
-# FUNCIÓN 
-# Esta función contiene una parte del código interno de una función ya existente.
+# FUNCION 
+# Esta funcion contiene una parte del codigo interno de una funcion ya existente.
 # -Original: fit
 # -Script: genetic.py 
 def find_best_individual_final_generation(self,fitness):
@@ -262,11 +262,11 @@ def find_best_individual_final_generation(self,fitness):
         else:
             self._program = self._programs[-1][np.argmin(fitness)]
 
-# FUNCIÓN 
+# FUNCION 
 # -Original: fit
 # -Script: genetic.py
 # -Clase: BaseSymbolic
-def new_fit(self,init_acc, X, y, threshold_corr,train_seed,sample_weight=None):# MODIFICACIÓN: añadir nuevos argumentos.
+def new_fit(self,init_acc, X, y, threshold_corr,train_seed,sample_weight=None):# MODIFICACION: añadir nuevos argumentos.
 
     random_state = check_random_state(self.random_state)
 
@@ -445,15 +445,15 @@ def new_fit(self,init_acc, X, y, threshold_corr,train_seed,sample_weight=None):#
         # Print header fields
         self._verbose_reporter()
 
-    gen=0# MODIFICACIÓN: para que el procedimiento no termine cuando se alcance un número de generaciones, las generaciones se cuentan con un contador independiente.
+    gen=0# MODIFICACION: para que el procedimiento no termine cuando se alcance un numero de generaciones, las generaciones se cuentan con un contador independiente.
 
-    # MODIFICACIÓN: variable global mediante la cual se irán contando el número de evaluaciones realizadas,
-    # entendiendo por evaluación cada evaluación de un punto en una expresión de una superficie.
+    # MODIFICACION: variable global mediante la cual se iran contando el numero de evaluaciones realizadas,
+    # entendiendo por evaluacion cada evaluacion de un punto en una expresion de una superficie.
     n_evaluations=0
     acc=init_acc
     global last_acc_change
     last_acc_change=0
-    while gen < max_n_gen:# MODIFICACIÓN: modificar el límite de entrenamiento.
+    while gen < max_n_gen:# MODIFICACION: modificar el limite de entrenamiento.
         
         start_time = time()
 
@@ -481,23 +481,23 @@ def new_fit(self,init_acc, X, y, threshold_corr,train_seed,sample_weight=None):#
         # Reduce, maintaining order across different n_jobs
         population = list(itertools.chain.from_iterable(population))  
 
-        # MODIFICACIÓN: guardar información relevante.
+        # MODIFICACION: guardar informacion relevante.
         if gen==0 or gen-last_acc_change>=acc_change_gen_freq:
 
             # Seleccionar el valor de accuracy apropiado.
             acc=accuracy_behaviour_shape(threshold_corr,acc,acc_type,list(population))
 
-            # Evaluar población con valor de accuracy seleccionado.
+            # Evaluar poblacion con valor de accuracy seleccionado.
             train_n_pts=int(default_train_n_pts*acc)
             df_train_pts=build_pts_sample(train_n_pts,train_pts_seed,expr_surf_real)
             X=df_train_pts[:,[0,1]]
             y=df_train_pts[:,2]
             fitness=generation_score_list(list(population),df_train_pts) 
 
-            # Guardar último número de valuaciones en las que se ha actualizado el accuracy.
+            # Guardar ultimo numero de valuaciones en las que se ha actualizado el accuracy.
             last_acc_change=gen
         else:
-            # Calculo de scores de la población actual con el accuracy actual.
+            # Calculo de scores de la poblacion actual con el accuracy actual.
             fitness = [program.raw_fitness_ for program in population]
    
         length = [program.length_ for program in population]
@@ -555,22 +555,22 @@ def new_fit(self,init_acc, X, y, threshold_corr,train_seed,sample_weight=None):#
         else:
             best_fitness = fitness[np.argmin(fitness)]
 
-        # MODIFICACIÓN: Guardar datos relevantes.
+        # MODIFICACION: Guardar datos relevantes.
         n_evaluations+=int(default_train_n_pts*acc)*len(population)
         find_best_individual_final_generation(self,fitness)
         score=evaluate(df_test_pts,self)
         df.append([threshold_corr,train_seed,gen,n_evaluations,acc,score])    
 
-        gen+=1# MODIFICACIÓN: actualizar número de generaciones.
+        gen+=1# MODIFICACION: actualizar numero de generaciones.
 
-    find_best_individual_final_generation(self,fitness)# MODIFICACIÓN: para obtener el mejor individuo de la última generación.
+    find_best_individual_final_generation(self,fitness)# MODIFICACION: para obtener el mejor individuo de la ultima generacion.
     
     return self
 
 #==================================================================================================
 # PROGRAMA PRINCIPAL
 #==================================================================================================
-# Para usar la función de ajuste modificada.
+# Para usar la funcion de ajuste modificada.
 BaseSymbolic.fit=new_fit
 
 # Definir variables globales.
@@ -583,21 +583,21 @@ global expr_surf_real
 # Superficie.
 expr_surf_real='x**2-y**2+y-1'
 
-# Parámetros de entrenamiento.
+# Parametros de entrenamiento.
 list_train_seeds=range(0,100,1)# Semillas de entrenamiento.
 default_train_n_pts=50# Cardinal de conjunto inicial predefinido.
 train_pts_seed=0
 max_n_gen=50
 acc_change_gen_freq=1
 
-# Parámetros y conjunto de validación.
+# Parametros y conjunto de validacion.
 test_n_pts=default_train_n_pts
 test_pts_seed=1
 df_test_pts=build_pts_sample(test_n_pts,test_pts_seed,expr_surf_real)
 
-# Función para ejecución en paralelo.
+# Funcion para ejecucion en paralelo.
 def parallel_processing(arg):
-    # Extraer información del argumento.
+    # Extraer informacion del argumento.
     threshold=arg[0]
     global acc_type
     acc_type=arg[1]
@@ -615,7 +615,7 @@ def parallel_processing(arg):
     df=pd.DataFrame(df,columns=['corr','train_seed','gen','n_eval','acc','score'])
     df.to_csv('results/data/SymbolicRegressor/UnderstandingAccuracyShape/df_'+str(acc_type)+'_acc_shape_tc'+str(threshold)+'.csv',)
 
-# Preparación de argumentos de la función.
+# Preparacion de argumentos de la funcion.
 acc_types=['Optimal','Ascendant']
 list_threshold_corr=[1.0,0.9,0.8,0.6,0.4,0.0]
 list_arg=[]
@@ -623,12 +623,12 @@ for acc_type in acc_types:
     for threshold in list_threshold_corr:
         list_arg.append([threshold,acc_type])
 
-# Ejecución en paralelo.
+# Ejecucion en paralelo.
 pool=mp.Pool(mp.cpu_count())
 pool.map(parallel_processing,list_arg)
 pool.close()
 
-# Guardar valores considerados como umbral para la correlación.
+# Guardar valores considerados como umbral para la correlacion.
 np.save('results/data/SymbolicRegressor/UnderstandingAccuracyShape/list_threshold_corr',list_threshold_corr)
 
 

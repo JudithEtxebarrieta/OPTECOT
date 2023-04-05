@@ -1,7 +1,7 @@
 
 
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
 import numpy as np
 import pandas as pd
@@ -59,7 +59,7 @@ def draw_linear_interpolation(x,y,env_name):
 list_env_names=['SymbolicRegressor','WindFLO','MuJoCo','Turbines']
 df=[]
 
-# Interpolación polinomial.
+# Interpolacion polinomial.
 for env_name in list_env_names:
     df_acc_eval_cost=pd.read_csv('results/data/'+str(env_name)+'/UnderstandingAccuracy/df_Bisection.csv')
     expression=polinomial_interpolation(df_acc_eval_cost['cost_per_eval'],df_acc_eval_cost['accuracy'])
@@ -70,7 +70,7 @@ for env_name in list_env_names:
 df=pd.DataFrame(df,columns=['env_name','interpolation_expression','inverse_expression','lower_time','upper_time'])
 df.to_csv('results/data/general/bisection_interval_PolinomialInterpolation.csv')
 
-# Interpolación lineal.
+# Interpolacion lineal.
 for env_name in list_env_names:
     df_acc_eval_cost=pd.read_csv('results/data/'+str(env_name)+'/UnderstandingAccuracy/df_Bisection.csv')
     draw_linear_interpolation(df_acc_eval_cost['cost_per_eval'],df_acc_eval_cost['accuracy'],env_name)

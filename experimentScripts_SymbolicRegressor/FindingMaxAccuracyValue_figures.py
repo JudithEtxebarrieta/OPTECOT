@@ -1,8 +1,8 @@
-# Mediante este script se representan gráficamente los resultados numéricos calculados por 
+# Mediante este script se representan graficamente los resultados numericos calculados por 
 # "FindingMaxAccuracyValue.py".
 
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
 from gplearn.genetic import SymbolicRegressor
 from sklearn.utils.random import check_random_state
@@ -16,10 +16,10 @@ import tqdm
 #==================================================================================================
 # FUNCIONES
 #==================================================================================================
-# FUNCIÓN 1
-# Parámetros:
-#   >data: datos sobre los cuales se calculará el rango entre percentiles.
-#   >bootstrap_iterations: número de submuestras que se considerarán de data para poder calcular el 
+# FUNCION 1
+# Parametros:
+#   >data: datos sobre los cuales se calculara el rango entre percentiles.
+#   >bootstrap_iterations: numero de submuestras que se consideraran de data para poder calcular el 
 #    rango entre percentiles de sus medias.
 # Devolver: la media de los datos originales junto a los percentiles de las medias obtenidas del 
 # submuestreo realizado sobre data.
@@ -31,13 +31,13 @@ def bootstrap_mean_and_confiance_interval(data,bootstrap_iterations=1000):
         mean_list.append(np.mean(sample))
     return np.mean(data),np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
 
-# FUNCIÓN 2
-# Parámetros:
-#   >df: base de datos con información de los scores asociados a diferentes conjuntos de puntos
+# FUNCION 2
+# Parametros:
+#   >df: base de datos con informacion de los scores asociados a diferentes conjuntos de puntos
 #    de diferentes tamaños.
-#   >position_mae: código numérico con la posición donde se desea dibujar la gráfica de los errores
+#   >position_mae: codigo numerico con la posicion donde se desea dibujar la grafica de los errores
 #    absolutos medios.
-# Devolver: nada, se dibuja directamente la gráfica.
+# Devolver: nada, se dibuja directamente la grafica.
 
 def from_data_to_figure(df,position_mae):
 
@@ -53,7 +53,7 @@ def from_data_to_figure(df,position_mae):
     # Rellenar las listas inicializadas.
     for n_pts in list_train_n_pts:
 
-        # Seleccionar los datos de todas las semillas asociados al número de puntos fijado.
+        # Seleccionar los datos de todas las semillas asociados al numero de puntos fijado.
         scores_mae=df[df['n_pts']==n_pts]['score_mae']
 
         # Calcular intervalo de confianza y media.
@@ -64,7 +64,7 @@ def from_data_to_figure(df,position_mae):
         all_q05_mae.append(q05_mae)
         all_q95_mae.append(q95_mae)
 
-    #Dibujar gráfica
+    #Dibujar grafica
     ax1=plt.subplot(position_mae)
     ax1.fill_between(list_train_n_pts,all_q05_mae,all_q95_mae, alpha=.5, linewidth=0)
     plt.plot(list_train_n_pts,all_mean_mae)
@@ -72,12 +72,12 @@ def from_data_to_figure(df,position_mae):
     ax1.set_ylabel("Mean MAE("+str(len(list_train_seeds))+' seeds)')
     ax1.set_title('Behavior of the MAE depending on the \n size of the train point set')
 
-# FUNCIÓN 3
-# Parámetros:
-#   >position: código numérico con la posición donde se desea dibujar la gráfica de los errores
+# FUNCION 3
+# Parametros:
+#   >position: codigo numerico con la posicion donde se desea dibujar la grafica de los errores
 #    absolutos medios.
-#   >eval_expr: expresión de la superficie que se desea dibujar.
-# Devolver: nada, se dibuja directamente la gráfica.
+#   >eval_expr: expresion de la superficie que se desea dibujar.
+# Devolver: nada, se dibuja directamente la grafica.
 
 def draw_surface(position,eval_expr):
 
@@ -98,14 +98,14 @@ def draw_surface(position,eval_expr):
 # PROGRAMA PRINCIPAL
 #==================================================================================================
 #--------------------------------------------------------------------------------------------------
-# EJEMPLO 1 (Paraboloide hiperbólica)
-# Solución: se define en 30 puntos la máxima precisión.
+# EJEMPLO 1 (Paraboloide hiperbolica)
+# Solucion: se define en 30 puntos la maxima precision.
 #--------------------------------------------------------------------------------------------------
 # Lectura de datos.
 df=pd.read_csv('results/data/SymbolicRegressor/FindingMaxAccuracyValue/FindingMaxAccuracyValue1.csv',index_col=0)
 eval_expr=str(np.load('results/data/SymbolicRegressor/FindingMaxAccuracyValue/eval_expr1.npy'))
 
-# Construir gráficas.
+# Construir graficas.
 plt.figure(figsize=[10,5])
 plt.subplots_adjust(left=0.07,bottom=0.11,right=0.94,top=0.88,wspace=0.2,hspace=0.2)
 
@@ -118,14 +118,14 @@ plt.close()
 
 #--------------------------------------------------------------------------------------------------
 # EJEMPLO 2 (Plano)
-# Solución: se define en 6 puntos la máxima precisión.
+# Solucion: se define en 6 puntos la maxima precision.
 #--------------------------------------------------------------------------------------------------
 
 # Lectura de datos.
 df=pd.read_csv('results/data/SymbolicRegressor/FindingMaxAccuracyValue/FindingMaxAccuracyValue2.csv',index_col=0)
 eval_expr=str(np.load('results/data/SymbolicRegressor/FindingMaxAccuracyValue/eval_expr2.npy'))
 
-# Construir gráficas.
+# Construir graficas.
 plt.figure(figsize=[10,5])
 plt.subplots_adjust(left=0.07,bottom=0.11,right=0.94,top=0.88,wspace=0.2,hspace=0.2)
 

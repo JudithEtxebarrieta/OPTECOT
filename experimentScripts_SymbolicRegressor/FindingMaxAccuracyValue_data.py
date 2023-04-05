@@ -1,5 +1,5 @@
 
-# Se pretende encontrar el número de puntos de entrenamiento que tiene asociada la máxima precisión, 
+# Se pretende encontrar el numero de puntos de entrenamiento que tiene asociada la maxima precision, 
 # para diferentes superficies. Mediante este script se guarda una base de datos por superficie
 # considerada, para resumir los scores de las superficies predichas a partir de un conjunto de 
 # puntos de diferentes tamaños definido con diferentes semillas.
@@ -8,9 +8,9 @@
 # Basado en: https://github.com/trevorstephens/gplearn/blob/main/doc/gp_examples.ipynb
 
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
-#Para mi código
+#Para mi codigo
 from gplearn.genetic import SymbolicRegressor
 from sklearn.utils.random import check_random_state
 from mpl_toolkits.mplot3d import Axes3D
@@ -46,8 +46,8 @@ from gplearn.genetic import BaseSymbolic
 #==================================================================================================
 # FUNCIONES
 #==================================================================================================
-# FUNCIÓN 1
-# Parámetros:
+# FUNCION 1
+# Parametros:
 #   >z_test: terceras coordenadas reales de los puntos de la superficie.
 #   >z_pred: terceras coordenadas obtenidas a partir de la superficie predicha.
 # Devuelve: el error absoluto medio de las dos listas anteriores.
@@ -55,11 +55,11 @@ from gplearn.genetic import BaseSymbolic
 def mean_abs_err(z_test,z_pred):
     return sum(abs(z_test-z_pred))/len(z_test)
 
-# FUNCIÓN 2
-# Parámetros:
-#   >n_sample: número de puntos que se desean construir.
-#   >seed: semilla para la selección aletoria de los puntos.
-#   >eval_expr: expresión de la superficie de la cual se quiere extraer la muestra de puntos.
+# FUNCION 2
+# Parametros:
+#   >n_sample: numero de puntos que se desean construir.
+#   >seed: semilla para la seleccion aletoria de los puntos.
+#   >eval_expr: expresion de la superficie de la cual se quiere extraer la muestra de puntos.
 # Devuelve: base de datos con las tres coordenadas de los puntos de la muestra.
 
 def build_pts_sample(n_sample,seed,eval_expr):
@@ -80,16 +80,16 @@ def build_pts_sample(n_sample,seed,eval_expr):
 
 	return pts_sample
 
-# FUNCIÓN 3
-# Parámetros:
+# FUNCION 3
+# Parametros:
 #   >df_train_pts: base de datos con las tres coordenadas de los puntos que forman el 
 #    conjunto de entrenamiento.
-#   >max_time: tiempo máximo fijado para la ejecución del GA (búsqueda de la superficie).
+#   >max_time: tiempo maximo fijado para la ejecucion del GA (busqueda de la superficie).
 # Devuelve: superficie seleccionada.
 
 def learn(df_train_pts,max_time):
 
-	# Definición del algoritmo genético con el cual se encontrará la superficie.
+	# Definicion del algoritmo genetico con el cual se encontrara la superficie.
     est_surf = SymbolicRegressor(random_state=0)
 
 	# Ajustar la superficie a los puntos.
@@ -99,10 +99,10 @@ def learn(df_train_pts,max_time):
 
     return est_surf
 
-# FUNCIÓN 4
-# Parámetros:
+# FUNCION 4
+# Parametros:
 #   >df_test_pts: base de datos con las tres coordenadas de los puntos que forman el 
-#    conjunto de validación.
+#    conjunto de validacion.
 #   >est_surf: superficie seleccionada en el proceso GA de entrenamiento.
 # Devuelve: error absoluto medio.
 
@@ -120,21 +120,21 @@ def evaluate(df_test_pts,est_surf):
 
     return score_mae
 
-# FUNCIÓN 5
-# Parámetros:
+# FUNCION 5
+# Parametros:
 #   >list_train_n_pts: lista con los tamaños considerados para el conjunto de puntos de entrenamiento.
-#   >list_train_seeds: lista de semillas para la selección aleatoria de los puntos que forman el 
+#   >list_train_seeds: lista de semillas para la seleccion aleatoria de los puntos que forman el 
 #    conjunto de entrenamiento.
-#   >test_n_pts: número de puntos con el que estará formado el conjunto de validación.
-#   >test_seed: semilla para seleccionar aleatoriamente los puntos que formarán el conjunto de entrenamiento.
-#   >eval_expr: expresión de la superficie original/real.
-#   >max_time: tiempo máximo fijado para la ejecución del GA (entrenamiento/búsqueda de la superficie).
+#   >test_n_pts: numero de puntos con el que estara formado el conjunto de validacion.
+#   >test_seed: semilla para seleccionar aleatoriamente los puntos que formaran el conjunto de entrenamiento.
+#   >eval_expr: expresion de la superficie original/real.
+#   >max_time: tiempo maximo fijado para la ejecucion del GA (entrenamiento/busqueda de la superficie).
 # Devuelve: base de datos con los scores asociados a diferentes tamaños de conjunto de puntos de entrenamiento,
 # definidos a partir de diferentes semillas.
 
 def find_max_accuracy(list_train_n_pts,list_train_seeds,test_n_pts,test_seed,eval_expr,max_time):
 
-    # Construir conjunto de puntos de validación.
+    # Construir conjunto de puntos de validacion.
     df_test_pts=build_pts_sample(test_n_pts,test_seed,eval_expr)
 
     # Almacenar datos de interes en una base de datos.
@@ -146,16 +146,16 @@ def find_max_accuracy(list_train_n_pts,list_train_seeds,test_n_pts,test_seed,eva
             df_train_pts=build_pts_sample(n_pts,seed,eval_expr)
             # Aprender superficie.
             est_surf=learn(df_train_pts,max_time)
-            # Evaluación.
+            # Evaluacion.
             score_mae=evaluate(df_test_pts,est_surf)
             # Guardar datos.
             df.append([n_pts,seed,score_mae])
 
     return pd.DataFrame(df,columns=['n_pts','seed','score_mae'])
 
-# FUNCIÓN 6
-# La siguiente función es una modificación de otra ya existente, con intención de hacer que el
-# proceso de búsqueda de una superficie se detenga en el tiempo computacional predeterminado.
+# FUNCION 6
+# La siguiente funcion es una modificacion de otra ya existente, con intencion de hacer que el
+# proceso de busqueda de una superficie se detenga en el tiempo computacional predeterminado.
 
 # -Original: fit
 # -Script: genetic.py
@@ -360,9 +360,9 @@ def new_fit(self, X, y, max_time, sample_weight=None):
         self._verbose_reporter()
 
     
-    start_total_time=time()#MODIFICACIÓN: empezar a contar el tiempo de entrenamiento
+    start_total_time=time()#MODIFICACION: empezar a contar el tiempo de entrenamiento
     gen=0
-    while time()-start_total_time < max_time:#MODIFICACIÓN: para que el proceso termine cuando se alcanza el tiempo fijado.
+    while time()-start_total_time < max_time:#MODIFICACION: para que el proceso termine cuando se alcanza el tiempo fijado.
 
         start_time = time()
 
@@ -450,12 +450,12 @@ def new_fit(self, X, y, max_time, sample_weight=None):
             # if best_fitness <= self.stopping_criteria:
             #     break
         
-		#MODIFICACIÓN: modificar el criterio de parada según el tiempo de entrenamiento.
+		#MODIFICACION: modificar el criterio de parada segun el tiempo de entrenamiento.
         total_time=time()-start_total_time
         if total_time>=max_time:
             break
 
-        gen+=1#MODIFICACIÓN: actualizar manualmente el número de generaciones.
+        gen+=1#MODIFICACION: actualizar manualmente el numero de generaciones.
         
 
     if isinstance(self, TransformerMixin):
@@ -503,14 +503,14 @@ def new_fit(self, X, y, max_time, sample_weight=None):
 #==================================================================================================
 # PROGRAMA PRINCIPAL
 #==================================================================================================
-# Para usar la función de ajuste modificada.
+# Para usar la funcion de ajuste modificada.
 BaseSymbolic.fit=new_fit
 
 #--------------------------------------------------------------------------------------------------
-# EJEMPLO 1 (Paraboloide hiperbólica)
+# EJEMPLO 1 (Paraboloide hiperbolica)
 #--------------------------------------------------------------------------------------------------
 
-# Parámetros.
+# Parametros.
 list_train_n_pts=range(2,32,2)
 list_train_seeds=range(1,21,1)
 test_n_pts=30
@@ -526,7 +526,7 @@ np.save('results/data/SymbolicRegressor/FindingMaxAccuracyValue/eval_expr1',eval
 #--------------------------------------------------------------------------------------------------
 # EJEMPLO 2 (Plano)
 #--------------------------------------------------------------------------------------------------
-# Parámetros.
+# Parametros.
 list_train_n_pts=range(2,7,1)
 list_train_seeds=range(1,21,1)
 test_n_pts=30

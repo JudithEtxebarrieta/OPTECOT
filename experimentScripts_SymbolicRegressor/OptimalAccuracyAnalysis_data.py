@@ -1,13 +1,13 @@
-# En este script se comienza por implementar un total de 14 heurísticos con intención de automatizar el 
+# En este script se comienza por implementar un total de 14 heuristicos con intencion de automatizar el 
 # ajuste del accuracy durante el proceso de entrenamiento. Tras observar las ventajas y desventajas de
-# los heurísticos anteriores, finalmente se diseñan 2 heurísticos finales (I y II) con las características 
-# resaltadas de los anteriores. Se almacenan y guardan los datos  obtenidos durante la ejecución de cada 
+# los heuristicos anteriores, finalmente se diseñan 2 heuristicos finales (I y II) con las caracteristicas 
+# resaltadas de los anteriores. Se almacenan y guardan los datos  obtenidos durante la ejecucion de cada 
 # uno de los heurśiticos.
 
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
-# Para mi código.
+# Para mi codigo.
 from gplearn.genetic import SymbolicRegressor
 from sklearn.utils.random import check_random_state
 from mpl_toolkits.mplot3d import Axes3D
@@ -49,10 +49,10 @@ import os
 # NUEVAS FUNCIONES
 #==================================================================================================
 #--------------------------------------------------------------------------------------------------
-# Funciones para el proceso de aprendizaje o búsqueda de la superficie.
+# Funciones para el proceso de aprendizaje o busqueda de la superficie.
 #--------------------------------------------------------------------------------------------------
-# FUNCIÓN 1
-# Parámetros:
+# FUNCION 1
+# Parametros:
 #   >z_test: terceras coordenadas reales de los puntos de la superficie.
 #   >z_pred: terceras coordenadas obtenidas a partir de la superficie predicha.
 # Devuelve: el error absoluto medio de las dos listas anteriores.
@@ -61,11 +61,11 @@ def mean_abs_err(z_test,z_pred):
     mae=sum(abs(z_test-z_pred))/len(z_test)
     return mae
 
-# FUNCIÓN 2
-# Parámetros:
-#   >n_sample: número de puntos que se desean construir.
-#   >seed: semilla para la selección aleatoria de los puntos.
-#   >expr_surf: expresión de la superficie de la cual se quiere extraer la muestra de puntos.
+# FUNCION 2
+# Parametros:
+#   >n_sample: numero de puntos que se desean construir.
+#   >seed: semilla para la seleccion aleatoria de los puntos.
+#   >expr_surf: expresion de la superficie de la cual se quiere extraer la muestra de puntos.
 # Devuelve: base de datos con las tres coordenadas de los puntos de la muestra.
 
 def build_pts_sample(n_sample,seed,expr_surf):
@@ -86,20 +86,20 @@ def build_pts_sample(n_sample,seed,expr_surf):
 
     return pts_sample
 
-# FUNCIÓN 3
-# Parámetros:
+# FUNCION 3
+# Parametros:
 #   >pts_set: conjunto de punts del que se desea extraer una submuestra.
-#   >n_sample: número de puntos con el que estará formada la submuestra.
+#   >n_sample: numero de puntos con el que estara formada la submuestra.
 # Devuelve: base de datos con las tres coordenadas de los puntos de la submuestra (una submuestra de las filas de pts_set).
 
 def select_pts_sample(pts_set,n_sample):
     pts_sample=pts_set[:n_sample]
     return np.array(pts_sample)
 
-# FUNCIÓN 4
-# Parámetros:
+# FUNCION 4
+# Parametros:
 #   >df_test_pts: base de datos con las tres coordenadas de los puntos que forman el 
-#    conjunto de validación.
+#    conjunto de validacion.
 #   >est_surf: superficie seleccionada en el proceso GA de entrenamiento.
 # Devuelve: error absoluto medio.
 
@@ -117,13 +117,13 @@ def evaluate(df_test_pts,est_surf):
 
     return score   
 
-# FUNCIÓN 5
-# Parámetros:
+# FUNCION 5
+# Parametros:
 #   >inti_acc: valor del accuracy inicial.
 #   >train_seed: semilla de entrenamiento.
-#   >df_test_pts: base de datos con las tres coordenadas de los puntos que forman el conjunto de validación.
-#   >heuristic: identificador del heurístico que se está aplicando.
-#   >heuristic_param: parámetro del heurístico que se está considerando.
+#   >df_test_pts: base de datos con las tres coordenadas de los puntos que forman el conjunto de validacion.
+#   >heuristic: identificador del heuristico que se esta aplicando.
+#   >heuristic_param: parametro del heuristico que se esta considerando.
 # Devuelve: superficie seleccionada.
 
 def learn(init_acc,train_seed,df_test_pts,heuristic,heuristic_param):
@@ -134,7 +134,7 @@ def learn(init_acc,train_seed,df_test_pts,heuristic,heuristic_param):
     # Inicializar conjunto de entrenamiento.
     df_train_pts=select_pts_sample(default_df_train_pts,train_n_pts)
 
-    # Definición del algoritmo genético con el cual se encontrarán la superficie.
+    # Definicion del algoritmo genetico con el cual se encontraran la superficie.
     est_surf=SymbolicRegressor(random_state=train_seed)
 
     # Ajustar la superficie a los puntos.
@@ -147,13 +147,13 @@ def learn(init_acc,train_seed,df_test_pts,heuristic,heuristic_param):
 #--------------------------------------------------------------------------------------------------
 # Funciones auxiliares para definir el accuracy apropiado en cada momento del proceso.
 #--------------------------------------------------------------------------------------------------
-# FUNCIÓN 6 (Cálculo de la correlación de Spearman entre dos secuencias)
+# FUNCION 6 (Calculo de la correlacion de Spearman entre dos secuencias)
 def spearman_corr(x,y):
     return sc.stats.spearmanr(x,y)[0]
 
-# FUNCIÓN 7 (Cálculo dela distancia Tau Kendall inversa normalizada entre dos secuencias)
+# FUNCION 7 (Calculo dela distancia Tau Kendall inversa normalizada entre dos secuencias)
 def inverse_normalized_tau_kendall(x,y):
-    # Número de pares con orden inverso.
+    # Numero de pares con orden inverso.
     pairs_reverse_order=0
     for i in range(len(x)):
         for j in range(i+1,len(x)):
@@ -163,7 +163,7 @@ def inverse_normalized_tau_kendall(x,y):
             if case1 or case2:
                 pairs_reverse_order+=1  
     
-    # Número de pares total.
+    # Numero de pares total.
     total_pairs=len(list(combinations(x,2)))
 
     # Distancia tau Kendall normalizada.
@@ -171,7 +171,7 @@ def inverse_normalized_tau_kendall(x,y):
 
     return 1-tau_kendall
 
-# FUNCIÓN 8 (Convertir vector de scores en vector de rankings)
+# FUNCION 8 (Convertir vector de scores en vector de rankings)
 def from_scores_to_ranking(list_scores):
     list_pos_ranking=np.argsort(np.array(list_scores))
     ranking=[0]*len(list_pos_ranking)
@@ -181,16 +181,16 @@ def from_scores_to_ranking(list_scores):
         i+=1
     return ranking
 
-# FUNCIÓN 9 (Generar lista con los scores asociados a cada superficie que forma la generación)
-# Parámetros:
-#   >list_surfaces: lista con las expresiones de las superficies que forman la generación.
+# FUNCION 9 (Generar lista con los scores asociados a cada superficie que forma la generacion)
+# Parametros:
+#   >list_surfaces: lista con las expresiones de las superficies que forman la generacion.
 #   >df_pts: conjunto de puntos sobre el que se desea evaluar cada superficie.
-#   >count_evaluations_acc: True o False en el caso en que se quiera o no sumar el número de evaluaciones gastadas como 
+#   >count_evaluations_acc: True o False en el caso en que se quiera o no sumar el numero de evaluaciones gastadas como 
 #    evaluaciones extra, respectivamente.
-#   >all_gen_evaluation: True o False en el caso en que se quiera o no sumar el número de evaluaciones gastadas como 
+#   >all_gen_evaluation: True o False en el caso en que se quiera o no sumar el numero de evaluaciones gastadas como 
 #    evaluaciones de procedimiento, respectivamente.
-#   >gen_variance: True o False ne el caso en que se quiera o no devolver la varianza de los scores de la generación.
-# Devuelve: lista de scores junto a la varianza de los mismos (en caso que así se indique).
+#   >gen_variance: True o False ne el caso en que se quiera o no devolver la varianza de los scores de la generacion.
+# Devuelve: lista de scores junto a la varianza de los mismos (en caso que asi se indique).
 
 def generation_score_list(list_surfaces,df_pts,
                           count_evaluations_acc=True,all_gen_evaluation=False,
@@ -203,7 +203,7 @@ def generation_score_list(list_surfaces,df_pts,
     X=df_pts[:,[0,1]]
     y=df_pts[:,2]
 
-    # Evaluar cada superficie que forma la generación con el accuracy indicado.
+    # Evaluar cada superficie que forma la generacion con el accuracy indicado.
     for expr_surf in list_surfaces:
 
         # Calcular el valor de las terceras coordenadas con las superficie seleccionada.
@@ -230,7 +230,7 @@ def generation_score_list(list_surfaces,df_pts,
     else:
         return list_scores
 
-# FUNCIÓN 10 (Eliminar de una lista en elemento de una posición)
+# FUNCION 10 (Eliminar de una lista en elemento de una posicion)
 def idx_remove(list,idx):
     new_list=[]
     for i in range(len(list)):
@@ -239,30 +239,30 @@ def idx_remove(list,idx):
     return new_list
 
 #--------------------------------------------------------------------------------------------------
-# Funciones asociadas al método de bisección para los heurísticos de prueba 
+# Funciones asociadas al metodo de biseccion para los heuristicos de prueba 
 # (1,2,3,4,5,6,7,8,9,10,11,12,13 y 14).
 #--------------------------------------------------------------------------------------------------
-# FUNCIÓN 11 (Implementación adaptada del método de bisección)
-# Parámetros:
-#   >init_acc: accuracy inicial (el mínimo considerado).
-#   >current_acc: accuracy actual (el definido más recientemente).
-#   >list_surf_gen: lista con las expresiones de las superficies que forman la generación.
+# FUNCION 11 (Implementacion adaptada del metodo de biseccion)
+# Parametros:
+#   >init_acc: accuracy inicial (el minimo considerado).
+#   >current_acc: accuracy actual (el definido mas recientemente).
+#   >list_surf_gen: lista con las expresiones de las superficies que forman la generacion.
 #   >train_seed: semilla de entrenamiento.
-#   >threshold: umbral del método de bisección con el que se irá actualizando el intervalo que contiene el valor de accuracy óptimo.
+#   >threshold: umbral del metodo de biseccion con el que se ira actualizando el intervalo que contiene el valor de accuracy optimo.
 #   >metric: 'spearman' o 'taukendall'.
-#   >random_sample: True o False, en caso de que se quiera aplicar el método de bisección con el 10% aleatorio o mejor de las superficies
-#    que forman la generación, respectivamente.
-#   >fitness: None o lista con los scores asociados a la generación.
-#   >first_gen: True o False en caso que se este en la primera o siguientes iteraciones del método de bisección, respectivamente.
+#   >random_sample: True o False, en caso de que se quiera aplicar el metodo de biseccion con el 10% aleatorio o mejor de las superficies
+#    que forman la generacion, respectivamente.
+#   >fitness: None o lista con los scores asociados a la generacion.
+#   >first_gen: True o False en caso que se este en la primera o siguientes iteraciones del metodo de biseccion, respectivamente.
 #   >change_threshold: 'None' en caso de que se quiera considerar un valor constante para el umbral; 'IncreasingMonotone' en caso de que se
-#    quiera actualizar el umbral con el último valor de la métrica que a superado el umbral anterior; 'NonMonotone' en caso de que se quiera 
-#    actualizar el umbral con el valor de la métrica asociado al accuracy seleccionado como óptimo.
-# Devuelve: valor de accuracy seleccionado como óptimo junto al nuevo umbral para el método de bisección (en caso que así se indique).
+#    quiera actualizar el umbral con el ultimo valor de la metrica que a superado el umbral anterior; 'NonMonotone' en caso de que se quiera 
+#    actualizar el umbral con el valor de la metrica asociado al accuracy seleccionado como optimo.
+# Devuelve: valor de accuracy seleccionado como optimo junto al nuevo umbral para el metodo de biseccion (en caso que asi se indique).
 
 def bisection_method(init_acc,current_acc,list_surf_gen,train_seed,threshold,metric,
                      random_sample=True,fitness=None,first_gen=False,change_threshold='None'):
 
-    # Inicializar límite inferior y superior.
+    # Inicializar limite inferior y superior.
     acc0=init_acc
     acc1=1    
 
@@ -270,20 +270,20 @@ def bisection_method(init_acc,current_acc,list_surf_gen,train_seed,threshold,met
     prev_m=current_acc
     m=(acc0+acc1)/2
     
-    # Función para calcular la correlación entre los rankings del 10% aleatorio/mejor de las superficies
-    # usando el accuracy actual y el máximo.
+    # Funcion para calcular la correlacion entre los rankings del 10% aleatorio/mejor de las superficies
+    # usando el accuracy actual y el maximo.
     def similarity_between_current_best_acc(current_acc,acc,list_surf_gen,train_seed,metric,first_iteration,actual_n_evaluations_acc,random_sample,fitness):
 
         if random_sample:
-            # Seleccionar de forma aleatoria el 10% de las superficies que forman la generación.
+            # Seleccionar de forma aleatoria el 10% de las superficies que forman la generacion.
             random.seed(train_seed)
             ind_surf=random.sample(range(len(list_surf_gen)),int(len(list_surf_gen)*0.1))
             list_surfaces=list(np.array(list_surf_gen)[ind_surf])
 
 
         else:
-            # Seleccionar el 10% mejor de las superficies que forman la generación según 
-            # el accuracy de la generación anterior.
+            # Seleccionar el 10% mejor de las superficies que forman la generacion segun 
+            # el accuracy de la generacion anterior.
             all_current_ranking=from_scores_to_ranking(fitness)
             if first_iteration:
                 global n_evaluations_acc
@@ -291,19 +291,19 @@ def bisection_method(init_acc,current_acc,list_surf_gen,train_seed,threshold,met
 
             list_surfaces=list_surf_gen
             for ranking_pos in range(int(len(list_surf_gen)*0.1),len(list_surf_gen)):
-                # Eliminar posiciones y superficies que no se usarán.
+                # Eliminar posiciones y superficies que no se usaran.
                 ind_remove=all_current_ranking.index(ranking_pos)
                 all_current_ranking.remove(ranking_pos)
                 list_surfaces=idx_remove(list_surfaces,ind_remove)
 
         # Guardar los scores asociados a cada superficie seleccionada.
-        best_scores=generation_score_list(list_surfaces,default_df_train_pts,count_evaluations_acc=first_iteration)# Con el máximo accuracy. 
+        best_scores=generation_score_list(list_surfaces,default_df_train_pts,count_evaluations_acc=first_iteration)# Con el maximo accuracy. 
         new_df_train_pts=select_pts_sample(default_df_train_pts,int(default_train_n_pts*acc))
         new_scores=generation_score_list(list_surfaces,new_df_train_pts)# Accuracy nuevo. 
 
         # Obtener vectores de rankings asociados.
         new_ranking=from_scores_to_ranking(new_scores)# Accuracy nuevo. 
-        best_ranking=from_scores_to_ranking(best_scores)# Máximo accuracy. 
+        best_ranking=from_scores_to_ranking(best_scores)# Maximo accuracy. 
                 
         # Comparar ambos rankings.
         if metric=='spearman':
@@ -313,8 +313,8 @@ def bisection_method(init_acc,current_acc,list_surf_gen,train_seed,threshold,met
 
         return metric_value, n_evaluations_acc-actual_n_evaluations_acc
 
-    # Reajustar límites del intervalo hasta que este tenga un rango lo suficientemente pequeño o hasta alcanzar
-    # el número máximo de evaluaciones.
+    # Reajustar limites del intervalo hasta que este tenga un rango lo suficientemente pequeño o hasta alcanzar
+    # el numero maximo de evaluaciones.
     global n_evaluations_acc
     first_iteration=True
     continue_bisection_method=True
@@ -352,24 +352,24 @@ def bisection_method(init_acc,current_acc,list_surf_gen,train_seed,threshold,met
     if change_threshold=='None':
         return prev_m
 
-# FUNCIÓN 12 (ajustar con el método de bisección el accuracy en la primera generación)
-# Parámetros:
-#   >init_acc: accuracy inicial (el mínimo considerado).
-#   >list_surf_gen: lista con las expresiones de las superficies que forman la generación.
+# FUNCION 12 (ajustar con el metodo de biseccion el accuracy en la primera generacion)
+# Parametros:
+#   >init_acc: accuracy inicial (el minimo considerado).
+#   >list_surf_gen: lista con las expresiones de las superficies que forman la generacion.
 #   >train_seed: semilla de entrenamiento.
 #   >metric: 'spearman' o 'taukendall'.
-#   >threshold: umbral del método de bisección con el que se irá actualizando el intervalo que contiene el valor de accuracy óptimo.
+#   >threshold: umbral del metodo de biseccion con el que se ira actualizando el intervalo que contiene el valor de accuracy optimo.
 # Devuelve: 
-#   >acc: accuracy seleccionado como óptimo.
+#   >acc: accuracy seleccionado como optimo.
 #   >X,y: coordenadas del conjunto de puntos de entrenamiento asociado al accuracy acc.
-#   >fitness: lista de scores de la generación calculados a partir del conjunto de puntos de entrenamiento recién fijado.
+#   >fitness: lista de scores de la generacion calculados a partir del conjunto de puntos de entrenamiento recien fijado.
 #   >acc_split: el 10% del accuracy restante que queda (1-acc).
-#   >threshold: umbral del método de bisección empleado.
-#   >variance: varianza de los scores de la generación.
+#   >threshold: umbral del metodo de biseccion empleado.
+#   >variance: varianza de los scores de la generacion.
 
 def set_initial_accuracy(init_acc,list_surf_gen,train_seed,metric,threshold=0.95,change_threshold='None',sample_size=None):
 
-    # Calcular el mínimo accuracy con el que se obtiene la máxima calidad.
+    # Calcular el minimo accuracy con el que se obtiene la maxima calidad.
     if change_threshold !='None':
         acc,next_threshold=bisection_method(init_acc,init_acc,list_surf_gen,train_seed,threshold,metric,first_gen=True,change_threshold=change_threshold,sample_size=sample_size)
     else:
@@ -381,12 +381,12 @@ def set_initial_accuracy(init_acc,list_surf_gen,train_seed,metric,threshold=0.95
     X=df_train_pts[:,[0,1]]
     y=df_train_pts[:,2]
 
-    # Calcular vector fitness de la generación usando el accuracy definido.
+    # Calcular vector fitness de la generacion usando el accuracy definido.
     fitness,variance=generation_score_list(list_surf_gen,df_train_pts,all_gen_evaluation=True,gen_variance=True) 
     global n_evaluations_acc
     n_evaluations_acc-=int(default_train_n_pts*acc)*int(len(list_surf_gen)*0.1)
 
-    # Definir el incremento de accuracy que se usará en las siguientes iteraciones en caso de 
+    # Definir el incremento de accuracy que se usara en las siguientes iteraciones en caso de 
     # tener que incrementar el accuracy.
     global acc_split
     acc_split=(1-acc)*0.1
@@ -396,12 +396,12 @@ def set_initial_accuracy(init_acc,list_surf_gen,train_seed,metric,threshold=0.95
     else:
         return acc,X,y,fitness,acc_split,threshold,variance
 #--------------------------------------------------------------------------------------------------
-# Funciones asociadas al método de bisección para los heurísticos finales (I y II)
+# Funciones asociadas al metodo de biseccion para los heuristicos finales (I y II)
 #--------------------------------------------------------------------------------------------------
-# FUNCIÓN 13 (Implementación adaptada del método de bisección)
+# FUNCION 13 (Implementacion adaptada del metodo de biseccion)
 def customized_bisection_method(lower_time,upper_time,list_surf_gen,train_seed,threshold,sample_size,interpolation_pts):
 
-    # Inicializar límite inferior y superior.
+    # Inicializar limite inferior y superior.
     time0=lower_time
     time1=upper_time    
 
@@ -409,30 +409,30 @@ def customized_bisection_method(lower_time,upper_time,list_surf_gen,train_seed,t
     prev_m=lower_time
     m=(time0+time1)/2
     
-    # Función para calcular la correlación entre los rankings de las sample_size superficies
-    # usando el accuracy actual y el máximo.
+    # Funcion para calcular la correlacion entre los rankings de las sample_size superficies
+    # usando el accuracy actual y el maximo.
     def similarity_between_current_best_acc(time,list_surf_gen,train_seed,first_iteration):
 
-        # Seleccionar de forma aleatoria sample_size superficies que forman la generación.
+        # Seleccionar de forma aleatoria sample_size superficies que forman la generacion.
         random.seed(train_seed)
         ind_surf=random.sample(range(len(list_surf_gen)),sample_size)
         list_surfaces=list(np.array(list_surf_gen)[ind_surf])
 
         # Guardar los scores asociados a cada superficie seleccionada.
-        best_scores=generation_score_list(list_surfaces,default_df_train_pts,count_evaluations_acc=first_iteration)# Con el máximo accuracy. 
+        best_scores=generation_score_list(list_surfaces,default_df_train_pts,count_evaluations_acc=first_iteration)# Con el maximo accuracy. 
         new_df_train_pts=select_pts_sample(default_df_train_pts,int(default_train_n_pts*time))
         new_scores=generation_score_list(list_surfaces,new_df_train_pts)# Accuracy nuevo. 
 
         # Obtener vectores de rankings asociados.
         new_ranking=from_scores_to_ranking(new_scores)# Accuracy nuevo. 
-        best_ranking=from_scores_to_ranking(best_scores)# Máximo accuracy. 
+        best_ranking=from_scores_to_ranking(best_scores)# Maximo accuracy. 
                 
         # Comparar ambos rankings.
         metric_value=spearman_corr(new_ranking,best_ranking)
 
         return metric_value
 
-    # Reajustar límites del intervalo hasta que este tenga un rango lo suficientemente pequeño (el 10% de la longitud máxima).
+    # Reajustar limites del intervalo hasta que este tenga un rango lo suficientemente pequeño (el 10% de la longitud maxima).
     global n_evaluations_acc
     first_iteration=True
     continue_bisection_method=True
@@ -453,10 +453,10 @@ def customized_bisection_method(lower_time,upper_time,list_surf_gen,train_seed,t
 
     return np.interp(prev_m,interpolation_pts[0],interpolation_pts[1])
 
-# FUNCIÓN 14 (ajustar con el método de bisección el accuracy en la primera generación)
+# FUNCION 14 (ajustar con el metodo de biseccion el accuracy en la primera generacion)
 def customized_set_initial_accuracy(lower_time,upper_time,list_surf_gen,train_seed,sample_size,interpolation_pts,threshold=0.95):
 
-    # Calcular el mínimo accuracy con el que se obtiene la máxima calidad.
+    # Calcular el minimo accuracy con el que se obtiene la maxima calidad.
     acc=customized_bisection_method(lower_time,upper_time,list_surf_gen,train_seed,threshold,sample_size,interpolation_pts)
 
     # Calcular conjunto de entrenamiento correspondiente.
@@ -465,7 +465,7 @@ def customized_set_initial_accuracy(lower_time,upper_time,list_surf_gen,train_se
     X=df_train_pts[:,[0,1]]
     y=df_train_pts[:,2]
 
-    # Calcular vector fitness de la generación usando el accuracy definido.
+    # Calcular vector fitness de la generacion usando el accuracy definido.
     fitness,variance=generation_score_list(list_surf_gen,df_train_pts,all_gen_evaluation=True,gen_variance=True) 
     global n_evaluations_acc
     n_evaluations_acc-=int(default_train_n_pts*acc)*sample_size
@@ -474,23 +474,23 @@ def customized_set_initial_accuracy(lower_time,upper_time,list_surf_gen,train_se
 
 
 #--------------------------------------------------------------------------------------------------
-# Funciones que implementan diferentes heurísticos para actualizar el accuracy.
+# Funciones que implementan diferentes heuristicos para actualizar el accuracy.
 #--------------------------------------------------------------------------------------------------
 #__________________________________________________________________________________________________
-# Heurísticos de prueba diseñados para la búsqueda de la definición del heurístico final.
+# Heuristicos de prueba diseñados para la busqueda de la definicion del heuristico final.
 
-# HEURÍSTICO 1 (accuracy ascendente)
-# >>Accuracy inicial: el definido con el método de bisección (umbral 0.95).
-# >>Valoración de cambio de accuracy (depende de parámetro): se comprobará si la correlación entre rankings
-# (accuracy actual y máximo) del 10% aleatorio de las superficies de la generación supera o no cierto umbral (parámetro). 
-# >>Definición de cambio de accuracy: función dependiente de la correlación anterior.
+# HEURISTICO 1 (accuracy ascendente)
+# >>Accuracy inicial: el definido con el metodo de biseccion (umbral 0.95).
+# >>Valoracion de cambio de accuracy (depende de parametro): se comprobara si la correlacion entre rankings
+# (accuracy actual y maximo) del 10% aleatorio de las superficies de la generacion supera o no cierto umbral (parametro). 
+# >>Definicion de cambio de accuracy: funcion dependiente de la correlacion anterior.
 def update_accuracy_heuristic1(acc,X,y,population,fitness,train_seed,param):
 
     global n_evaluations_acc
     global n_evaluations
 
     if acc<1:
-        # Función para el calculo de incremento de accuracy.
+        # Funcion para el calculo de incremento de accuracy.
         def acc_split(corr,acc_rest,param):
             if param=='logistic':
                 split=(1/(1+np.exp(12*(corr-0.5))))*acc_rest
@@ -501,26 +501,26 @@ def update_accuracy_heuristic1(acc,X,y,population,fitness,train_seed,param):
                     split=-acc_rest*(((corr-param[0])/(1-param[0]))**(1/param[1]))+acc_rest
             return split
     
-        # Seleccionar de forma aleatoria el 10% de las superficies que forman la generación.
+        # Seleccionar de forma aleatoria el 10% de las superficies que forman la generacion.
         random.seed(train_seed)
         ind_surf=random.sample(range(len(population)),int(len(population)*0.1))
         list_surfaces=list(np.array(population)[ind_surf])
 
         # Guardar los scores asociados a cada superficie seleccionada.
-        best_scores=generation_score_list(list_surfaces,default_df_train_pts)# Con el máximo accuracy. 
+        best_scores=generation_score_list(list_surfaces,default_df_train_pts)# Con el maximo accuracy. 
         current_scores=list(np.array(fitness)[ind_surf])# Accuracy actual.
 
-        # Actualizar número de evaluaciones extra empleadas para la definición del accuracy.
+        # Actualizar numero de evaluaciones extra empleadas para la definicion del accuracy.
         n_evaluations_acc+=int(default_train_n_pts*acc)*len(list_surfaces)
 
         # Obtener vectores de rankings asociados.
         current_ranking=from_scores_to_ranking(current_scores)# Accuracy actual. 
-        best_ranking=from_scores_to_ranking(best_scores)# Máximo accuracy. 
+        best_ranking=from_scores_to_ranking(best_scores)# Maximo accuracy. 
                 
-        # Comparar ambos rankings (calcular coeficiente de correlación de Spearman).
+        # Comparar ambos rankings (calcular coeficiente de correlacion de Spearman).
         corr=spearman_corr(current_ranking,best_ranking)
 
-        # Dependiendo de la similitud entre los rankings calcular el split en el accuracy para la siguiente generación.
+        # Dependiendo de la similitud entre los rankings calcular el split en el accuracy para la siguiente generacion.
         split=acc_split(corr,1-acc,param)
 
         # Modificar accuracy.
@@ -535,23 +535,23 @@ def update_accuracy_heuristic1(acc,X,y,population,fitness,train_seed,param):
 
         # Si el accuracy asciende y si no lo hace.
         if prev_acc!=acc:
-            # Calcular vector fitness de la generación usando el accuracy definido.
+            # Calcular vector fitness de la generacion usando el accuracy definido.
             fitness=generation_score_list(list(population),df_train_pts,all_gen_evaluation=True) 
         else:
-            # Actualizar número de evaluaciones del proceso.
+            # Actualizar numero de evaluaciones del proceso.
             n_evaluations+=int(default_train_n_pts*acc)*len(list(population))
             n_evaluations_acc-=int(default_train_n_pts*acc)*len(list_surfaces)
     else:
-        # Actualizar número de evaluaciones del proceso.
+        # Actualizar numero de evaluaciones del proceso.
         n_evaluations+=default_train_n_pts*len(list(population))
 
     return acc,X,y,fitness
 
-# HEURÍSTICO 2 (accuracy ascendente)
-# >>Accuracy inicial: el definido con el método de bisección (umbral 0.95).
-# >>Valoración de cambio de accuracy (depende de parámetro): se comprobará si la correlación entre rankings 
-# (accuracy actual y siguientes en una lista predefinida) del 10% aleatorio de las superficies de la generación supera o no cierto umbral (parámetro). 
-# >>Definición de cambio de accuracy: accuracy actual más el split constante definido tras aplicar el método de bisección
+# HEURISTICO 2 (accuracy ascendente)
+# >>Accuracy inicial: el definido con el metodo de biseccion (umbral 0.95).
+# >>Valoracion de cambio de accuracy (depende de parametro): se comprobara si la correlacion entre rankings 
+# (accuracy actual y siguientes en una lista predefinida) del 10% aleatorio de las superficies de la generacion supera o no cierto umbral (parametro). 
+# >>Definicion de cambio de accuracy: accuracy actual mas el split constante definido tras aplicar el metodo de biseccion
 # (con umbral 0.95) al comienzo.
 def update_accuracy_heuristic2(acc,init_acc,X,y,population,fitness,train_seed,param):
     global n_evaluations_acc
@@ -559,7 +559,7 @@ def update_accuracy_heuristic2(acc,init_acc,X,y,population,fitness,train_seed,pa
 
     if acc<1:
         # Definir lista de accuracys duplicando el valor del accuracy actual sucesivamente hasta
-        # llegar al máximo.
+        # llegar al maximo.
         list_acc=[init_acc]
         next_acc=list_acc[-1]*2
         while next_acc<1:
@@ -568,7 +568,7 @@ def update_accuracy_heuristic2(acc,init_acc,X,y,population,fitness,train_seed,pa
         if 1 not in list_acc:
             list_acc.append(1)
     
-        # Seleccionar de forma aleatoria el 10% de las superficies que forman la generación.
+        # Seleccionar de forma aleatoria el 10% de las superficies que forman la generacion.
         random.seed(train_seed)
         ind_surf=random.sample(range(len(population)),int(len(population)*0.1))
         list_surfaces=list(np.array(population)[ind_surf])
@@ -578,10 +578,10 @@ def update_accuracy_heuristic2(acc,init_acc,X,y,population,fitness,train_seed,pa
         current_scores=list(np.array(fitness)[ind_surf])
         current_ranking=from_scores_to_ranking(current_scores)
 
-        # Actualizar número de evaluaciones extra empleadas para la definición del accuracy.
+        # Actualizar numero de evaluaciones extra empleadas para la definicion del accuracy.
         n_evaluations_acc+=int(default_train_n_pts*acc)*len(list_surfaces)
 
-        # Mientras la correlación del ranking actual con el ranking asociado a un accuracy mayor no 
+        # Mientras la correlacion del ranking actual con el ranking asociado a un accuracy mayor no 
         # sea inferior al umbral seguir probando con el resto de accuracys.
         possible_acc=list(np.array(list_acc)[np.array(list_acc)>acc])
         ind_next_acc=0
@@ -597,10 +597,10 @@ def update_accuracy_heuristic2(acc,init_acc,X,y,population,fitness,train_seed,pa
             next_scores=generation_score_list(list_surfaces,next_df_train_pts)
             next_ranking=from_scores_to_ranking(next_scores)
 
-            # Comparar ambos rankings (calcular coeficiente de correlación de Spearman).
+            # Comparar ambos rankings (calcular coeficiente de correlacion de Spearman).
             corr=spearman_corr(current_ranking,next_ranking)
 
-            # Actualización de indice de accuracy.
+            # Actualizacion de indice de accuracy.
             ind_next_acc+=1
         
         # Modificar accuracy.
@@ -618,23 +618,23 @@ def update_accuracy_heuristic2(acc,init_acc,X,y,population,fitness,train_seed,pa
 
         # Si el accuracy asciende y si no lo hace.
         if prev_acc!=acc:
-            # Calcular vector fitness de la generación usando el accuracy definido.
+            # Calcular vector fitness de la generacion usando el accuracy definido.
             fitness=generation_score_list(list(population),df_train_pts,all_gen_evaluation=True) 
         else:
-            # Actualizar número de evaluaciones del proceso.
+            # Actualizar numero de evaluaciones del proceso.
             n_evaluations+=int(default_train_n_pts*acc)*len(list(population))
             n_evaluations_acc-=int(default_train_n_pts*acc)*len(list_surfaces)
     else:
-        # Actualizar número de evaluaciones del proceso.
+        # Actualizar numero de evaluaciones del proceso.
         n_evaluations+=default_train_n_pts*len(list(population))
 
     return acc,X,y,fitness
 
-# HEURÍSTICO 3 (accuracy ascendente)
-# >>Accuracy inicial: el definido con el método de bisección (umbral 0.95).
-# >>Valoración de cambio de accuracy (depende de parámetro):  se comprobará si la correlación entre rankings
-# (accuracy mínimo y actual) de las superficies de la generación supera o no cierto umbral (parámetro). 
-# >>Definición de cambio de accuracy: accuracy actual más el split constante definido tras aplicar el método de bisección
+# HEURISTICO 3 (accuracy ascendente)
+# >>Accuracy inicial: el definido con el metodo de biseccion (umbral 0.95).
+# >>Valoracion de cambio de accuracy (depende de parametro):  se comprobara si la correlacion entre rankings
+# (accuracy minimo y actual) de las superficies de la generacion supera o no cierto umbral (parametro). 
+# >>Definicion de cambio de accuracy: accuracy actual mas el split constante definido tras aplicar el metodo de biseccion
 # (con umbral 0.95) al comienzo.
 def update_accuracy_heuristic3(acc,init_acc,X,y,population,fitness,param):
 
@@ -645,20 +645,20 @@ def update_accuracy_heuristic3(acc,init_acc,X,y,population,fitness,param):
         # Guardar los scores asociados a cada superficie.
         list_surfaces=list(population)
         worst_df_train_pts=select_pts_sample(default_df_train_pts,int(default_train_n_pts*init_acc))
-        worst_scores=generation_score_list(list_surfaces,worst_df_train_pts)# Con el mínimo accuracy. 
+        worst_scores=generation_score_list(list_surfaces,worst_df_train_pts)# Con el minimo accuracy. 
         current_scores=fitness# Accuracy actual.
 
-        # Actualizar número de evaluaciones extra empleadas para la definición del accuracy.
+        # Actualizar numero de evaluaciones extra empleadas para la definicion del accuracy.
         n_evaluations_acc+=int(default_train_n_pts*acc)*len(list_surfaces)
         
         # Obtener vectores de rankings asociados.
         current_ranking=from_scores_to_ranking(current_scores)# Accuracy actual. 
-        worst_ranking=from_scores_to_ranking(worst_scores)# Mínimo accuracy. 
+        worst_ranking=from_scores_to_ranking(worst_scores)# Minimo accuracy. 
                 
-        # Comparar ambos rankings (calcular coeficiente de correlación de Spearman).
+        # Comparar ambos rankings (calcular coeficiente de correlacion de Spearman).
         corr=spearman_corr(current_ranking,worst_ranking)
 
-        # Dependiendo de la similitud entre los rankings considerar un accuracy mayor para la siguiente generación.
+        # Dependiendo de la similitud entre los rankings considerar un accuracy mayor para la siguiente generacion.
         prev_acc=acc
         if corr>param:
             acc+=acc_split
@@ -673,21 +673,21 @@ def update_accuracy_heuristic3(acc,init_acc,X,y,population,fitness,param):
 
         # Si el accuracy asciende y si no lo hace.
         if prev_acc!=acc:
-            # Calcular vector fitness de la generación usando el accuracy definido.
+            # Calcular vector fitness de la generacion usando el accuracy definido.
             fitness=generation_score_list(list(population),df_train_pts,all_gen_evaluation=True) 
         else:
             n_evaluations+=int(default_train_n_pts*acc)*len(list_surfaces)
             n_evaluations_acc-=int(default_train_n_pts*acc)*len(list_surfaces)
     else:
-        # Actualizar número de evaluaciones del proceso.
+        # Actualizar numero de evaluaciones del proceso.
         n_evaluations+=default_train_n_pts*len(list(population))
     return acc,X,y,fitness
 
-# HEURÍSTICO 4 (accuracy ascendente)
-# >>Accuracy inicial: el definido con el método de bisección (umbral 0.95).
-# >>Valoración de cambio de accuracy (depende de parámetro): cada cierta frecuencia (parámetro) correlación 
-# entre rankings (accuracy actual y máximo) del mejor 10% de superficies de la generación. 
-# >>Definición de cambio de accuracy: accuracy actual más el split constante definido tras aplicar el método de bisección
+# HEURISTICO 4 (accuracy ascendente)
+# >>Accuracy inicial: el definido con el metodo de biseccion (umbral 0.95).
+# >>Valoracion de cambio de accuracy (depende de parametro): cada cierta frecuencia (parametro) correlacion 
+# entre rankings (accuracy actual y maximo) del mejor 10% de superficies de la generacion. 
+# >>Definicion de cambio de accuracy: accuracy actual mas el split constante definido tras aplicar el metodo de biseccion
 # (con umbral 0.95) al comienzo.
 def update_accuracy_heuristic4(acc,X,y,population,fitness,param):
     global last_optimal_evaluations
@@ -703,7 +703,7 @@ def update_accuracy_heuristic4(acc,X,y,population,fitness,param):
             n_evaluations_acc+=int(default_train_n_pts*acc)*len(list_surfaces)
 
             for ranking_pos in range(int(len(population)*0.1),len(population)):
-                # Eliminar posiciones y superficies que no se usarán.
+                # Eliminar posiciones y superficies que no se usaran.
                 ind_remove=all_current_ranking.index(ranking_pos)
                 all_current_ranking.remove(ranking_pos)
                 list_surfaces=idx_remove(list_surfaces,ind_remove)
@@ -729,29 +729,29 @@ def update_accuracy_heuristic4(acc,X,y,population,fitness,param):
             
             # Si el accuracy asciende y si no lo hace.
             if prev_acc!=acc:
-                # Calcular vector fitness de la generación usando el accuracy definido.
+                # Calcular vector fitness de la generacion usando el accuracy definido.
                 fitness=generation_score_list(list(population),df_train_pts,all_gen_evaluation=True) 
             else:
                 n_evaluations+=int(default_train_n_pts*acc)*len(list(population))
                 n_evaluations_acc-=int(default_train_n_pts*acc)*len(list_surfaces)
 
-            # Actualizar número de evaluaciones en los que se ha actualizado el accuracy.
+            # Actualizar numero de evaluaciones en los que se ha actualizado el accuracy.
             last_optimal_evaluations=n_evaluations+n_evaluations_acc
         else:
-            # Actualizar número de evaluaciones.
+            # Actualizar numero de evaluaciones.
             n_evaluations+=int(default_train_n_pts*acc)*len(list(population))
     else:
-        # Actualizar número de evaluaciones del proceso.
+        # Actualizar numero de evaluaciones del proceso.
         n_evaluations+=default_train_n_pts*len(list(population))
 
     return acc,X,y,fitness
 
-# HEURÍSTICO 5 (accuracy ascendente)
-# >>Accuracy inicial: el definido con el método de bisección (umbral 0.95).
-# >>Valoración de cambio de accuracy (depende de parámetro): mirar el último descenso de score en que posición 
-# del intervalo de confianza se encuentra. El número de descensos asociados a las generaciones anteriores
-# es el parámetro a definir, y a partir de estos descensos es de donde se calculará el intervalo de confianza.. 
-# >>Definición de cambio de accuracy: accuracy actual más el split constante definido tras aplicar el método de bisección al comienzo.
+# HEURISTICO 5 (accuracy ascendente)
+# >>Accuracy inicial: el definido con el metodo de biseccion (umbral 0.95).
+# >>Valoracion de cambio de accuracy (depende de parametro): mirar el ultimo descenso de score en que posicion 
+# del intervalo de confianza se encuentra. El numero de descensos asociados a las generaciones anteriores
+# es el parametro a definir, y a partir de estos descensos es de donde se calculara el intervalo de confianza.. 
+# >>Definicion de cambio de accuracy: accuracy actual mas el split constante definido tras aplicar el metodo de biseccion al comienzo.
 def update_accuracy_heuristic5(acc,X,y,list_scores,population,fitness,param):
     global n_evaluations
     global n_evaluations_acc
@@ -759,7 +759,7 @@ def update_accuracy_heuristic5(acc,X,y,list_scores,population,fitness,param):
     if acc<1:
         if len(list_scores)>param+1:
 
-            # Función para calcular el intervalo de confianza.
+            # Funcion para calcular el intervalo de confianza.
             def bootstrap_confidence_interval(data,bootstrap_iterations=1000):
                 mean_list=[]
                 for i in range(bootstrap_iterations):
@@ -775,7 +775,7 @@ def update_accuracy_heuristic5(acc,X,y,list_scores,population,fitness,param):
             conf_interval_q05,conf_interval_q95=bootstrap_confidence_interval(list_score_falls[0:-1])
             last_fall=list_score_falls[-1]
 
-            # Actualizar número de evaluaciones extra empleadas para la definición del accuracy.
+            # Actualizar numero de evaluaciones extra empleadas para la definicion del accuracy.
             n_evaluations_acc+=default_train_n_pts*(param+1)
             
             # Definir ascenso de accuracy en caso de que se deba ascender.
@@ -793,28 +793,28 @@ def update_accuracy_heuristic5(acc,X,y,list_scores,population,fitness,param):
 
             # Si el accuracy asciende y si no lo hace.
             if prev_acc!=acc:
-                # Calcular vector fitness de la generación usando el accuracy definido.
+                # Calcular vector fitness de la generacion usando el accuracy definido.
                 fitness=generation_score_list(list(population),df_train_pts,all_gen_evaluation=True) 
             else:
-                # Actualizar número de evaluaciones del proceso.
+                # Actualizar numero de evaluaciones del proceso.
                 n_evaluations+=int(default_train_n_pts*acc)*len(list(population))
 
         else:
-            # Actualizar número de evaluaciones del proceso.
+            # Actualizar numero de evaluaciones del proceso.
             n_evaluations+=int(default_train_n_pts*acc)*len(list(population))
     else:
-        # Actualizar número de evaluaciones del proceso.
+        # Actualizar numero de evaluaciones del proceso.
         n_evaluations+=default_train_n_pts*len(list(population))
 
     return acc,X,y,fitness
 
-# HEURÍSTICO 6 (accuracy ascendente)
-# >>Accuracy inicial: el definido con el método de bisección (el umbral es el parámetro).
-# >>Actualización de accuracy (depende de parámetro): por generación, aplicando el método de bisección con el 
-# 10% aleatorio (el umbral es el parámetro) y usando como límite inferior del intervalo el accuracy de la 
-# iteración anterior.
+# HEURISTICO 6 (accuracy ascendente)
+# >>Accuracy inicial: el definido con el metodo de biseccion (el umbral es el parametro).
+# >>Actualizacion de accuracy (depende de parametro): por generacion, aplicando el metodo de biseccion con el 
+# 10% aleatorio (el umbral es el parametro) y usando como limite inferior del intervalo el accuracy de la 
+# iteracion anterior.
 def update_accuracy_heuristic6(acc,list_surf_gen,train_seed,fitness,heuristic_param):
-    # Calcular el mínimo accuracy con el que se obtiene la máxima calidad.
+    # Calcular el minimo accuracy con el que se obtiene la maxima calidad.
     prev_acc=acc
     acc=bisection_method(acc,acc,list_surf_gen,train_seed,heuristic_param,'spearman')
 
@@ -826,26 +826,26 @@ def update_accuracy_heuristic6(acc,list_surf_gen,train_seed,fitness,heuristic_pa
 
     # Si el accuracy asciende y si no lo hace.
     if prev_acc!=acc:
-        # Calcular vector fitness de la generación usando el accuracy definido.
+        # Calcular vector fitness de la generacion usando el accuracy definido.
         fitness=generation_score_list(list_surf_gen,df_train_pts,all_gen_evaluation=True) 
         global n_evaluations_acc
         n_evaluations_acc-=int(default_train_n_pts*acc)*int(len(list_surf_gen)*0.1)
     else:
-        # Actualizar número de evaluaciones del proceso.
+        # Actualizar numero de evaluaciones del proceso.
         global n_evaluations
         n_evaluations+=int(default_train_n_pts*acc)*len(list_surf_gen)
 
     return acc,X,y,fitness
 
-# HEURÍSTICO 7 (accuracy óptimo)
-# >>Accuracy inicial: el definido con el método de bisección (el umbral es el parámetro).
-# >>Actualización de accuracy (depende de parámetro): por generación, aplicando el método de bisección 
-# (el umbral es el parámetro) desde cero con el 10% aleatorio de las superficies que forman la generación.
+# HEURISTICO 7 (accuracy optimo)
+# >>Accuracy inicial: el definido con el metodo de biseccion (el umbral es el parametro).
+# >>Actualizacion de accuracy (depende de parametro): por generacion, aplicando el metodo de biseccion 
+# (el umbral es el parametro) desde cero con el 10% aleatorio de las superficies que forman la generacion.
 def update_accuracy_heuristic7(acc,init_acc,list_surf_gen,train_seed,fitness,heuristic_param):
     global n_evaluations
     global n_evaluations_acc
 
-    # Calcular el mínimo accuracy con el que se obtiene la máxima calidad.
+    # Calcular el minimo accuracy con el que se obtiene la maxima calidad.
     prev_acc=acc
     acc=bisection_method(init_acc,init_acc,list_surf_gen,train_seed,heuristic_param,'spearman')
 
@@ -857,27 +857,27 @@ def update_accuracy_heuristic7(acc,init_acc,list_surf_gen,train_seed,fitness,heu
 
     # Si el accuracy cambia y si no lo hace.
     if prev_acc!=acc:
-        # Calcular vector fitness de la generación usando el accuracy definido.
+        # Calcular vector fitness de la generacion usando el accuracy definido.
         fitness=generation_score_list(list_surf_gen,df_train_pts,all_gen_evaluation=True) 
         n_evaluations_acc-=int(default_train_n_pts*acc)*int(len(list_surf_gen)*0.1)
         
     else:
-        # Actualizar número de evaluaciones del proceso.
+        # Actualizar numero de evaluaciones del proceso.
         n_evaluations+=int(default_train_n_pts*acc)*len(list_surf_gen)
         n_evaluations_acc-=int(default_train_n_pts*acc)*int(len(list_surf_gen)*0.1)
 
     return acc,X,y,fitness
 
-# HEURÍSTICO 8 (accuracy óptimo)
-# >>Accuracy inicial: el definido con el método de bisección (el umbral es el parámetro).
-# >>Actualización de accuracy (depende de parámetro): por generación, aplicando el método de 
-# bisección (el umbral es el parámetro) desde cero con el 10% mejor de las superficies que 
-# forman la generación.
+# HEURISTICO 8 (accuracy optimo)
+# >>Accuracy inicial: el definido con el metodo de biseccion (el umbral es el parametro).
+# >>Actualizacion de accuracy (depende de parametro): por generacion, aplicando el metodo de 
+# biseccion (el umbral es el parametro) desde cero con el 10% mejor de las superficies que 
+# forman la generacion.
 def update_accuracy_heuristic8(acc,init_acc,list_surf_gen,train_seed,fitness,heuristic_param):
     global n_evaluations
     global n_evaluations_acc
     
-    # Calcular el mínimo accuracy con el que se obtiene la máxima calidad.
+    # Calcular el minimo accuracy con el que se obtiene la maxima calidad.
     prev_acc=acc
     acc=bisection_method(init_acc,acc,list_surf_gen,train_seed,heuristic_param,'spearman',random_sample=False,fitness=fitness)
 
@@ -889,21 +889,21 @@ def update_accuracy_heuristic8(acc,init_acc,list_surf_gen,train_seed,fitness,heu
 
     # Si el accuracy cambia y si no lo hace.
     if prev_acc!=acc:
-        # Calcular vector fitness de la generación usando el accuracy definido.
+        # Calcular vector fitness de la generacion usando el accuracy definido.
         fitness=generation_score_list(list_surf_gen,df_train_pts,all_gen_evaluation=True) 
         n_evaluations_acc-=int(default_train_n_pts*acc)*int(len(list_surf_gen)*0.1)
     else:
-        # Actualizar número de evaluaciones del proceso.
+        # Actualizar numero de evaluaciones del proceso.
         n_evaluations+=int(default_train_n_pts*acc)*len(list_surf_gen)
         n_evaluations_acc-=int(default_train_n_pts*acc)*int(len(list_surf_gen)*0.1)
 
     return acc,X,y,fitness
 
-# HEURÍSTICO 9 (heurístico 7 con frecuencia de actualización de accuracy predefinida)
-# >>Accuracy inicial: el definido con el método de bisección (umbral 0.95).
-# >>Actualización de accuracy (depende de parámetro): cada cierta frecuencia (param) se aplicará 
-# el método de bisección (con umbral 0.95) desde cero con el 10% aleatorio de las superficies que
-# forman la generación.
+# HEURISTICO 9 (heuristico 7 con frecuencia de actualizacion de accuracy predefinida)
+# >>Accuracy inicial: el definido con el metodo de biseccion (umbral 0.95).
+# >>Actualizacion de accuracy (depende de parametro): cada cierta frecuencia (param) se aplicara 
+# el metodo de biseccion (con umbral 0.95) desde cero con el 10% aleatorio de las superficies que
+# forman la generacion.
 def update_accuracy_heuristic9(acc,init_acc,X,y,list_surf_gen,train_seed,fitness,param):
     global n_evaluations
     global n_evaluations_acc
@@ -911,7 +911,7 @@ def update_accuracy_heuristic9(acc,init_acc,X,y,list_surf_gen,train_seed,fitness
 
     if (n_evaluations+n_evaluations_acc)-last_optimal_evaluations>=param:
 
-        # Calcular el mínimo accuracy con el que se obtiene la máxima calidad.
+        # Calcular el minimo accuracy con el que se obtiene la maxima calidad.
         prev_acc=acc
         acc=bisection_method(init_acc,init_acc,list_surf_gen,train_seed,0.95,'spearman')
 
@@ -923,32 +923,32 @@ def update_accuracy_heuristic9(acc,init_acc,X,y,list_surf_gen,train_seed,fitness
 
         # Si el accuracy cambia y si no lo hace.
         if prev_acc!=acc:
-            # Calcular vector fitness de la generación usando el accuracy definido.
+            # Calcular vector fitness de la generacion usando el accuracy definido.
             fitness=generation_score_list(list_surf_gen,df_train_pts,all_gen_evaluation=True) 
             n_evaluations_acc-=int(default_train_n_pts*acc)*int(len(list_surf_gen)*0.1)
             
         else:
-            # Actualizar número de evaluaciones del proceso.
+            # Actualizar numero de evaluaciones del proceso.
             n_evaluations+=int(default_train_n_pts*acc)*len(list_surf_gen)
             n_evaluations_acc-=int(default_train_n_pts*acc)*int(len(list_surf_gen)*0.1)
 
-        # Actualizar número de evaluaciones en los que se a actualizado el accuracy.
+        # Actualizar numero de evaluaciones en los que se a actualizado el accuracy.
         last_optimal_evaluations=n_evaluations+n_evaluations_acc
     else:
-        # Actualizar número de evaluaciones.
+        # Actualizar numero de evaluaciones.
         n_evaluations+=int(default_train_n_pts*acc)*len(list_surf_gen)
 
 
     return acc,X,y,fitness
 
-# HEURÍSTICO 10 (heurístico 9 usando la distancia tau Kendall en lugar de la correlación de Spearman)
+# HEURISTICO 10 (heuristico 9 usando la distancia tau Kendall en lugar de la correlacion de Spearman)
 def update_accuracy_heuristic10(acc,init_acc,X,y,list_surf_gen,train_seed,fitness,param):
     global n_evaluations
     global n_evaluations_acc
     global last_optimal_evaluations
     if (n_evaluations+n_evaluations_acc)-last_optimal_evaluations>=param:
 
-        # Calcular el mínimo accuracy con el que se obtiene la máxima calidad.
+        # Calcular el minimo accuracy con el que se obtiene la maxima calidad.
         prev_acc=acc
         acc=bisection_method(init_acc,init_acc,list_surf_gen,train_seed,0.95,'taukendall')
 
@@ -960,38 +960,38 @@ def update_accuracy_heuristic10(acc,init_acc,X,y,list_surf_gen,train_seed,fitnes
 
         # Si el accuracy cambia y si no lo hace.
         if prev_acc!=acc:
-            # Calcular vector fitness de la generación usando el accuracy definido.
+            # Calcular vector fitness de la generacion usando el accuracy definido.
             fitness=generation_score_list(list_surf_gen,df_train_pts,all_gen_evaluation=True) 
             n_evaluations_acc-=int(default_train_n_pts*acc)*int(len(list_surf_gen)*0.1)
             
         else:
-            # Actualizar número de evaluaciones del proceso.
+            # Actualizar numero de evaluaciones del proceso.
             n_evaluations+=int(default_train_n_pts*acc)*len(list_surf_gen)
             n_evaluations_acc-=int(default_train_n_pts*acc)*int(len(list_surf_gen)*0.1)
 
-        # Actualizar número de evaluaciones en los que se a actualizado el accuracy.
+        # Actualizar numero de evaluaciones en los que se a actualizado el accuracy.
         last_optimal_evaluations=n_evaluations+n_evaluations_acc
     else:
-        # Actualizar número de evaluaciones.
+        # Actualizar numero de evaluaciones.
         n_evaluations+=int(default_train_n_pts*acc)*len(list_surf_gen)
 
 
     return acc,X,y,fitness
 
 
-# HEURÍSTICO 11 (heurístico 7 con frecuencia de actualización de accuracy definida por heurístico 5)
-# >>Accuracy inicial: el definido con el método de bisección (umbral 0.95).
-# >>Valoración de cambio de accuracy (depende de parámetro): por generación se comprobará si el nuevo 
+# HEURISTICO 11 (heuristico 7 con frecuencia de actualizacion de accuracy definida por heuristico 5)
+# >>Accuracy inicial: el definido con el metodo de biseccion (umbral 0.95).
+# >>Valoracion de cambio de accuracy (depende de parametro): por generacion se comprobara si el nuevo 
 # descenso de score se encuentra por debajo del intervalo de confianza de los param descensos anteriores. 
-# El parámetro param indica el número de descensos a partir del cual se quiere calcular el intervalo de confianza.
-# >>Definición de cambio de accuracy: en caso de que haya que modificar el accuracy, se aplicará el método
-# de bisección (umbral 0.95) desde cero con el 10% aleatorio de las superficies que forman la generación.
+# El parametro param indica el numero de descensos a partir del cual se quiere calcular el intervalo de confianza.
+# >>Definicion de cambio de accuracy: en caso de que haya que modificar el accuracy, se aplicara el metodo
+# de biseccion (umbral 0.95) desde cero con el 10% aleatorio de las superficies que forman la generacion.
 def update_accuracy_heuristic11(init_acc,acc,X,y,list_scores,population,train_seed,fitness,param):
     global n_evaluations
 
     if len(list_scores)>param+1:
 
-        # Función para calcular el intervalo de confianza.
+        # Funcion para calcular el intervalo de confianza.
         def bootstrap_confiance_interval(data,bootstrap_iterations=1000):
             mean_list=[]
             for i in range(bootstrap_iterations):
@@ -1007,7 +1007,7 @@ def update_accuracy_heuristic11(init_acc,acc,X,y,list_scores,population,train_se
         conf_interval_q05,conf_interval_q95=bootstrap_confiance_interval(list_score_falls[0:-1])
         last_fall=list_score_falls[-1]
 
-        # Actualizar número de evaluaciones extra empleadas para la definición del accuracy.
+        # Actualizar numero de evaluaciones extra empleadas para la definicion del accuracy.
         global n_evaluations_acc
         n_evaluations_acc+=default_train_n_pts*(param+1)
         
@@ -1024,27 +1024,27 @@ def update_accuracy_heuristic11(init_acc,acc,X,y,list_scores,population,train_se
 
         # Si el accuracy cambia y si no lo hace.
         if prev_acc!=acc:
-            # Calcular vector fitness de la generación usando el accuracy definido.
+            # Calcular vector fitness de la generacion usando el accuracy definido.
             fitness=generation_score_list(list(population),df_train_pts,all_gen_evaluation=True) 
         else:
-            # Actualizar número de evaluaciones del proceso.
+            # Actualizar numero de evaluaciones del proceso.
             n_evaluations+=int(default_train_n_pts*acc)*len(list(population))
 
     else:
-        # Actualizar número de evaluaciones del proceso.
+        # Actualizar numero de evaluaciones del proceso.
         n_evaluations+=int(default_train_n_pts*acc)*len(list(population))
 
 
     return acc,X,y,fitness
 
-# HEURÍSTICO 12 (heurístico 7 con frecuencia de actualización de accuracy definida automáticamente)
-# >>Accuracy inicial: el definido con el método de bisección (umbral 0.95).
-# >>Valoración de cambio de accuracy (depende de parámetro): se van almacenando las varianzas de cada 
-# generación calculadas con el accuracy óptimo, y con una cierta cantidad de las más recientes entre ellas
-# (param) se calcula un intervalo de confianza. Si la última varianza registrada se sitúa fuera del intervalo
-# se procederá a reajustar el accuracy.
-# >>Definición de cambio de accuracy: en caso de que haya que modificar el accuracy, se aplicará el método
-# de bisección (umbral 0.95) desde cero con el 10% aleatorio de las superficies que forman la generación.
+# HEURISTICO 12 (heuristico 7 con frecuencia de actualizacion de accuracy definida automaticamente)
+# >>Accuracy inicial: el definido con el metodo de biseccion (umbral 0.95).
+# >>Valoracion de cambio de accuracy (depende de parametro): se van almacenando las varianzas de cada 
+# generacion calculadas con el accuracy optimo, y con una cierta cantidad de las mas recientes entre ellas
+# (param) se calcula un intervalo de confianza. Si la ultima varianza registrada se situa fuera del intervalo
+# se procedera a reajustar el accuracy.
+# >>Definicion de cambio de accuracy: en caso de que haya que modificar el accuracy, se aplicara el metodo
+# de biseccion (umbral 0.95) desde cero con el 10% aleatorio de las superficies que forman la generacion.
 def update_accuracy_heuristic12(acc,init_acc,X,y,list_variances,list_surf_gen,train_seed,fitness,param):
     global n_evaluations
     global n_evaluations_acc
@@ -1052,7 +1052,7 @@ def update_accuracy_heuristic12(acc,init_acc,X,y,list_variances,list_surf_gen,tr
 
     if len(list_variances)>=param+1:
 
-        # Función para calcular el intervalo de confianza.
+        # Funcion para calcular el intervalo de confianza.
         def bootstrap_confidence_interval(data,bootstrap_iterations=1000):
             mean_list=[]
             for i in range(bootstrap_iterations):
@@ -1065,7 +1065,7 @@ def update_accuracy_heuristic12(acc,init_acc,X,y,list_variances,list_surf_gen,tr
 
         if last_variance<variance_q05 or last_variance>variance_q95:
 
-            # Calcular el mínimo accuracy con el que se obtiene la máxima calidad.
+            # Calcular el minimo accuracy con el que se obtiene la maxima calidad.
             prev_acc=acc
             acc=bisection_method(init_acc,init_acc,list_surf_gen,train_seed,0.95,'spearman')
 
@@ -1086,11 +1086,11 @@ def update_accuracy_heuristic12(acc,init_acc,X,y,list_variances,list_surf_gen,tr
 
     return acc,X,y,fitness,threshold,variance
 
-# HEURÍSTICO 13 (heurístico 12 con definición automática monótono ascendente para el umbral del método de bisección)
-# Cada vez que haya que reajustar el accuracy (definido por el heurístico 12), se recalculará el umbral a considerar
-# en el método de bisección para el siguiente reajuste del accuracy. El nuevo umbral será la correlación de Spearman 
-# con la que se ha superado el umbral actual por última vez al aplicar el método de bisección. En caso de que no se supere 
-# ninguna vez, el umbral se mantendrá.
+# HEURISTICO 13 (heuristico 12 con definicion automatica monotono ascendente para el umbral del metodo de biseccion)
+# Cada vez que haya que reajustar el accuracy (definido por el heuristico 12), se recalculara el umbral a considerar
+# en el metodo de biseccion para el siguiente reajuste del accuracy. El nuevo umbral sera la correlacion de Spearman 
+# con la que se ha superado el umbral actual por ultima vez al aplicar el metodo de biseccion. En caso de que no se supere 
+# ninguna vez, el umbral se mantendra.
 def update_accuraccy_heuristic13(acc,init_acc,X,y,list_variances,list_surf_gen,train_seed,fitness,threshold,param):
     global n_evaluations
     global n_evaluations_acc
@@ -1100,7 +1100,7 @@ def update_accuraccy_heuristic13(acc,init_acc,X,y,list_variances,list_surf_gen,t
 
         if len(list_variances)>=param+1:
 
-            # Función para calcular el intervalo de confianza.
+            # Funcion para calcular el intervalo de confianza.
             def bootstrap_confidence_interval(data,bootstrap_iterations=1000):
                 mean_list=[]
                 for i in range(bootstrap_iterations):
@@ -1113,7 +1113,7 @@ def update_accuraccy_heuristic13(acc,init_acc,X,y,list_variances,list_surf_gen,t
 
             if last_variance<variance_q05 or last_variance>variance_q95:
 
-                # Calcular el mínimo accuracy con el que se obtiene la máxima calidad.
+                # Calcular el minimo accuracy con el que se obtiene la maxima calidad.
                 prev_acc=acc
                 acc,next_threshold=bisection_method(init_acc,init_acc,list_surf_gen,train_seed,threshold,'spearman',change_threshold='IncreasingMonotone')
 
@@ -1128,12 +1128,12 @@ def update_accuraccy_heuristic13(acc,init_acc,X,y,list_variances,list_surf_gen,t
         
                 # Si el accuracy cambia y si no lo hace.
                 if prev_acc!=acc:
-                    # Calcular vector fitness de la generación usando el accuracy definido.
+                    # Calcular vector fitness de la generacion usando el accuracy definido.
                     fitness=generation_score_list(list_surf_gen,df_train_pts,all_gen_evaluation=True) 
                     n_evaluations_acc-=int(default_train_n_pts*acc)*int(len(list_surf_gen)*0.1)
                     
                 else:
-                    # Actualizar número de evaluaciones del proceso.
+                    # Actualizar numero de evaluaciones del proceso.
                     n_evaluations+=int(default_train_n_pts*acc)*len(list_surf_gen)
                     n_evaluations_acc-=int(default_train_n_pts*acc)*int(len(list_surf_gen)*0.1)
             else:
@@ -1148,10 +1148,10 @@ def update_accuraccy_heuristic13(acc,init_acc,X,y,list_variances,list_surf_gen,t
 
     return acc,X,y,fitness,threshold,next_threshold,variance
 
-# HEURÍSTICO 14 (heurístico 12 con definición automática no monótona para el umbral del método de bisección)
-# Cada vez que haya que reajustar el accuracy (definido por el heurístico 12), se recalculará el umbral a considerar
-# en el método de bisección para el siguiente reajuste del accuracy. El nuevo umbral será la correlación de Spearman 
-# asociada al accuracy seleccionado como óptimo en el método de bisección.
+# HEURISTICO 14 (heuristico 12 con definicion automatica no monotona para el umbral del metodo de biseccion)
+# Cada vez que haya que reajustar el accuracy (definido por el heuristico 12), se recalculara el umbral a considerar
+# en el metodo de biseccion para el siguiente reajuste del accuracy. El nuevo umbral sera la correlacion de Spearman 
+# asociada al accuracy seleccionado como optimo en el metodo de biseccion.
 def update_accuraccy_heuristic14(acc,init_acc,X,y,list_variances,list_surf_gen,train_seed,fitness,threshold,param):
     global n_evaluations
     global n_evaluations_acc
@@ -1161,7 +1161,7 @@ def update_accuraccy_heuristic14(acc,init_acc,X,y,list_variances,list_surf_gen,t
 
         if len(list_variances)>=param+1:
 
-            # Función para calcular el intervalo de confianza.
+            # Funcion para calcular el intervalo de confianza.
             def bootstrap_confidence_interval(data,bootstrap_iterations=1000):
                 mean_list=[]
                 for i in range(bootstrap_iterations):
@@ -1174,7 +1174,7 @@ def update_accuraccy_heuristic14(acc,init_acc,X,y,list_variances,list_surf_gen,t
 
             if last_variance<variance_q05 or last_variance>variance_q95:
 
-                # Calcular el mínimo accuracy con el que se obtiene la máxima calidad.
+                # Calcular el minimo accuracy con el que se obtiene la maxima calidad.
                 prev_acc=acc
                 acc,next_threshold=bisection_method(init_acc,init_acc,list_surf_gen,train_seed,threshold,'spearman',change_threshold='NonMonotone')
 
@@ -1189,12 +1189,12 @@ def update_accuraccy_heuristic14(acc,init_acc,X,y,list_variances,list_surf_gen,t
         
                 # Si el accuracy cambia y si no lo hace.
                 if prev_acc!=acc:
-                    # Calcular vector fitness de la generación usando el accuracy definido.
+                    # Calcular vector fitness de la generacion usando el accuracy definido.
                     fitness=generation_score_list(list_surf_gen,df_train_pts,all_gen_evaluation=True) 
                     n_evaluations_acc-=int(default_train_n_pts*acc)*int(len(list_surf_gen)*0.1)
                     
                 else:
-                    # Actualizar número de evaluaciones del proceso.
+                    # Actualizar numero de evaluaciones del proceso.
                     n_evaluations+=int(default_train_n_pts*acc)*len(list_surf_gen)
                     n_evaluations_acc-=int(default_train_n_pts*acc)*int(len(list_surf_gen)*0.1)
             else:
@@ -1210,18 +1210,18 @@ def update_accuraccy_heuristic14(acc,init_acc,X,y,list_variances,list_surf_gen,t
     return acc,X,y,fitness,threshold,next_threshold,variance
 
 #__________________________________________________________________________________________________
-# Heurísticos finales (los heurístico 7 y 12 anteriores pero considerando el tamaño de muestra y
-# la frecuencia de aceptación de los heurísticos predefinidos, y la bisección sobre el coste por evaluación para
-# aplicar el método de bisección).
+# Heuristicos finales (los heuristico 7 y 12 anteriores pero considerando el tamaño de muestra y
+# la frecuencia de aceptacion de los heuristicos predefinidos, y la biseccion sobre el coste por evaluacion para
+# aplicar el metodo de biseccion).
 
-# HEURISTICO I (aplicar el método de bisección todas las veces que sea posible)
+# HEURISTICO I (aplicar el metodo de biseccion todas las veces que sea posible)
 def update_accuracy_heuristicI(acc,lower_time,upper_time,X,y,list_surf_gen,train_seed,fitness,heuristic_param,sample_size,heuristic_freq,interpolation_pts):
     global n_evaluations
     global n_evaluations_acc
     global last_time_heuristic_accepted
 
     if (n_evaluations+n_evaluations_acc)-last_time_heuristic_accepted>=heuristic_freq:
-        # Calcular el mínimo accuracy con el que se obtiene la máxima calidad.
+        # Calcular el minimo accuracy con el que se obtiene la maxima calidad.
         prev_acc=acc
         acc=customized_bisection_method(lower_time,upper_time,list_surf_gen,train_seed,heuristic_param,sample_size,interpolation_pts)
 
@@ -1233,24 +1233,24 @@ def update_accuracy_heuristicI(acc,lower_time,upper_time,X,y,list_surf_gen,train
 
         # Si el accuracy cambia y si no lo hace.
         if prev_acc!=acc:
-            # Calcular vector fitness de la generación usando el accuracy definido.
+            # Calcular vector fitness de la generacion usando el accuracy definido.
             fitness=generation_score_list(list_surf_gen,df_train_pts,all_gen_evaluation=True) 
             n_evaluations_acc-=int(default_train_n_pts*acc)*sample_size
             
         else:
-            # Actualizar número de evaluaciones del proceso.
+            # Actualizar numero de evaluaciones del proceso.
             n_evaluations+=int(default_train_n_pts*acc)*len(list_surf_gen)
             n_evaluations_acc-=int(default_train_n_pts*acc)*sample_size
 
         last_time_heuristic_accepted=n_evaluations+n_evaluations_acc
     else:
-        # Actualizar número de evaluaciones.
+        # Actualizar numero de evaluaciones.
         n_evaluations+=int(default_train_n_pts*acc)*len(list_surf_gen)
 
     return acc,X,y,fitness
 
 
-# HEURÍSTICO II (aplicar el método de bisección con frecuencia de actualización de accuracy definida automáticamente)
+# HEURISTICO II (aplicar el metodo de biseccion con frecuencia de actualizacion de accuracy definida automaticamente)
 def update_accuracy_heuristicII(acc,lower_time,upper_time,X,y,list_variances,list_surf_gen,train_seed,fitness,param,sample_size,heuristic_freq,interpolation_pts):
     global n_evaluations
     global n_evaluations_acc
@@ -1261,7 +1261,7 @@ def update_accuracy_heuristicII(acc,lower_time,upper_time,X,y,list_variances,lis
 
     if len(list_variances)>=param+1:
 
-        # Función para calcular el intervalo de confianza.
+        # Funcion para calcular el intervalo de confianza.
         def bootstrap_confidence_interval(data,bootstrap_iterations=1000):
             mean_list=[]
             for i in range(bootstrap_iterations):
@@ -1277,7 +1277,7 @@ def update_accuracy_heuristicII(acc,lower_time,upper_time,X,y,list_variances,lis
 
                 unused_bisection_executions+=int((n_evaluations+n_evaluations_acc-last_time_heuristic_accepted)/heuristic_freq)-1
 
-                # Calcular el mínimo accuracy con el que se obtiene la máxima calidad.
+                # Calcular el minimo accuracy con el que se obtiene la maxima calidad.
                 acc=customized_bisection_method(lower_time,upper_time,list_surf_gen,train_seed,0.95,sample_size,interpolation_pts)
 
                 # Calcular nuevo conjunto de entrenamiento.
@@ -1293,7 +1293,7 @@ def update_accuracy_heuristicII(acc,lower_time,upper_time,X,y,list_variances,lis
             else:
                 if unused_bisection_executions>0:
                     
-                    # Calcular el mínimo accuracy con el que se obtiene la máxima calidad.
+                    # Calcular el minimo accuracy con el que se obtiene la maxima calidad.
                     acc=customized_bisection_method(lower_time,upper_time,list_surf_gen,train_seed,0.95,sample_size,interpolation_pts)
 
                     # Calcular nuevo conjunto de entrenamiento.
@@ -1317,7 +1317,7 @@ def update_accuracy_heuristicII(acc,lower_time,upper_time,X,y,list_variances,lis
     else:
         if (n_evaluations+n_evaluations_acc)-last_time_heuristic_accepted>=heuristic_freq:
 
-            # Calcular el mínimo accuracy con el que se obtiene la máxima calidad.
+            # Calcular el minimo accuracy con el que se obtiene la maxima calidad.
             acc=customized_bisection_method(lower_time,upper_time,list_surf_gen,train_seed,0.95,sample_size,interpolation_pts)
 
             # Calcular nuevo conjunto de entrenamiento.
@@ -1337,7 +1337,7 @@ def update_accuracy_heuristicII(acc,lower_time,upper_time,X,y,list_variances,lis
 
     return acc,X,y,fitness,threshold,variance
 
-# TODOS LOS HEURÍSTICOS (ha esta función se le llamará desde la función fit (modificada por new_fit))
+# TODOS LOS HEURISTICOS (ha esta funcion se le llamara desde la funcion fit (modificada por new_fit))
 def execute_heuristic(heuristic,heuristic_param,train_seed,gen,population,init_acc,acc,X,y,fitness):
     global train_pts_seed
     global last_optimal_evaluations
@@ -1349,7 +1349,7 @@ def execute_heuristic(heuristic,heuristic_param,train_seed,gen,population,init_a
     threshold=None
     variance=None
 
-    # Para el método de bisección en los heurísticos finales (tamaño de muestra, frecuencia y expresión de interpolación).
+    # Para el metodo de biseccion en los heuristicos finales (tamaño de muestra, frecuencia y expresion de interpolacion).
     df_sample_freq=pd.read_csv('results/data/general/sample_size_freq_'+str(sample_size_freq)+'.csv',index_col=0)
     df_interpolation=pd.read_csv('results/data/SymbolicRegressor/UnderstandingAccuracy/df_Bisection.csv')
     sample_size=int(df_sample_freq[df_sample_freq['env_name']=='SymbolicRegressor']['sample_size'])
@@ -1360,7 +1360,7 @@ def execute_heuristic(heuristic,heuristic_param,train_seed,gen,population,init_a
     upper_time=max(interpolation_time)
 
  
-    # Fijar accuracy de la generación inicial.
+    # Fijar accuracy de la generacion inicial.
     if gen==0:
         if heuristic in [1,2,3,4,5,9,11,12]:
             if heuristic==11:
@@ -1375,7 +1375,7 @@ def execute_heuristic(heuristic,heuristic_param,train_seed,gen,population,init_a
         if heuristic==14:
             acc,X,y,fitness,acc_split,threshold,next_threshold,variance=set_initial_accuracy(init_acc,list(population),train_seed,'spearman',threshold=heuristic_param[0],change_threshold='NonMonotone')
 
-        # Actualizar último número de evaluaciones en el que se a actualizado el accuracy para los heurísticos que lo necesiten.    
+        # Actualizar ultimo numero de evaluaciones en el que se a actualizado el accuracy para los heuristicos que lo necesiten.    
         if heuristic in [4,9,10]:
             last_optimal_evaluations=n_evaluations+n_evaluations_acc
 
@@ -1443,7 +1443,7 @@ def execute_heuristic(heuristic,heuristic_param,train_seed,gen,population,init_a
 # FUNCIONES DISEÑADAS A PARTIR DE ALGUNAS YA EXISTENTES
 #==================================================================================================
 
-# FUNCIÓN 
+# FUNCION 
 # -Original: raw_fitness
 # -Script: _Program.py
 # -Clase: _Program
@@ -1454,7 +1454,7 @@ def new_raw_fitness(self, X, y, sample_weight):
         y_pred = self.transformer(y_pred)
     raw_fitness = self.metric(y, y_pred, sample_weight)
     
-    # MODIFICACIÓN: Sumar el número de evaluaciones realizadas (tantas como puntos en el 
+    # MODIFICACION: Sumar el numero de evaluaciones realizadas (tantas como puntos en el 
     # conjunto de entrenamiento).
     if count_evaluations:
         global n_evaluations
@@ -1462,7 +1462,7 @@ def new_raw_fitness(self, X, y, sample_weight):
 
     return raw_fitness
 
-# FUNCIÓN 
+# FUNCION 
 # -Original: _parallel_evolve
 # -Script: genetic.py
 def new_parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params):
@@ -1497,8 +1497,8 @@ def new_parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params)
 
     # Build programs
     programs = []
-    i=0# MODIFICACIÓN: inicializar contador de forma manual.
-    while i<n_programs and n_evaluations<max_n_eval:#MODIFICACIÓN: añadir nueva restricción para terminar el bucle.
+    i=0# MODIFICACION: inicializar contador de forma manual.
+    while i<n_programs and n_evaluations<max_n_eval:#MODIFICACION: añadir nueva restriccion para terminar el bucle.
 
         random_state = check_random_state(seeds[i])
 
@@ -1585,11 +1585,11 @@ def new_parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params)
 
         programs.append(program)
 
-        i+=1# MODIFICACIÓN: actualizar contador de forma manual.
+        i+=1# MODIFICACION: actualizar contador de forma manual.
     return programs
 
-# FUNCIÓN 
-# Esta función contiene una parte del código interno de una función ya existente.
+# FUNCION 
+# Esta funcion contiene una parte del codigo interno de una funcion ya existente.
 # -Original: fit
 # -Script: genetic.py 
 def find_best_individual_final_generation(self,fitness):
@@ -1633,11 +1633,11 @@ def find_best_individual_final_generation(self,fitness):
         else:
             self._program = self._programs[-1][np.argmin(fitness)]
 
-# FUNCIÓN 
+# FUNCION 
 # -Original: fit
 # -Script: genetic.py
 # -Clase: BaseSymbolic
-def new_fit(self,init_acc, X, y, train_seed,df_test_pts,heuristic,heuristic_param,sample_weight=None):# MODIFICACIÓN: añadir nuevos argumentos.
+def new_fit(self,init_acc, X, y, train_seed,df_test_pts,heuristic,heuristic_param,sample_weight=None):# MODIFICACION: añadir nuevos argumentos.
 
     random_state = check_random_state(self.random_state)
 
@@ -1816,21 +1816,21 @@ def new_fit(self,init_acc, X, y, train_seed,df_test_pts,heuristic,heuristic_para
         # Print header fields
         self._verbose_reporter()
 
-    start_total_time=time() #MODIFICACIÓN: empezar a contar el tiempo de entrenamiento.
-    gen=0# MODIFICACIÓN: para que el procedimiento no termine cuando se alcance un número de generaciones, las generaciones se cuentan con un contador independiente.
+    start_total_time=time() #MODIFICACION: empezar a contar el tiempo de entrenamiento.
+    gen=0# MODIFICACION: para que el procedimiento no termine cuando se alcance un numero de generaciones, las generaciones se cuentan con un contador independiente.
 
-    # MODIFICACIÓN: variable global mediante la cual se irán contando el número de evaluaciones realizadas,
-    # entendiendo por evaluación cada evaluación de un punto en una expresión de una superficie.
+    # MODIFICACION: variable global mediante la cual se iran contando el numero de evaluaciones realizadas,
+    # entendiendo por evaluacion cada evaluacion de un punto en una expresion de una superficie.
     global n_evaluations
     n_evaluations=0
     global n_evaluations_acc
     n_evaluations_acc=0
     acc=init_acc
     global count_evaluations
-    count_evaluations=False# Para que en la primera generación no se cuenten las evaluaciones hechas al calcular la población.
+    count_evaluations=False# Para que en la primera generacion no se cuenten las evaluaciones hechas al calcular la poblacion.
     
     global train_pts_seed
-    while n_evaluations+n_evaluations_acc < max_n_eval:# MODIFICACIÓN: modificar el límite de entrenamiento.
+    while n_evaluations+n_evaluations_acc < max_n_eval:# MODIFICACION: modificar el limite de entrenamiento.
         
         start_time = time()
 
@@ -1844,7 +1844,7 @@ def new_fit(self,init_acc, X, y, train_seed,df_test_pts,heuristic,heuristic_para
             self.population_size, self.n_jobs)
         seeds = random_state.randint(MAX_INT, size=self.population_size)
 
-        # MODIFICACIÓN: contar las evaluaciones hechas al definir la población.
+        # MODIFICACION: contar las evaluaciones hechas al definir la poblacion.
         if heuristic=='None':
             threshold=None
             variance=None
@@ -1865,7 +1865,7 @@ def new_fit(self,init_acc, X, y, train_seed,df_test_pts,heuristic,heuristic_para
         population = list(itertools.chain.from_iterable(population))
         fitness = [program.raw_fitness_ for program in population]
 
-        # MODIFICACIÓN: cuando se aplique algún heurístico.
+        # MODIFICACION: cuando se aplique algun heuristico.
         if heuristic !='None':
             acc,X,y,fitness,threshold,variance=execute_heuristic(heuristic,heuristic_param,train_seed,gen,population,init_acc,acc,X,y,fitness)
 
@@ -1925,24 +1925,24 @@ def new_fit(self,init_acc, X, y, train_seed,df_test_pts,heuristic,heuristic_para
             best_fitness = fitness[np.argmin(fitness)]
 
    
-        find_best_individual_final_generation(self,fitness) # MODIFICACIÓN: para poder evaluar la mejor superficie durante el proceso.
+        find_best_individual_final_generation(self,fitness) # MODIFICACION: para poder evaluar la mejor superficie durante el proceso.
         
-        # MODIFICACIÓN: ir guardando los datos de interés durante el entrenamiento. 
+        # MODIFICACION: ir guardando los datos de interes durante el entrenamiento. 
         score=evaluate(df_test_pts,self)
         elapsed_time=time()-start_total_time   
         df_train.append([heuristic_param,train_seed,threshold,variance,acc,gen,score,elapsed_time,generation_time,n_evaluations,n_evaluations_acc,n_evaluations+n_evaluations_acc])
 
         # print('n_eval_PROC: '+str(n_evaluations)+'n_evaluations_acc: '+str(n_evaluations_acc)+' acc:'+str(acc))   
-        gen+=1# MODIFICACIÓN: actualizar número de generaciones.
+        gen+=1# MODIFICACION: actualizar numero de generaciones.
 
-    find_best_individual_final_generation(self,fitness)# MODIFICACIÓN: para obtener el mejor individuo de la última generación.
+    find_best_individual_final_generation(self,fitness)# MODIFICACION: para obtener el mejor individuo de la ultima generacion.
     
     return self
 
 #==================================================================================================
 # PROGRAMA PRINCIPAL
 #==================================================================================================
-# Para usar la función de ajuste modificada.
+# Para usar la funcion de ajuste modificada.
 _Program.raw_fitness=new_raw_fitness
 _parallel_evolve=new_parallel_evolve
 BaseSymbolic.fit=new_fit
@@ -1953,25 +1953,25 @@ expr_surf_real='x**2-y**2+y-1'
 # Mallados.
 list_train_seeds=range(1,101,1)# Semillas de entrenamiento.
 
-# Parámetros y conjunto de entrenamiento.
+# Parametros y conjunto de entrenamiento.
 default_train_n_pts=50# Cardinal de conjunto inicial predefinido.
 train_pts_seed=0
 default_df_train_pts=build_pts_sample(default_train_n_pts,train_pts_seed,expr_surf_real)
-max_n_eval=20*50*1000# Equivalente a 20 generaciones con el máximo accuracy.
+max_n_eval=20*50*1000# Equivalente a 20 generaciones con el maximo accuracy.
 
-# Parámetros y conjunto de validación.
+# Parametros y conjunto de validacion.
 test_n_pts=default_train_n_pts
 test_pts_seed=1
 df_test_pts=build_pts_sample(test_n_pts,test_pts_seed,expr_surf_real)
 
-# Otros parámetros.
+# Otros parametros.
 sample_size_freq='BisectionAndPopulation'
 # sample_size_freq='BisectionOnly'
 
-# Función para realizar la ejecución en paralelo.
+# Funcion para realizar la ejecucion en paralelo.
 def parallel_processing(arg):
 
-    # Extraer información de heurístico del argumento de la función.
+    # Extraer informacion de heuristico del argumento de la funcion.
     heuristic=arg[0]
     param=arg[1]
 
@@ -1983,7 +1983,7 @@ def parallel_processing(arg):
     if heuristic=='None':
         init_acc=1
     else:
-        init_acc=1/default_train_n_pts# El correspondiente a un conjunto formado por un único punto.
+        init_acc=1/default_train_n_pts# El correspondiente a un conjunto formado por un unico punto.
 
 
     for train_seed in tqdm(list_train_seeds):
@@ -1998,13 +1998,13 @@ def parallel_processing(arg):
     else:
         df_train.to_csv('results/data/SymbolicRegressor/OptimalAccuracyAnalysis/df_train_OptimalAccuracy_heuristic'+str(heuristic)+'_param'+str(param)+'.csv')
 
-    # Guardar expresión de superficie.
+    # Guardar expresion de superficie.
     np.save('results/data/SymbolicRegressor/OptimalAccuracyAnalysis/expr_surf',expr_surf_real)
 
     
 
-# Preparar argumentos de la función para procesamiento en paralelo.
-# Forma de argumento: [identificador de heurístico, valor de parámetro]
+# Preparar argumentos de la funcion para procesamiento en paralelo.
+# Forma de argumento: [identificador de heuristico, valor de parametro]
 list_arg=[
     # [1,(0,1)],[1,(0,3)],[1,(0.5,3)],[1,(0.5,1)],[1,(0,0.3)],[1,'logistic'],
     # [2,0.8],[2,0.6],

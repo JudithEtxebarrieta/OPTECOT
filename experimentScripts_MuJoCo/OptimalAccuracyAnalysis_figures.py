@@ -1,8 +1,8 @@
-# Mediante este script se representan gráficamente los resultados numéricos calculados por 
+# Mediante este script se representan graficamente los resultados numericos calculados por 
 # "OptimaltAccuracyAnalysis_data.py".
 
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
 import numpy as np
 from scipy.stats import norm
@@ -19,10 +19,10 @@ import plotly.express as px
 # FUNCIONES
 #==================================================================================================
 
-# FUNCIÓN 1
-# Parámetros:
-#   >data: datos sobre los cuales se calculará el rango entre percentiles.
-#   >bootstrap_iterations: número de submuestras que se considerarán de data para poder calcular el 
+# FUNCION 1
+# Parametros:
+#   >data: datos sobre los cuales se calculara el rango entre percentiles.
+#   >bootstrap_iterations: numero de submuestras que se consideraran de data para poder calcular el 
 #    rango entre percentiles de sus medias.
 # Devolver: la media de los datos originales junto a los percentiles de las medias obtenidas del 
 # submuestreo realizado sobre data.
@@ -34,10 +34,10 @@ def bootstrap_mean_and_confiance_interval(data,bootstrap_iterations=1000):
         mean_list.append(np.mean(sample))
     return np.mean(data),np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
 
-# FUNCIÓN 2 (construcción de la gráfica de scores)
+# FUNCION 2 (construccion de la grafica de scores)
 def train_data_to_figure_data(df_train,type_eval,seed_name='seed'):
 
-    # Inicializar listas para la gráfica.
+    # Inicializar listas para la grafica.
     all_mean=[]
     all_q05=[]
     all_q95=[]
@@ -63,9 +63,9 @@ def train_data_to_figure_data(df_train,type_eval,seed_name='seed'):
 
     return all_mean,all_q05,all_q95,list_train_time
 
-# FUNCIÓN 3 (construcción de las curvas que muestran el comportamiento del accuracy durante el entrenamiento)
+# FUNCION 3 (construccion de las curvas que muestran el comportamiento del accuracy durante el entrenamiento)
 def draw_accuracy_behaviour(df_train,type_time,curve):
-    # Inicializar listas para la gráfica.
+    # Inicializar listas para la grafica.
     all_mean=[]
     all_q05=[]
     all_q95=[]
@@ -73,7 +73,7 @@ def draw_accuracy_behaviour(df_train,type_time,curve):
     # Rellenar listas.
     for train_time in list_train_time:
 
-        # Indices de filas con el tiempo de entrenamiento más cercano a train_time.
+        # Indices de filas con el tiempo de entrenamiento mas cercano a train_time.
         ind_down=df_train[type_time] <= train_time
         ind_per_seed=df_train[ind_down].groupby('seed')[type_time].idxmax()
 
@@ -88,37 +88,37 @@ def draw_accuracy_behaviour(df_train,type_time,curve):
         all_q05.append(q05)
         all_q95.append(q95)
     
-    # Dibujar gráfica
+    # Dibujar grafica
     ax.fill_between(list_train_time,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
     plt.plot(list_train_time, all_mean, linewidth=2,color=colors[curve])
 
-# FUNCIÓN 4 (dibujar y guardar las gráficas según el heurístico seleccionada)
+# FUNCION 4 (dibujar y guardar las graficas segun el heuristico seleccionada)
 def draw_and_save_figures_per_heuristic(heuristic):
 
     global ax
 
-    # Inicializar gráfica.
+    # Inicializar grafica.
     plt.figure(figsize=[20,5])
     plt.subplots_adjust(left=0.08,bottom=0.11,right=0.76,top=0.88,wspace=0.4,hspace=0.76)
 
     #__________________________________________________________________________________________________
-    # SUBGRÁFICA 1: scores durante el entrenamiento.
+    # SUBGRAFICA 1: scores durante el entrenamiento.
 
     ax=plt.subplot(132)
 
-    # Lectura de bases de datos que se emplearán.
+    # Lectura de bases de datos que se emplearan.
     df_optimal_acc=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_'+str(sample_size_freq)+'.csv', index_col=0) # Accuracy ascendente.
 
-    # Inicializar número de curvas.
+    # Inicializar numero de curvas.
     curve=0
 
-    # Uso constante de la precisión.
+    # Uso constante de la precision.
     all_mean,all_q05,all_q95,list_train_time=train_data_to_figure_data(df_max_acc,'n_steps','train_seed')
     ax.fill_between(list_train_time,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
     plt.plot(list_train_time, all_mean, linewidth=2,label='1',color=colors[curve])
     curve+=1
 
-    # Uso ascendente de la precisión.
+    # Uso ascendente de la precision.
     list_params=list(set(df_optimal_acc['heuristic_param']))
     for param in list_params:
         df=df_optimal_acc[df_optimal_acc['heuristic_param']==param]
@@ -133,21 +133,21 @@ def draw_and_save_figures_per_heuristic(heuristic):
     ax.set_title('Comparison between optimal and constant accuracy')
 
     #__________________________________________________________________________________________________
-    # SUBGRÁFICA 2: scores durante el entrenamiento sin considerar el tiempo de evaluación extra
+    # SUBGRAFICA 2: scores durante el entrenamiento sin considerar el tiempo de evaluacion extra
     # necesarios para reajustar el accuracy.
 
     ax=plt.subplot(133)
 
-    # Inicializar número de curvas.
+    # Inicializar numero de curvas.
     curve=0
 
-    # Uso constante de la precisión.
+    # Uso constante de la precision.
     all_mean,all_q05,all_q95,list_train_time=train_data_to_figure_data(df_max_acc,'n_steps','train_seed')
     ax.fill_between(list_train_time,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
     plt.plot(list_train_time, all_mean, linewidth=2,label='1',color=colors[curve])
     curve+=1
 
-    # Uso ascendente de la precisión.
+    # Uso ascendente de la precision.
     list_params=list(set(df_optimal_acc['heuristic_param']))
     for param in list_params:
         df=df_optimal_acc[df_optimal_acc['heuristic_param']==param]
@@ -165,11 +165,11 @@ def draw_and_save_figures_per_heuristic(heuristic):
 
 
     #__________________________________________________________________________________________________
-    # SUBGRÁFICA 3: representación gráfica del comportamiento del accuracy.
+    # SUBGRAFICA 3: representacion grafica del comportamiento del accuracy.
 
     ax=plt.subplot(131)
 
-    # Inicializar número de curvas.
+    # Inicializar numero de curvas.
     curve=1
 
     # Dibujar curvas.
@@ -187,16 +187,16 @@ def draw_and_save_figures_per_heuristic(heuristic):
     plt.show()
     plt.close()
 
-# FUNCIÓN 6 (dibujar gráfica comparativa)
+# FUNCION 6 (dibujar grafica comparativa)
 def draw_comparative_figure(heuristic_param_list):
     global ax
 
-    # Inicializar gráfica.
+    # Inicializar grafica.
     plt.figure(figsize=[15,5])
     plt.subplots_adjust(left=0.12,bottom=0.11,right=0.73,top=0.88,wspace=0.4,hspace=0.76)
 
     #__________________________________________________________________________________________________
-    # SUBGRÁFICA 1: scores durante el entrenamiento.
+    # SUBGRAFICA 1: scores durante el entrenamiento.
 
     ax=plt.subplot(122)
 
@@ -225,11 +225,11 @@ def draw_comparative_figure(heuristic_param_list):
     ax.legend(title="Train time-step \n accuracy",bbox_to_anchor=(1.4, 0, 0, 1), loc='center')
 
     #__________________________________________________________________________________________________
-    # SUBGRÁFICA 2: representación gráfica del comportamiento del accuracy.
+    # SUBGRAFICA 2: representacion grafica del comportamiento del accuracy.
 
     ax=plt.subplot(121)
 
-    # Inicializar número de curvas.
+    # Inicializar numero de curvas.
     curve=1
 
     # Dibujar curvas.
@@ -254,7 +254,7 @@ def draw_comparative_figure(heuristic_param_list):
 # Lista de colores.
 colors=px.colors.qualitative.D3
 
-# Parámetro.
+# Parametro.
 sample_size_freq='BisectionOnly'
 
 # Definir tiempos de entrenamiento que se desean dibujar.
@@ -273,7 +273,7 @@ time_split=list(df_cost_per_acc['cost_per_eval'])[0]*20
 
 list_train_time=np.arange(max(min_time_acc_max,min_time_hI,min_time_hII),min(max_time_acc_max,max_time_hI,max_time_hII)+time_split,time_split)
 
-# Llamar a la función.
+# Llamar a la funcion.
 list_heuristics=['I','II']
 heuristic_param_list=[['I',0.95],['II',5]]
 for heuristic in list_heuristics:

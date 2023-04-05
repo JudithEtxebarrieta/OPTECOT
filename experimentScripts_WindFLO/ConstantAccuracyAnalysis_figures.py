@@ -1,9 +1,9 @@
 
-# Mediante este script se representan gráficamente los resultados numéricos calculados por 
+# Mediante este script se representan graficamente los resultados numericos calculados por 
 # "ConstantAccuracyAnalysis_data.py".
 
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
 import numpy as np
 from scipy.stats import norm
@@ -20,10 +20,10 @@ import math
 # FUNCIONES
 #==================================================================================================
 
-# FUNCIÓN 1
-# Parámetros:
-#   >data: datos sobre los cuales se calculará el rango entre percentiles.
-#   >bootstrap_iterations: número de submuestras que se considerarán de data para poder calcular el 
+# FUNCION 1
+# Parametros:
+#   >data: datos sobre los cuales se calculara el rango entre percentiles.
+#   >bootstrap_iterations: numero de submuestras que se consideraran de data para poder calcular el 
 #    rango entre percentiles de sus medias.
 # Devolver: la media de los datos originales junto a los percentiles de las medias obtenidas del 
 # submuestreo realizado sobre data.
@@ -35,17 +35,17 @@ def bootstrap_mean_and_confiance_interval(data,bootstrap_iterations=1000):
         mean_list.append(np.mean(sample))
     return np.mean(data),np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
 
-# FUNCIÓN 2 (para la construcción de la gráfica de scores)
-# Parámetros:
+# FUNCION 2 (para la construccion de la grafica de scores)
+# Parametros:
 #   >df_train_acc: base de datos con datos de entrenamiento.
-#   >list_train_times: lista con límites de tiempo que se desean dibujar en la gráfica de scores.
+#   >list_train_times: lista con limites de tiempo que se desean dibujar en la grafica de scores.
 # Devolver: 
-#   >all_mean: medias de los scores por límite de tiempos de entrenamiento fijados en list_train_times.
-#   >all_q05,all_q95: percentiles de los scores por límite de tiempos de entrenamiento.
+#   >all_mean: medias de los scores por limite de tiempos de entrenamiento fijados en list_train_times.
+#   >all_q05,all_q95: percentiles de los scores por limite de tiempos de entrenamiento.
 
 def train_data_to_figure_data(df_train_acc,list_train_times):
 
-    # Inicializar listas para la gráfica.
+    # Inicializar listas para la grafica.
     all_mean=[]
     all_q05=[]
     all_q95=[]
@@ -75,14 +75,14 @@ def train_data_to_figure_data(df_train_acc,list_train_times):
 # PROGRAMA PRINCIPAL
 #==================================================================================================
 
-# Inicializar gráfica.
+# Inicializar grafica.
 plt.figure(figsize=[15,6])
 plt.subplots_adjust(left=0.09,bottom=0.11,right=0.84,top=0.88,wspace=0.17,hspace=0.2)
 
 # Leer lista con valores de accuracy considerados.
 list_acc=np.load('results/data/WindFLO/ConstantAccuracyAnalysis/list_acc.npy')
 
-# Definir lista con límites de tiempos de entrenamiento que se desean dibujar.
+# Definir lista con limites de tiempos de entrenamiento que se desean dibujar.
 df_train_acc_min=pd.read_csv("results/data/WindFLO/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis"+str(min(list_acc))+".csv", index_col=0)
 df_train_acc_max=pd.read_csv("results/data/WindFLO/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis"+str(max(list_acc))+".csv", index_col=0)
 max_time=np.load('results/data/WindFLO/ConstantAccuracyAnalysis/max_time.npy')
@@ -91,11 +91,11 @@ split_time=max(df_train_acc_min.groupby('seed')['elapsed_time'].min())
 list_train_times=np.arange(min_time,max_time,split_time)
 
 #--------------------------------------------------------------------------------------------------
-# GRÁFICA 1 (Mejores resultados por valor de accuracy)
+# GRAFICA 1 (Mejores resultados por valor de accuracy)
 #--------------------------------------------------------------------------------------------------
 print('GRAFICA 1')
 
-# Conseguir datos para la gráfica.
+# Conseguir datos para la grafica.
 train_times=[]
 max_scores=[]
 for accuracy in list_acc:
@@ -103,14 +103,14 @@ for accuracy in list_acc:
     # Leer base de datos.
     df_train_acc=pd.read_csv("results/data/WindFLO/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis"+str(accuracy)+".csv", index_col=0)
 
-    # Extraer de la base de datos la información relevante.
+    # Extraer de la base de datos la informacion relevante.
     all_mean_scores,all_q05_scores,all_q95_scores=train_data_to_figure_data(df_train_acc,list_train_times)
 
-    # Fijar límite de evaluación de alcance de score.
+    # Fijar limite de evaluacion de alcance de score.
     if accuracy==1:
         score_limit=all_mean_scores[-1]
 
-    # Encontrar cuando se da el límite de score prefijado por primera vez.
+    # Encontrar cuando se da el limite de score prefijado por primera vez.
     limit_scores=list(np.array(all_mean_scores)>=score_limit)
     if True in limit_scores:
         ind_min=limit_scores.index(True)
@@ -120,7 +120,7 @@ for accuracy in list_acc:
     max_scores.append(all_mean_scores[ind_min])
 
 
-# Dibujar la gráfica.
+# Dibujar la grafica.
 ind_sort=np.argsort(train_times)
 train_times_sort=[str(i) for i in sorted(train_times)]
 max_scores_sort=[max_scores[i] for i in ind_sort]
@@ -138,7 +138,7 @@ plt.axhline(y=score_limit,color='black', linestyle='--')
 
 
 #--------------------------------------------------------------------------------------------------
-# GRÁFICA 2 (Resultados generales scores)
+# GRAFICA 2 (Resultados generales scores)
 #--------------------------------------------------------------------------------------------------
 print('GRAFICA 2')
 
@@ -149,7 +149,7 @@ for accuracy in list_acc:
     # Leer base de datos.
     df_train_acc=pd.read_csv("results/data/WindFLO/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis"+str(accuracy)+".csv", index_col=0)
 
-    # Extraer de la base de datos la información relevante.
+    # Extraer de la base de datos la informacion relevante.
     all_mean_scores,all_q05_scores,all_q95_scores =train_data_to_figure_data(df_train_acc,list_train_times)
 
     # Dibujar curva.

@@ -1,8 +1,8 @@
-# Mediante este script se representan de forma gráfica los resultados numéricos obtenidos en 
+# Mediante este script se representan de forma grafica los resultados numericos obtenidos en 
 # "ConstantAccuracyAnalysis_data.py".
 
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
 import numpy as np
 from scipy.stats import norm
@@ -17,10 +17,10 @@ import pandas as pd
 # FUNCIONES
 #==================================================================================================
 
-# FUNCIÓN 1
-# Parámetros:
-#   >data: datos sobre los cuales se calculará el rango entre percentiles.
-#   >bootstrap_iterations: número de submuestras que se considerarán de data para poder calcular el 
+# FUNCION 1
+# Parametros:
+#   >data: datos sobre los cuales se calculara el rango entre percentiles.
+#   >bootstrap_iterations: numero de submuestras que se consideraran de data para poder calcular el 
 #    rango entre percentiles de sus medias.
 # Devolver: la media de los datos originales junto a los percentiles de las medias obtenidas del 
 # submuestreo realizado sobre data.
@@ -32,23 +32,23 @@ def bootstrap_mean_and_confidence_interval(data,bootstrap_iterations=1000):
         mean_list.append(np.mean(sample))
     return np.mean(data),np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
 
-# FUNCIÓN 2
-# Parámetros:
-#   >df_train_acc: base de datos con la información de entrenamiento asociada a un accuracy de time-step.
-#   >list_train_steps: lista con número de steps de entrenamiento que se desean dibujar.
+# FUNCION 2
+# Parametros:
+#   >df_train_acc: base de datos con la informacion de entrenamiento asociada a un accuracy de time-step.
+#   >list_train_steps: lista con numero de steps de entrenamiento que se desean dibujar.
 # Devolver: la media de los rewards originales junto a los percentiles de las medias obtenidas del 
 # submuestreo realizado sobre dichos datos.
 
 def train_data_to_figure_data(df_train_acc,list_train_steps):
 
-    # Inicializar listas para la gráfica.
+    # Inicializar listas para la grafica.
     all_mean_rewards=[]
     all_q05_reawrds=[]
     all_q95_rewards=[]
 
     # Rellenar listas.
     for train_steps in list_train_steps:
-        # Indices de filas con un número de steps de entrenamiento menor que train_steps.
+        # Indices de filas con un numero de steps de entrenamiento menor que train_steps.
         ind_train=df_train_acc["info_steps"] <= train_steps
         
         # Agrupar las filas anteriores por la semilla y quedarnos con la fila por grupo 
@@ -70,14 +70,14 @@ def train_data_to_figure_data(df_train_acc,list_train_steps):
 # PROGRAMA PRINCIPAL
 #==================================================================================================
 
-# Inicializar gráfica.
+# Inicializar grafica.
 plt.figure(figsize=[15,6])
 plt.subplots_adjust(left=0.09,bottom=0.11,right=0.84,top=0.88,wspace=0.17,hspace=0.2)
 
 # Leer lista con valores de accuracy considerados.
 grid_acc=np.load('results/data/CartPole/ConstantAccuracyAnalysis/grid_acc.npy')
 
-# Lista con límites de steps de entrenamiento que se desean dibujar.
+# Lista con limites de steps de entrenamiento que se desean dibujar.
 df_train_acc_min=pd.read_csv("results/data/CartPole/ConstantAccuracyAnalysis/df_train_acc"+str(min(grid_acc))+".csv", index_col=0)
 df_train_acc_max=pd.read_csv("results/data/CartPole/ConstantAccuracyAnalysis/df_train_acc"+str(max(grid_acc))+".csv", index_col=0)
 max_train_steps=np.load('results/data/CartPole/ConstantAccuracyAnalysis/max_train_steps.npy')
@@ -86,25 +86,25 @@ split_steps=max(df_train_acc_min.groupby("seed")["steps"].min())
 list_train_steps=np.arange(min_steps,max_train_steps,split_steps)
 
 #--------------------------------------------------------------------------------------------------
-# GRÁFICA 1 (mejores resultados por valor de accuracy)
+# GRAFICA 1 (mejores resultados por valor de accuracy)
 #--------------------------------------------------------------------------------------------------
 ax=plt.subplot(121)
 
-# Conseguir datos para la gráfica
+# Conseguir datos para la grafica
 train_steps=[]
 max_rewards=[]
 for accuracy in grid_acc:
     # Leer base de datos.
     df_train_acc=pd.read_csv("results/data/CartPole/ConstantAccuracyAnalysis/df_train_acc"+str(accuracy)+".csv", index_col=0)
 
-    # Extraer de la base de datos la información relevante.
+    # Extraer de la base de datos la informacion relevante.
     all_mean_rewards,all_q05_rewards,all_q95_rewards=train_data_to_figure_data(df_train_acc,list_train_steps)
 
-    # Fijar límite de evaluación de alcance de score.
+    # Fijar limite de evaluacion de alcance de score.
     if accuracy==1:
         score_limit=all_mean_rewards[-1]
 
-    # Encontrar cuando se da el máximo reward por primera vez.
+    # Encontrar cuando se da el maximo reward por primera vez.
     limit_rewards=list(np.array(all_mean_rewards)>=score_limit)
     if True in limit_rewards:
         ind_max=limit_rewards.index(True)
@@ -113,7 +113,7 @@ for accuracy in grid_acc:
     train_steps.append(list_train_steps[ind_max])
     max_rewards.append(all_mean_rewards[ind_max])
 
-# Dibujar la gráfica
+# Dibujar la grafica
 ind_sort=np.argsort(train_steps)
 train_steps_sort=[str(i) for i in sorted(train_steps)]
 max_rewards_sort=[max_rewards[i] for i in ind_sort]
@@ -130,7 +130,7 @@ ax.set_title('Best results for each model')
 # ax.legend(title="Train time-step \n accuracy",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
 
 #--------------------------------------------------------------------------------------------------
-# GRÁFICA 2 (resultados generales)
+# GRAFICA 2 (resultados generales)
 #--------------------------------------------------------------------------------------------------
 
 # Ir dibujando una curva por cada valor de accuracy.
@@ -139,7 +139,7 @@ for accuracy in grid_acc:
     # Leer base de datos.
     df_train_acc=pd.read_csv("results/data/CartPole/ConstantAccuracyAnalysis/df_train_acc"+str(accuracy)+".csv", index_col=0)
 
-    # Extraer de la base de datos la información relevante.
+    # Extraer de la base de datos la informacion relevante.
     all_mean_rewards,all_q05_rewards,all_q95_rewards=train_data_to_figure_data(df_train_acc,list_train_steps)
 
     # Dibujar curva.

@@ -1,4 +1,4 @@
-# El código de este script está proporcionado por MGEP. En el se calcula la evaluación de un
+# El codigo de este script esta proporcionado por MGEP. En el se calcula la evaluacion de un
 # diseño de turbina aleatorio.
 
 #==================================================================================================
@@ -116,7 +116,7 @@ weights = [0.1085, 0.1160, 0.1188, 0.0910, 0.0824, 0.1486, 0.0882, 0.0867, 0.094
 Nmin = 1000
 Nmax = 3200
 
-# La función fintess requiere el diccionario 'constargs' para instanciar el objeto turbina y calcular la puntuación.
+# La funcion fintess requiere el diccionario 'constargs' para instanciar el objeto turbina y calcular la puntuacion.
 constargs = {"N": N,
              "omega": omega,
              "rcas": rcas,

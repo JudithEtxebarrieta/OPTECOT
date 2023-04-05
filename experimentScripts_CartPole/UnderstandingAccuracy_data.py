@@ -1,11 +1,11 @@
-# Mediante este script se evalúan 100 políticas aleatorias (asociadas a una precisión máxima) 
-# sobre 10 episodios de un entorno definido con 10 valores de accuracy diferentes para el parámetro
+# Mediante este script se evaluan 100 politicas aleatorias (asociadas a una precision maxima) 
+# sobre 10 episodios de un entorno definido con 10 valores de accuracy diferentes para el parametro
 # timesteps (tiempo transcurrido entre frame y frame de un episodio). Los datos relevantes (medias 
-# de rewards y número de steps por evaluación) se almacenan para después poder acceder a ellos.
+# de rewards y numero de steps por evaluacion) se almacenan para despues poder acceder a ellos.
 
 
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
 from stable_baselines3 import PPO
 from stable_baselines3.ppo import MlpPolicy
@@ -17,12 +17,12 @@ from tqdm import tqdm
 #==================================================================================================
 # FUNCIONES
 #==================================================================================================
-# FUNCIÓN 1 (construir muestra aleatoria de políticas)
+# FUNCION 1 (construir muestra aleatoria de politicas)
 def build_policy_sample(n_sample=100):
     # Inicializar entorno.
     env = gym.make('CartPole-v1')
 
-    # Construir muestra de políticas.
+    # Construir muestra de politicas.
     policy_sample=[]
     for i in range(0,n_sample):
         policy = PPO(MlpPolicy,env,seed=i)
@@ -30,7 +30,7 @@ def build_policy_sample(n_sample=100):
 
     return policy_sample
 
-# FUNCIÓN 2 (evaluar política sobre 10 episodios de un entorno definido con un accuracy concreto)
+# FUNCION 2 (evaluar politica sobre 10 episodios de un entorno definido con un accuracy concreto)
 def evaluate_policy(policy,accuracy):
     # Inicializar entorno de entrenamiento con el accuracy indicado.
     env = gym.make('CartPole-v1')
@@ -38,7 +38,7 @@ def evaluate_policy(policy,accuracy):
     env.env.spec.max_episode_steps = int(env.env.spec.max_episode_steps*accuracy)
     env._max_episode_steps = env.unwrapped.spec.max_episode_steps
     
-    #Para garantizar que en cada llamada a la función se usarán los mismos episodios.
+    #Para garantizar que en cada llamada a la funcion se usaran los mismos episodios.
     env.seed(0)
     obs=env.reset()
     
@@ -60,7 +60,7 @@ def evaluate_policy(policy,accuracy):
     
     return np.mean(all_episode_reward),np.mean(all_episode_steps)
 
-# FUNCIÓN 3 (evaluar conjunto de políticas sobre 10 episodios de un entorno definido con un accuracy concreto)
+# FUNCION 3 (evaluar conjunto de politicas sobre 10 episodios de un entorno definido con un accuracy concreto)
 def evaluate_policy_sample(policy_sample,accuracy):
     for i in tqdm(range(len(policy_sample))):
         reward,steps=evaluate_policy(policy_sample[i],accuracy)
@@ -69,13 +69,13 @@ def evaluate_policy_sample(policy_sample,accuracy):
 #==================================================================================================
 # PROGRAMA PRINCIPAL
 #==================================================================================================
-# Construir muestra de políticas.
+# Construir muestra de politicas.
 policy_sample=build_policy_sample(100)
 
 # Lista de accuracys.
 list_acc=[1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1]
 
-# Construir base de datos con información de rewards y costes obtenidos al evaluar las políticas de
+# Construir base de datos con informacion de rewards y costes obtenidos al evaluar las politicas de
 # la muestra con los diferentes valores de accuracy.
 df=[]
 for accuracy in tqdm(list_acc):

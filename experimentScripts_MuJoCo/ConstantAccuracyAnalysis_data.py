@@ -1,11 +1,11 @@
 
 # Mediante este script se aplica el algoritmo CMA-ES sobre el entorno Swimmer de MuJoCo, durante 
-# un número máximo de steps, considerando 10 valores diferentes de accuracy y 100 semillas para 
-# cada uno de ellos. Por cada valor de accuracy se construirá una base de datos con la información
+# un numero maximo de steps, considerando 10 valores diferentes de accuracy y 100 semillas para 
+# cada uno de ellos. Por cada valor de accuracy se construira una base de datos con la informacion
 # relevante durante en entrenamiento.
 
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
 import os
 os.environ['TF_ENABLE_ONEDNN_OPTS']='0'
@@ -56,18 +56,18 @@ import psutil as ps
 #==================================================================================================
 # NUEVAS FUNCIONES
 #==================================================================================================
-# FUNCIÓN 1 (validar una política)
+# FUNCION 1 (validar una politica)
 def evaluate_policy(agent,test_env,n_eval_episodes):
 
     # Fijar semilla del entorno (para que los episodios a validar sean los mismos por cada 
-    # llamada a la función) y definir el estado inicial (obs) del primer episodio.
+    # llamada a la funcion) y definir el estado inicial (obs) del primer episodio.
     test_env._env.seed(seed=test_env_seed)
     obs,_=test_env.reset()
 
     # Guardar reward por episodios evaluado.
     all_ep_reward=[]
     for i in range(n_eval_episodes):
-        # Evaluar episodio con la política y guardar el reward asociado.
+        # Evaluar episodio con la politica y guardar el reward asociado.
         episode_reward=0
         done=False
         while not done:
@@ -81,21 +81,21 @@ def evaluate_policy(agent,test_env,n_eval_episodes):
 
     return np.mean(all_ep_reward)
 
-# FUNCIÓN 2 (aprender política óptima con CMA-ES)
+# FUNCION 2 (aprender politica optima con CMA-ES)
 @wrap_experiment(snapshot_mode="none", log_dir="/tmp/",archive_launch_repo=False)
 def learn(ctxt=None, gymEnvName=None, action_space=None, max_episode_length=None,
                        policy_name=None,seed=None,accuracy=1.0):
 
-    # Inicialización de contadores.
+    # Inicializacion de contadores.
     global n_steps,n_episodes,n_generations
-    n_steps=0 # Contador que índica el número de steps consumidos hasta el momento.
+    n_steps=0 # Contador que indica el numero de steps consumidos hasta el momento.
     n_episodes = 0 # Contador que indica en que episodio estamos.
-    n_generations=0 # Contador que indica en que generación estamos.
+    n_generations=0 # Contador que indica en que generacion estamos.
 
-    # Definición de parámetros para el algoritmos CMA-ES.
+    # Definicion de parametros para el algoritmos CMA-ES.
     global popsize,batch_size_ep,total_generations
     popsize= 20 # Tamaño de las generaciones/poblaciones en CMA-ES. (Referencia: https://github.com/rlworkgroup/garage/blob/master/src/garage/examples/np/cma_es_cartpole.py)
-    batch_size_ep=1 # Número de episodios que se van a considerar para evaluar cada política/individuos de una generación.
+    batch_size_ep=1 # Numero de episodios que se van a considerar para evaluar cada politica/individuos de una generacion.
 
     # Fijar semilla.
     set_seed(seed)
@@ -109,12 +109,12 @@ def learn(ctxt=None, gymEnvName=None, action_space=None, max_episode_length=None
         train_env._env.unwrapped.model.opt.timestep=default_frametime/accuracy
         train_env._env.seed(seed=train_env_seed)
 
-        # Definir entorno de validación con el accuracy máximo.
+        # Definir entorno de validacion con el accuracy maximo.
         global test_env
         test_env = GymEnv(gymEnvName, max_episode_length=max_episode_length)
         test_env._env.unwrapped.model.opt.timestep=default_frametime
         
-        # Definir política.
+        # Definir politica.
         is_action_space_discrete=bool(["continuous", "discrete"].index(action_space))
         if is_action_space_discrete:
             policy = CategoricalMLPPolicy(name=policy_name, env_spec=train_env.spec)
@@ -127,22 +127,22 @@ def learn(ctxt=None, gymEnvName=None, action_space=None, max_episode_length=None
         trainer.setup(algo, train_env)
 
         # Entrenamiento.
-        total_generations= int(max_steps/(popsize*batch_size_ep*current_max_episode_length)) # Número de generaciones a evaluar, dependiendo del número máximo de steps definido para entrenar. (CRITERIO DE PARADA)
+        total_generations= int(max_steps/(popsize*batch_size_ep*current_max_episode_length)) # Numero de generaciones a evaluar, dependiendo del numero maximo de steps definido para entrenar. (CRITERIO DE PARADA)
         trainer.train(n_epochs=total_generations, batch_size=batch_size_ep*current_max_episode_length)
 
 
 #==================================================================================================
 # FUNCIONES DISEÑADAS PARA SUSTITUIR ALGUNAS YA EXISTENTES
 #==================================================================================================
-# FUNCIÓN 3 (para poder evaluar cada política de cada generación durante el entrenamiento con el mismo
-# conjunto de episodios, esta modificación hace que el proceso sea determinista y las comparaciones 
-# entre individuos por generación sean justas).
+# FUNCION 3 (para poder evaluar cada politica de cada generacion durante el entrenamiento con el mismo
+# conjunto de episodios, esta modificacion hace que el proceso sea determinista y las comparaciones 
+# entre individuos por generacion sean justas).
 def start_episode(self):
     """Begin a new episode."""
 
     self._eps_length = 0
 
-    # MODIFICACIÓN: para que siempre se usen los mismos episodios para validar las políticas/individuos y estas puedan ser comparables.
+    # MODIFICACION: para que siempre se usen los mismos episodios para validar las politicas/individuos y estas puedan ser comparables.
     global n_episodes,batch_size_ep,n_generations
     if n_episodes%batch_size_ep==0:
         self.env._env.seed(seed=n_generations)#seed=train_env_seed (si se quiere evaluar los mismos episodios en todas las generaciones)
@@ -153,14 +153,14 @@ def start_episode(self):
 
     self.agent.reset()
 
-# FUNCIÓN 4 (para poder almacenar los datos de interés durante el entrenamiento).
+# FUNCION 4 (para poder almacenar los datos de interes durante el entrenamiento).
 def rollout(self):
     global n_steps,n_episodes,n_generations,df_acc,current_max_episode_length,n_eval_episodes,popsize,total_generations
     global seed,accuracy
     global list_gen_policies,list_gen_policies_rewards,policy_reward_per_ep
 
-    # Listas para guardar las políticas asociadas a una generación y sus correspondientes rewards.
-    n_policies=n_episodes/batch_size_ep #Políticas evaluadas hasta el momento.
+    # Listas para guardar las politicas asociadas a una generacion y sus correspondientes rewards.
+    n_policies=n_episodes/batch_size_ep #Politicas evaluadas hasta el momento.
     if n_policies%popsize==0:
 
         list_gen_policies=[]
@@ -168,19 +168,19 @@ def rollout(self):
 
         policy_reward_per_ep=[]
 
-    # En caso de usar un entorno con criterio de parada dependiente del parámetro 
+    # En caso de usar un entorno con criterio de parada dependiente del parametro 
     # terminate_when_unhealthy, anular este tipo de parada.
     if DTU:
         self.env._env.env._terminate_when_unhealthy = False
 
     # Inicializar episodio.
     self.start_episode() 
-    self._max_episode_length = current_max_episode_length # Fijar tamaño máximo del episodio.
+    self._max_episode_length = current_max_episode_length # Fijar tamaño maximo del episodio.
     
     # Actualizar contadores tras evaluar el episodio.
-    episode_steps = 0 # Inicializar contador para sumar el número de steps dados en este episodio.
+    episode_steps = 0 # Inicializar contador para sumar el numero de steps dados en este episodio.
     policy_reward=0
-    while not self.step_episode(): # Hasta que no se puedan dar más steps en el episodio.
+    while not self.step_episode(): # Hasta que no se puedan dar mas steps en el episodio.
         policy_reward+=self._env_steps[episode_steps].reward # Dar un nuevo step.
         episode_steps+= 1 # Sumar step.
 
@@ -188,59 +188,59 @@ def rollout(self):
     n_episodes += 1 # Episodios evaluados hasta el momento.
     policy_reward_per_ep.append(policy_reward)
 
-    # Cuando se haya evaluado una política/individuo al completo (número de episodios evaluado=batch_size_ep),
-    # se almacena la política y su correspondiente reward (reward total en batch_size_ep).
+    # Cuando se haya evaluado una politica/individuo al completo (numero de episodios evaluado=batch_size_ep),
+    # se almacena la politica y su correspondiente reward (reward total en batch_size_ep).
     if n_episodes%batch_size_ep==0:
         list_gen_policies.append(self.agent)
         list_gen_policies_rewards.append(np.mean(policy_reward_per_ep))
         policy_reward_per_ep=[]
     
-    # Cuando se han evaluado las suficientes políticas como para poder completar una generación nueva,
-    # se guarda la información obtenida de la nueva generación.
-    n_policies=n_episodes/batch_size_ep#Políticas evaluadas hasta el momento.
+    # Cuando se han evaluado las suficientes politicas como para poder completar una generacion nueva,
+    # se guarda la informacion obtenida de la nueva generacion.
+    n_policies=n_episodes/batch_size_ep#Politicas evaluadas hasta el momento.
     if n_policies!=0 and n_policies%popsize == 0:
         best_policy=list_gen_policies[list_gen_policies_rewards.index(max(list_gen_policies_rewards))]
         reward=evaluate_policy(best_policy,test_env,n_eval_episodes)
         df_acc.append([accuracy,seed,n_generations,n_episodes,n_steps,reward])
         n_generations+=1
 
-        # print('GENERACIÓN: '+str(n_generations)+'/'+str(total_generations))
+        # print('GENERACION: '+str(n_generations)+'/'+str(total_generations))
 
     return self.collect_episode()
 
 #==================================================================================================
 # PROGRAMA PRINCIPAL
 #==================================================================================================
-# Modificación de función existente (para guardar datos durante el entrenamiento).
+# Modificacion de funcion existente (para guardar datos durante el entrenamiento).
 garage.sampler.default_worker.DefaultWorker.rollout = rollout
-# Modificación de función existente ( para no perder tiempo).
+# Modificacion de funcion existente ( para no perder tiempo).
 garage.trainer.Trainer.save = lambda self, epoch: "skipp save."
-# Modificación de función existente (para no imprimir información de episodio durante el entrenamiento).
+# Modificacion de funcion existente (para no imprimir informacion de episodio durante el entrenamiento).
 Logger.log= lambda self, data: 'skipp info message.'
 warnings.filterwarnings("ignore")
-# Modificación de función existente (para evaluar todas las políticas/individuos de cada generación con los mismos episodios y así puedan ser comparables).
+# Modificacion de funcion existente (para evaluar todas las politicas/individuos de cada generacion con los mismos episodios y asi puedan ser comparables).
 from garage.sampler.default_worker import DefaultWorker
 DefaultWorker.start_episode=start_episode
 
-# Características del entorno.
+# Caracteristicas del entorno.
 gymEnvName='Swimmer-v3'
 action_space="continuous"
 max_episode_length=1000
-default_frametime=0.01 # Parámetro del que se modificará el accuracy.
+default_frametime=0.01 # Parametro del que se modificara el accuracy.
 policy_name='SwimmerPolicy'
 DTU=False # Criterio de parada dependiente de terminate_when_unhealthy.
 
-# Mallados y parámetros para el entrenamiento.
+# Mallados y parametros para el entrenamiento.
 list_train_seeds = list(range(2,102,1)) # Lista de semillas de entrenamiento.
 list_acc=[1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1]
 train_env_seed=0 # Semilla para el entorno de entrenamiento.
-max_steps=1000000 # Límite de entrenamiento medido en steps (asumiendo que el coste de todos los steps es el mismo). (Referencia: https://huggingface.co/sb3/ppo-Swimmer-v3/tree/main)
+max_steps=1000000 # Limite de entrenamiento medido en steps (asumiendo que el coste de todos los steps es el mismo). (Referencia: https://huggingface.co/sb3/ppo-Swimmer-v3/tree/main)
 
-# Parámetros de validación.
-test_env_seed=1 # Semilla para el entorno de validación.
-n_eval_episodes=10 # Número de episodios que se evaluarán en la validación.
+# Parametros de validacion.
+test_env_seed=1 # Semilla para el entorno de validacion.
+n_eval_episodes=10 # Numero de episodios que se evaluaran en la validacion.
 
-# Función para ejecución en paralelo.
+# Funcion para ejecucion en paralelo.
 def parallel_processing(arg):
     global df_acc
     df_acc=[]
@@ -263,7 +263,7 @@ pool.close()
 # Guardar lista de accuracys.
 np.save('results/data/MuJoCo/ConstantAccuracyAnalysis/list_acc',list_acc)
 
-# Guardar límite de entrenamiento.
+# Guardar limite de entrenamiento.
 np.save('results/data/MuJoCo/ConstantAccuracyAnalysis/max_steps',max_steps)
 
 

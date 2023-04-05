@@ -1,18 +1,18 @@
 # Mediante este script se analiza la influencia de considerar conjuntos de puntos de diferentes 
-# tamaños a la hora de entrenar/buscar la superficie a la que pertenecen, usando una regresión 
-# simbólica con GA. Para ello, se escoge la superficie x²-y²+y-1 y se consideran 7 tamaños/precisiones
-# para el conjunto de puntos inicial sobre el cual se entrenará/buscará la superficie. Para cada
-# precisión se repite el procedimiento usando 100 semillas diferentes (esto permite definir la población
-# inicial del GA de forma diferente). Para la búsqueda de las superficies se fijará un número máximo
-# de evaluaciones (en la expresión de la superficie seleccionada) y se guardarán los datos relevantes 
-# asociados a la mejor superficie encontrada durante el proceso de búsqueda.
+# tamaños a la hora de entrenar/buscar la superficie a la que pertenecen, usando una regresion 
+# simbolica con GA. Para ello, se escoge la superficie x²-y²+y-1 y se consideran 7 tamaños/precisiones
+# para el conjunto de puntos inicial sobre el cual se entrenara/buscara la superficie. Para cada
+# precision se repite el procedimiento usando 100 semillas diferentes (esto permite definir la poblacion
+# inicial del GA de forma diferente). Para la busqueda de las superficies se fijara un numero maximo
+# de evaluaciones (en la expresion de la superficie seleccionada) y se guardaran los datos relevantes 
+# asociados a la mejor superficie encontrada durante el proceso de busqueda.
 
 # Basado en: https://github.com/trevorstephens/gplearn/blob/main/doc/gp_examples.ipynb
 
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
-# Para mi código.
+# Para mi codigo.
 from gplearn.genetic import SymbolicRegressor
 from sklearn.utils.random import check_random_state
 from mpl_toolkits.mplot3d import Axes3D
@@ -50,8 +50,8 @@ import multiprocessing as mp
 # NUEVAS FUNCIONES
 #==================================================================================================
 
-# FUNCIÓN 1
-# Parámetros:
+# FUNCION 1
+# Parametros:
 #   >z_test: terceras coordenadas reales de los puntos de la superficie.
 #   >z_pred: terceras coordenadas obtenidas a partir de la superficie predicha.
 # Devuelve: el error absoluto medio de las dos listas anteriores.
@@ -59,11 +59,11 @@ import multiprocessing as mp
 def mean_abs_err(z_test,z_pred):
     return sum(abs(z_test-z_pred))/len(z_test)
 
-# FUNCIÓN 2
-# Parámetros:
-#   >n_sample: número de puntos que se desean construir.
-#   >seed: semilla para la selección aleatoria de los puntos.
-#   >expr_surf: expresión de la superficie de la cual se quiere extraer la muestra de puntos.
+# FUNCION 2
+# Parametros:
+#   >n_sample: numero de puntos que se desean construir.
+#   >seed: semilla para la seleccion aleatoria de los puntos.
+#   >expr_surf: expresion de la superficie de la cual se quiere extraer la muestra de puntos.
 # Devuelve: base de datos con las tres coordenadas de los puntos de la muestra.
 
 def build_pts_sample(n_sample,seed,expr_surf):
@@ -84,10 +84,10 @@ def build_pts_sample(n_sample,seed,expr_surf):
 
     return pts_sample
 
-# FUNCIÓN 3
-# Parámetros:
+# FUNCION 3
+# Parametros:
 #   >df_test_pts: base de datos con las tres coordenadas de los puntos que forman el 
-#    conjunto de validación.
+#    conjunto de validacion.
 #   >est_surf: superficie seleccionada en el proceso GA de entrenamiento.
 # Devuelve: error absoluto medio.
 
@@ -105,13 +105,13 @@ def evaluate(df_test_pts,est_surf):
 
     return score   
 
-# FUNCIÓN 4
-# Parámetros:
+# FUNCION 4
+# Parametros:
 #   >acc: valor de accuracy que se esta considerando para el conjunto de puntos de entrenamiento.
 #   >train_seed: semilla de entrenamiento.
 #   >df_test_pts: base de datos con las tres coordenadas de los puntos que forman el 
-#    conjunto de validación.
-#   >max_time: tiempo máximo fijado para la ejecución del GA (búsqueda de la superficie).
+#    conjunto de validacion.
+#   >max_time: tiempo maximo fijado para la ejecucion del GA (busqueda de la superficie).
 # Devuelve: superficie seleccionada.
 
 def learn(acc,train_seed,df_test_pts,max_time):
@@ -122,7 +122,7 @@ def learn(acc,train_seed,df_test_pts,max_time):
     # Inicializar conjunto de entrenamiento.
     df_train_pts=build_pts_sample(train_n_pts,train_pts_seed,expr_surf_real)
 
-	# Definición del algoritmo genético con el cual se encontrarán la superficie.
+	# Definicion del algoritmo genetico con el cual se encontraran la superficie.
     est_surf=SymbolicRegressor(random_state=train_seed)
 
 	# Ajustar la superficie a los puntos.
@@ -137,7 +137,7 @@ def learn(acc,train_seed,df_test_pts,max_time):
 # FUNCIONES DISEÑADAS A PARTIR DE ALGUNAS YA EXISTENTES
 #==================================================================================================
 
-# FUNCIÓN 5
+# FUNCION 5
 # -Original: raw_fitness
 # -Script: _Program.py
 # -Clase: _Program
@@ -148,14 +148,14 @@ def new_raw_fitness(self, X, y, sample_weight):
         y_pred = self.transformer(y_pred)
     raw_fitness = self.metric(y, y_pred, sample_weight)
     
-    # MODIFICACIÓN: Sumar el número de evaluaciones realizadas (tantas como puntos en el 
+    # MODIFICACION: Sumar el numero de evaluaciones realizadas (tantas como puntos en el 
     # conjunto de entrenamiento).
     global n_evaluations
     n_evaluations+=X.shape[0]
 
     return raw_fitness
 
-# FUNCIÓN 6
+# FUNCION 6
 # -Original: _parallel_evolve
 # -Script: genetic.py
 
@@ -191,8 +191,8 @@ def new_parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params)
 
     # Build programs
     programs = []
-    i=0# MODIFICACIÓN: inicializar contador de forma manual.
-    while i<n_programs and n_evaluations<max_n_eval:#MODIFICACIÓN: añadir nueva restricción para terminar el bucle.
+    i=0# MODIFICACION: inicializar contador de forma manual.
+    while i<n_programs and n_evaluations<max_n_eval:#MODIFICACION: añadir nueva restriccion para terminar el bucle.
 
         random_state = check_random_state(seeds[i])
 
@@ -279,11 +279,11 @@ def new_parallel_evolve(n_programs, parents, X, y, sample_weight, seeds, params)
 
         programs.append(program)
 
-        i+=1# MODIFICACIÓN: actualizar contador de forma manual.
+        i+=1# MODIFICACION: actualizar contador de forma manual.
     return programs
 
-# FUNCIÓN 7
-# Esta función contiene una parte del código interno de una función ya existente.
+# FUNCION 7
+# Esta funcion contiene una parte del codigo interno de una funcion ya existente.
 # -Original: fit
 # -Script: genetic.py 
 def find_best_individual_final_generation(self,fitness):
@@ -327,11 +327,11 @@ def find_best_individual_final_generation(self,fitness):
         else:
             self._program = self._programs[-1][np.argmin(fitness)]
 
-# FUNCIÓN 8
+# FUNCION 8
 # -Original: fit
 # -Script: genetic.py
 # -Clase: BaseSymbolic
-def new_fit(self, X, y,max_n_eval, train_seed,df_test_pts,sample_weight=None):# MODIFICACIÓN: añadir nuevos argumentos.
+def new_fit(self, X, y,max_n_eval, train_seed,df_test_pts,sample_weight=None):# MODIFICACION: añadir nuevos argumentos.
 
     random_state = check_random_state(self.random_state)
 
@@ -510,15 +510,15 @@ def new_fit(self, X, y,max_n_eval, train_seed,df_test_pts,sample_weight=None):# 
         # Print header fields
         self._verbose_reporter()
 
-    start_total_time=time() #MODIFICACIÓN: empezar a contar el tiempo de entrenamiento.
-    gen=0# MODIFICACIÓN: para que el procedimiento no termine cuando se alcance un número de generaciones, las generaciones se cuentan con un contador independiente.
+    start_total_time=time() #MODIFICACION: empezar a contar el tiempo de entrenamiento.
+    gen=0# MODIFICACION: para que el procedimiento no termine cuando se alcance un numero de generaciones, las generaciones se cuentan con un contador independiente.
     
-    # MODIFICACIÓN: variable global mediante la cual se irán contando el número de evaluaciones realizadas,
-    # entendiendo por evaluación cada evaluación de un punto en una expresión de una superficie.
+    # MODIFICACION: variable global mediante la cual se iran contando el numero de evaluaciones realizadas,
+    # entendiendo por evaluacion cada evaluacion de un punto en una expresion de una superficie.
     global n_evaluations
     n_evaluations=0
 
-    while n_evaluations < max_n_eval:# MODIFICACIÓN: modificar el límite de entrenamiento.
+    while n_evaluations < max_n_eval:# MODIFICACION: modificar el limite de entrenamiento.
 
         start_time = time()
 
@@ -603,16 +603,16 @@ def new_fit(self, X, y,max_n_eval, train_seed,df_test_pts,sample_weight=None):# 
             best_fitness = fitness[np.argmin(fitness)]
         
 
-        find_best_individual_final_generation(self,fitness) # MODIFICACIÓN: para poder evaluar la mejor superficie durante el proceso.
+        find_best_individual_final_generation(self,fitness) # MODIFICACION: para poder evaluar la mejor superficie durante el proceso.
         
-        # MODIFICACIÓN: ir guardando los datos de interés durante el entrenamiento. 
+        # MODIFICACION: ir guardando los datos de interes durante el entrenamiento. 
         score=evaluate(df_test_pts,self)
         elapsed_time=time()-start_total_time      
         df_train.append([train_seed,gen,score,elapsed_time,generation_time,n_evaluations])
         
-        gen+=1# MODIFICACIÓN: actualizar número de generaciones.
+        gen+=1# MODIFICACION: actualizar numero de generaciones.
 
-    find_best_individual_final_generation(self,fitness)# MODIFICACIÓN: para obtener el mejor individuo de la última generación.
+    find_best_individual_final_generation(self,fitness)# MODIFICACION: para obtener el mejor individuo de la ultima generacion.
     
     return self
 
@@ -620,7 +620,7 @@ def new_fit(self, X, y,max_n_eval, train_seed,df_test_pts,sample_weight=None):# 
 # PROGRAMA PRINCIPAL
 #==================================================================================================
 
-# Para usar la función de ajuste modificada.
+# Para usar la funcion de ajuste modificada.
 _Program.raw_fitness=new_raw_fitness
 _parallel_evolve=new_parallel_evolve
 BaseSymbolic.fit=new_fit
@@ -632,12 +632,12 @@ expr_surf_real='x**2-y**2+y-1'
 list_train_seeds=range(1,101,1)
 list_acc=[1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1]
 
-# Parámetros de entrenamiento.
+# Parametros de entrenamiento.
 default_train_n_pts=50# Cardinal de conjunto inicial predefinido.
 train_pts_seed=0
-max_n_eval=20*50*1000# Número de evaluaciones que se harían con un accuracy=1 durante 20 generaciones (límite de entrenamiento fijado por defecto).
+max_n_eval=20*50*1000# Numero de evaluaciones que se harian con un accuracy=1 durante 20 generaciones (limite de entrenamiento fijado por defecto).
 
-# Parámetros y conjunto de validación.
+# Parametros y conjunto de validacion.
 test_n_pts=default_train_n_pts
 test_pts_seed=1
 df_test_pts=build_pts_sample(test_n_pts,test_pts_seed,expr_surf_real)
@@ -645,13 +645,13 @@ df_test_pts=build_pts_sample(test_n_pts,test_pts_seed,expr_surf_real)
 # Guardar lista de precisiones.
 np.save('results/data/SymbolicRegressor/ConstantAccuracyAnalysis/list_acc',list_acc)
 
-# Guardar expresión de superficie.
+# Guardar expresion de superficie.
 np.save('results/data/SymbolicRegressor/ConstantAccuracyAnalysis/expr_surf',expr_surf_real)
 
-# Guardar límite de entrenamiento.
+# Guardar limite de entrenamiento.
 np.save('results/data/SymbolicRegressor/ConstantAccuracyAnalysis/max_n_eval',max_n_eval)
 
-# Función para ejecución en paralelo.
+# Funcion para ejecucion en paralelo.
 def parallel_processing(arg):
 
     # Guardar datos de entrenamiento.

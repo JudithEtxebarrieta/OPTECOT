@@ -1,11 +1,11 @@
-# Mediante este script se aplica el algoritmo CMA-ES durante un tiempo máximo de ejecución, 
+# Mediante este script se aplica el algoritmo CMA-ES durante un tiempo maximo de ejecucion, 
 # considerando 10 valores diferentes de accuracy y 50 semillas para cada uno de ellos. Primero se 
-# ejecuta el algoritmo para accuracy 1, fijando así el límite de tiempo de entrenamiento en el 
-# mínimo tiempo entre los tiempos totales necesarios para cada semilla. Por cada valor de accuracy
-# se construirá una base de datos con la información relevante durante en entrenamiento.
+# ejecuta el algoritmo para accuracy 1, fijando asi el limite de tiempo de entrenamiento en el 
+# minimo tiempo entre los tiempos totales necesarios para cada semilla. Por cada valor de accuracy
+# se construira una base de datos con la informacion relevante durante en entrenamiento.
 
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
 import os
 import sys
@@ -54,19 +54,19 @@ class stopwatch:
 # FUNCIONES
 #==================================================================================================
 
-# FUNCIÓN 1 (Inicializar las características del terreno y las turbinas sobre los cuales se aplicará la optimización)
+# FUNCION 1 (Inicializar las caracteristicas del terreno y las turbinas sobre los cuales se aplicara la optimizacion)
 def get_windFLO_with_accuracy(momentary_folder='',accuracy=1):
 
-    # Configuración y parámetros de WindFLO.
+    # Configuracion y parametros de WindFLO.
     windFLO = WindFLO(
     inputFile = 'WindFLO/Examples/Example1/WindFLO.dat', # Archivo input para leer.
-    libDir = 'WindFLO/release/', # Ruta a la librería compartida libWindFLO.so.
-    turbineFile = 'WindFLO/Examples/Example1/V90-3MW.dat',# Parámetros de las turbinas.
+    libDir = 'WindFLO/release/', # Ruta a la libreria compartida libWindFLO.so.
+    turbineFile = 'WindFLO/Examples/Example1/V90-3MW.dat',# Parametros de las turbinas.
     terrainfile = 'WindFLO/Examples/Example1/terrain.dat', # Archivo del terreno.
     runDir=momentary_folder,
-    nTurbines = 25, # Número de turbinas.
+    nTurbines = 25, # Numero de turbinas.
 
-    monteCarloPts = round(1000*accuracy)# Parámetro del cual se modificará su precisión.
+    monteCarloPts = round(1000*accuracy)# Parametro del cual se modificara su precision.
     )
 
     # Cambiar el modelo de terreno predeterminado de RBF a IDW.
@@ -74,7 +74,7 @@ def get_windFLO_with_accuracy(momentary_folder='',accuracy=1):
 
     return windFLO
 
-# FUNCIÓN 2 (Evaluar el desempeño del diseño del parque eólico)
+# FUNCION 2 (Evaluar el desempeño del diseño del parque eolico)
 def EvaluateFarm(x, windFLO):
     
     k = 0
@@ -89,7 +89,7 @@ def EvaluateFarm(x, windFLO):
 
     return -windFLO.farmPower
 
-# FUNCIÓN 3 (Buscar la solución óptima aplicando el algoritmo CMA-ES)
+# FUNCION 3 (Buscar la solucion optima aplicando el algoritmo CMA-ES)
 def learn(seed, accuracy,maxfeval=500,popsize=50): 
 
     global max_n_eval
@@ -102,10 +102,10 @@ def learn(seed, accuracy,maxfeval=500,popsize=50):
     windFLO = get_windFLO_with_accuracy(momentary_folder=folder_name+'/',accuracy=accuracy)
     default_windFLO= get_windFLO_with_accuracy(momentary_folder=folder_name+'/')
     
-    # Función para transformar el valor escalado de los parámetros en los valores reales.
+    # Funcion para transformar el valor escalado de los parametros en los valores reales.
     def transform_to_problem_dim(list_coord):
-        lbound = np.zeros(windFLO.nTurbines*2) # Límite inferior real.
-        ubound = np.ones(windFLO.nTurbines*2)*2000 # Límite superior real.
+        lbound = np.zeros(windFLO.nTurbines*2) # Limite inferior real.
+        ubound = np.ones(windFLO.nTurbines*2)*2000 # Limite superior real.
         return lbound + list_coord*(ubound - lbound)
 
     # Inicializar contador de tiempo.
@@ -117,19 +117,19 @@ def learn(seed, accuracy,maxfeval=500,popsize=50):
 
     n_gen=0
 
-    # Aplicar algoritmo CMA-ES para la búsqueda de la solución.
+    # Aplicar algoritmo CMA-ES para la busqueda de la solucion.
     np.random.seed(seed)
     es = cma.CMAEvolutionStrategy(np.random.random(default_windFLO.nTurbines*2), 0.33, inopts={'bounds': [0, 1],'seed':seed,'maxiter':1e9, 'maxfevals':maxfeval, 'popsize':popsize})
     
     while not es.stop():
 
-        # Construir generación.
+        # Construir generacion.
         solutions = es.ask()
 
-        # Transformar los valores escalados de los parámetros a los valores reales.
+        # Transformar los valores escalados de los parametros a los valores reales.
         real_solutions=[transform_to_problem_dim(list_coord) for list_coord in solutions]
 
-        # Lista de scores asociados a la generación.
+        # Lista de scores asociados a la generacion.
         list_scores=[]
         for sol in real_solutions:
 
@@ -140,10 +140,10 @@ def learn(seed, accuracy,maxfeval=500,popsize=50):
             list_scores.append(fitness)
             n_evaluations+=1
 
-        # Para construir la siguiente generación.
+        # Para construir la siguiente generacion.
         es.tell(solutions, list_scores)
 
-        # Acumular datos de interés.
+        # Acumular datos de interes.
         score = EvaluateFarm(transform_to_problem_dim(es.result.xbest),default_windFLO)
         df_acc.append([accuracy,seed,n_gen,-score,eval_time])
 
@@ -154,7 +154,7 @@ def learn(seed, accuracy,maxfeval=500,popsize=50):
     if accuracy==1:
         return eval_time
 
-# FUNCIÓN 4 (Criterio de parada para accuracy=1)
+# FUNCION 4 (Criterio de parada para accuracy=1)
 def new_stop_max_acc(self, check=True, ignore_list=(), check_in_same_iteration=False,
              get_value=None):
     stop={}
@@ -162,7 +162,7 @@ def new_stop_max_acc(self, check=True, ignore_list=(), check_in_same_iteration=F
         stop={'TIME RUN OUT':max_n_eval}
     return stop
 
-# FUNCIÓN 5 (Criterio de parada para accuracys menores)
+# FUNCION 5 (Criterio de parada para accuracys menores)
 def new_stop_lower_acc(self, check=True, ignore_list=(), check_in_same_iteration=False,
              get_value=None):
 	stop={}
@@ -180,14 +180,14 @@ list_seeds=range(1,51,1)
 # Lista de accuracys a considerar.
 list_acc=[1.0,0.5,0.2,0.1,0.05,0.02,0.01,0.005,0.002,0.001]
 
-# Construir base de datos con datos relevantes por cada ejecución con un valor de accuracy.
+# Construir base de datos con datos relevantes por cada ejecucion con un valor de accuracy.
 for accuracy in list_acc:
 
     global df_acc
     df_acc=[]
 
-    # El caso de accuracy 1 hay que ejecutarlo el primero para definir el límite de tiempo de 
-    # ejecución para el resto.
+    # El caso de accuracy 1 hay que ejecutarlo el primero para definir el limite de tiempo de 
+    # ejecucion para el resto.
     if accuracy==1:
         cma.CMAEvolutionStrategy.stop=new_stop_max_acc
         list_total_time=[]
