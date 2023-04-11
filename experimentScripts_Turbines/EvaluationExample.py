@@ -1,7 +1,7 @@
-# Mediante este código se calcula la evaluación de un diseño de turbina aleatorio.
+# Mediante este codigo se calcula la evaluacion de un diseno de turbina aleatorio.
 
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
 import numpy as np
 import matplotlib as mpl
@@ -33,9 +33,9 @@ import time
 #==================================================================================================
 
 #--------------------------------------------------------------------------------------------------
-# Definir un diseño de turbina de forma aleatoria
+# Definir un diseno de turbina de forma aleatoria
 #--------------------------------------------------------------------------------------------------
-# Definición de parámetros a optimizar.
+# Definicion de parametros a optimizar.
 blade_number = [3, 5, 7] # Blade-number gene.
 sigma_hub = [0.4, 0.7]# Hub solidity gene.
 sigma_tip = [0.4, 0.7]# Tip solidity gene.
@@ -44,7 +44,7 @@ tip_clearance = [0, 3]# Tip-clearance gene.
 airfoil_dist = np.arange(0, 27)# Airfoil dist. gene.   
 
 
-# Obtener un diseño aleatorio de turbina.
+# Obtener un diseno aleatorio de turbina.
 turb_params = [np.random.choice(blade_number),
                np.random.uniform(sigma_hub[0], sigma_hub[1]),
                np.random.uniform(sigma_tip[0], sigma_tip[1]),
@@ -53,10 +53,10 @@ turb_params = [np.random.choice(blade_number),
                np.random.choice(airfoil_dist)]
 
 #--------------------------------------------------------------------------------------------------
-# Definición de parámetros constantes
+# Definicion de parametros constantes
 #--------------------------------------------------------------------------------------------------
-# Definición de parámetros constantes.
-N = 50  # Number of blade elements.                                          <<<<<<<<<<<<<<<<<<<<<< PARÁMETRO QUE PODEMOS MODIFICAR
+# Definicion de parametros constantes.
+N = 50  # Number of blade elements.                                          <<<<<<<<<<<<<<<<<<<<<< PARAMETRO QUE PODEMOS MODIFICAR
 airfoils = ["NACA0015", "NACA0018", "NACA0021"]# Set of possible airfoils.
 omega = 2100# Rotational speed.
 rcas = 0.4# Casing radius.
@@ -67,7 +67,7 @@ weights = [0.1085, 0.1160, 0.1188, 0.0910, 0.0824, 0.1486, 0.0882, 0.0867, 0.094
 Nmin = 1000# Min threshold rotational speeds.
 Nmax = 3200# Max threshold rotational speeds.
 
-# Diccionario con parámetros constantes (necesario para calcular una evaluación).
+# Diccionario con parametros constantes (necesario para calcular una evaluacion).
 constargs = {"N": N,
              "omega": omega,
              "rcas": rcas,
@@ -81,17 +81,17 @@ constargs = {"N": N,
              "Mode": "mono"}
 
 #--------------------------------------------------------------------------------------------------
-# Evaluar el diseño de turbina seleccionado.
+# Evaluar el diseno de turbina seleccionado.
 #--------------------------------------------------------------------------------------------------
-# Crear turbina instantánea.
+# Crear turbina instantanea.
 os.chdir('OptimizationAlgorithms_KONFLOT')# Cambiar directorio por defecto para poder acceder a COORDS.
 turb = turbine_classes.instantiate_turbine(constargs, turb_params)
 os.chdir('../')# Volver a directorio por defecto.
 
-# Calcular score y tiempo de ejecución.
+# Calcular score y tiempo de ejecucion.
 t=time.time()
 scores = turbine_classes.fitness_func(constargs=constargs, turb=turb, out='brfitness')
-print('TIEMPO DE EJECUCIÓN DE UNA EVALUACIÓN:'+str(time.time()-t))
+print('TIEMPO DE EJECUCION DE UNA EVALUACION:'+str(time.time()-t))
 for e, score in enumerate(scores[0]):
     print("Fitness at sea-state #" + str(e) + ": " + str(score) + "\n")
 print("Total fitness: " + str(scores[1]))

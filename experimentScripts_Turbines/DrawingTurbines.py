@@ -1,7 +1,7 @@
-# Mediante este script se guardan las imágenes del diseño de diferentes turbinas.
+# Mediante este script se guardan las imagenes del diseno de diferentes turbinas.
 
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
 import numpy as np
 import matplotlib as mpl
@@ -32,7 +32,7 @@ import MathTools as mt
 #==================================================================================================
 def build_constargs_dict(N):
 
-	# Definir parámetros constantes.
+	# Definir parametros constantes.
 	omega = 2100# Rotational speed.
 	rcas = 0.4# Casing radius.
 	airfoils = ["NACA0015", "NACA0018", "NACA0021"]# Set of possible airfoils.
@@ -43,7 +43,7 @@ def build_constargs_dict(N):
 	Nmin = 1000#Max threshold rotational speeds
 	Nmax = 3200#Min threshold rotational speeds
 
-	# Construir el diccionario que necesita la función fitness.
+	# Construir el diccionario que necesita la funcion fitness.
 	constargs = {"N": N,
 		     "omega": omega,
 		     "rcas": rcas,
@@ -59,10 +59,10 @@ def build_constargs_dict(N):
 	return constargs
 
 def build_turbine(turb_params,N=50):
-	# Construir diccionario de parámetros constantes.
+	# Construir diccionario de parametros constantes.
 	constargs=build_constargs_dict(N)
 
-	# Crear turbina instantánea.
+	# Crear turbina instantanea.
 	os.chdir('OptimizationAlgorithms_KONFLOT')
 	turb = turbine_classes.instantiate_turbine(constargs, turb_params)	
 	os.chdir('../')
@@ -73,7 +73,7 @@ def build_turbine(turb_params,N=50):
 # FUNCIONES
 #==================================================================================================
 
-# Parámetros de la turbina.
+# Parametros de la turbina.
 blade_number = [3, 5, 7]# Blade-number gene.
 sigma_hub = [0.4, 0.7]# Hub solidity gene.
 sigma_tip = [0.4, 0.7]# Tip solidity gene.

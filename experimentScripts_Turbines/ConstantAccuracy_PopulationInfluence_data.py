@@ -1,5 +1,5 @@
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
 import numpy as np
 import matplotlib as mpl
@@ -61,7 +61,7 @@ class stopwatch:
 #==================================================================================================
 def define_bounds():
 
-	# Definir rangos de los parámetros que definen el diseño de la turbina.
+	# Definir rangos de los parametros que definen el diseno de la turbina.
 	sigma_hub = [0.4, 0.7]# Hub solidity gene.
 	sigma_tip = [0.4, 0.7]# Tip solidity gene.
 	nu = [0.4, 0.75] # Hub-to-tip-ratio gene.
@@ -80,7 +80,7 @@ def define_bounds():
 	return bounds
 
 def build_constargs_dict(N):
-	# Definir parámetros constantes.
+	# Definir parametros constantes.
 	omega = 2100# Rotational speed.
 	rcas = 0.4# Casing radius.
 	airfoils = ["NACA0015", "NACA0018", "NACA0021"]# Set of possible airfoils.
@@ -91,7 +91,7 @@ def build_constargs_dict(N):
 	Nmin = 1000#Max threshold rotational speeds
 	Nmax = 3200#Min threshold rotational speeds
 
-	# Construir el diccionario que necesita la función fitness
+	# Construir el diccionario que necesita la funcion fitness
 	constargs = {"N": N,
 		     "omega": omega,
 		     "rcas": rcas,
@@ -108,7 +108,7 @@ def build_constargs_dict(N):
 
 def fitness_function(turb_params,N=50):
 
-    # Construir diccionario de parámetros constantes.
+    # Construir diccionario de parametros constantes.
     constargs=build_constargs_dict(N)
 
     # Crear turbina instantantanea.
@@ -116,7 +116,7 @@ def fitness_function(turb_params,N=50):
     turb = turbine_classes.instantiate_turbine(constargs, turb_params)	
     os.chdir('../')
 
-    # Calcular evaluación.
+    # Calcular evaluacion.
     if N==default_N:
         sw_stop.resume()
     global sw_eval_time
@@ -148,37 +148,37 @@ def evaluate(blade_number,bounds,seed,popsize):
     sw_stop = stopwatch()
     sw_stop.pause()
 
-    # Evaluar los diseños de las generaciones con diferentes accuracys para N hasta agotar el tiempo
-    # máximo definido para el accuracy máximo.
+    # Evaluar los disenos de las generaciones con diferentes accuracys para N hasta agotar el tiempo
+    # maximo definido para el accuracy maximo.
     list_turb_params=[]
     n_gen=0
 
-    # Inicializar contador de número de evaluaciones.
+    # Inicializar contador de numero de evaluaciones.
     global stop_n_eval
     stop_n_eval=0
 
     while not es.stop():
 
-        # Nueva generación.
+        # Nueva generacion.
         n_gen+=1
         solutions = es.ask()
 
-        # Inicializar número de evaluaciones.
+        # Inicializar numero de evaluaciones.
         n_eval=0
 
         # Evaluar nuevas soluciones e ir guardando tiempos.
         new_scores=[]
         for x in solutions:
-            # Contar una nueva evaluación.
+            # Contar una nueva evaluacion.
             n_eval+=1
 
-            # Evaluar diseño con diferentes accuracys para N.
+            # Evaluar diseno con diferentes accuracys para N.
             for accuracy in list_acc:
 
-                # Actualizar el parámetro N.
+                # Actualizar el parametro N.
                 N=int(default_N*accuracy)
 
-                # Transformación de parámetros.
+                # Transformacion de parametros.
                 turb_params=transform_turb_params(x, blade_number,bounds)
 
                 # Calcular score.
@@ -188,20 +188,20 @@ def evaluate(blade_number,bounds,seed,popsize):
                     new_scores.append(new_score)
                     list_turb_params.append(turb_params)
 
-                # Añadir nuevos datos a la base de datos.
+                # Anadir nuevos datos a la base de datos.
                 df.append([N,seed,n_gen,n_eval,-new_score,sw_eval_time.get_time()])
 
-        # Actualizar número de evaluaciones.
+        # Actualizar numero de evaluaciones.
         stop_n_eval+=popsize
 
-        # Pasar los valores de la función objetivo para prepararse para la próxima iteración.
+        # Pasar los valores de la funcion objetivo para prepararse para la proxima iteracion.
         es.tell(solutions, new_scores)
         es.logger.add()  
 
-        # Imprimir las variables del estado actual en una sola línea.
+        # Imprimir las variables del estado actual en una sola linea.
         es.disp()
 
-    # Guardar diseños de turbinas evaluados.
+    # Guardar disenos de turbinas evaluados.
     df_turb_params=pd.DataFrame(list_turb_params)
     df_turb_params.to_csv('results/data/Turbines/PopulationInfluence/df_turb_params_blade_number'+str(blade_number)+'_seed'+str(seed)+'.csv')
 
@@ -225,19 +225,19 @@ def new_stop_n_eval(self, check=True, ignore_list=(), check_in_same_iteration=Fa
 # PROGRAMA PRINCIPAL
 #==================================================================================================
 
-# Para usar la nueva función de parada (según el tiempo de ejecución).
+# Para usar la nueva funcion de parada (segun el tiempo de ejecucion).
 # cma.CMAEvolutionStrategy.stop=new_stop_time
 cma.CMAEvolutionStrategy.stop=new_stop_n_eval
 
-# Definir array de rangos de los parámetros a optimizar (blase_number de forma individual).
+# Definir array de rangos de los parametros a optimizar (blase_number de forma individual).
 bounds=define_bounds()
 list_blade_number = [3, 5, 7]# Blade-number gene.
 
-# Mallados y parámetros.
+# Mallados y parametros.
 list_seeds=[1,2,3,4,5]
 list_acc=[1.0,0.8,0.6,0.4,0.2]
 # max_time=60*3
-max_time=100*5 # Número de evaluaciones máximo.
+max_time=100*5 # Numero de evaluaciones maximo.
 default_N=50
 popsize=10
 
@@ -252,7 +252,7 @@ df=[]
 
 # Guardar datos asociados a cada semilla en una base de datos.	
 for seed in list_seeds:
-    # Evaluación.
+    # Evaluacion.
     evaluate(blade_number,bounds,seed,popsize)
 
     # Guardar datos acumulados.
@@ -262,7 +262,7 @@ for seed in list_seeds:
 # Guardar lista de semillas.
 np.save('results/data/Turbines/PopulationInfluence/list_seeds',list_seeds)
 
-# Guardar tamaño de generación.
+# Guardar tamano de generacion.
 np.save('results/data/Turbines/PopulationInfluence/popsize',popsize)
 		
 		

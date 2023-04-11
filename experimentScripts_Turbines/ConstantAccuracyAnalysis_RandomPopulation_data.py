@@ -1,6 +1,6 @@
 
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
 import numpy as np
 import matplotlib as mpl
@@ -63,14 +63,14 @@ class stopwatch:
 #==================================================================================================
 
 def choose_random_configuration(seed,change_seed,blade_number):
-	# Definir rangos de los parámetros que definen el diseño de la turbina.
+	# Definir rangos de los parametros que definen el diseno de la turbina.
 	sigma_hub = [0.4, 0.7]# Hub solidity gene.
 	sigma_tip = [0.4, 0.7]# Tip solidity gene.
 	nu = [0.4, 0.75] # Hub-to-tip-ratio gene.
 	tip_clearance=[0,3]# Tip-clearance gene.	  
 	airfoil_dist = np.arange(0, 27)# Airfoil dist. gene.  
 
-	# Obtener configuración aleatoria.
+	# Obtener configuracion aleatoria.
 	if change_seed:
 		np.random.seed(seed)
 
@@ -85,7 +85,7 @@ def choose_random_configuration(seed,change_seed,blade_number):
 	return turb_params
 
 def build_constargs_dict(N):
-	# Definir parámetros constantes.
+	# Definir parametros constantes.
 	omega = 2100# Rotational speed.
 	rcas = 0.4# Casing radius.
 	airfoils = ["NACA0015", "NACA0018", "NACA0021"]# Set of possible airfoils.
@@ -96,7 +96,7 @@ def build_constargs_dict(N):
 	Nmin = 1000#Max threshold rotational speeds
 	Nmax = 3200#Min threshold rotational speeds
 
-	# Construir el diccionario que necesita la función fitness
+	# Construir el diccionario que necesita la funcion fitness
 	constargs = {"N": N,
 		     "omega": omega,
 		     "rcas": rcas,
@@ -113,7 +113,7 @@ def build_constargs_dict(N):
 
 def evaluation(turb_params,N,count_time):
 
-	# Construir diccionario de parámetros constantes.
+	# Construir diccionario de parametros constantes.
 	constargs=build_constargs_dict(N)
 
 	# Crear turbina instantantanea.
@@ -121,7 +121,7 @@ def evaluation(turb_params,N,count_time):
 	turb = turbine_classes.instantiate_turbine(constargs, turb_params)	
 	os.chdir('../')
 
-	# Calcular evaluación.
+	# Calcular evaluacion.
 	if count_time:
 		sw.resume()
 	scores = turbine_classes.fitness_func(constargs=constargs, turb=turb, out='brfitness')
@@ -139,16 +139,16 @@ def learn(seed,default_N,N,blade_number,max_time):
 
 	while sw.get_time()<max_time:
 		
-		# Escoger un nuevo diseño de turbina.
+		# Escoger un nuevo diseno de turbina.
 		turb_params=choose_random_configuration(seed,change_seed,blade_number)
 		change_seed=False
 		list_turb_params.append(turb_params)
 
-		# Evaluar el nuevo diseño de turbina.
+		# Evaluar el nuevo diseno de turbina.
 		turb_score=evaluation(turb_params,N,True)
 		list_scores.append(turb_score)
 
-		# Evaluar mejor diseño de turbina seleccionado hasta el momento.
+		# Evaluar mejor diseno de turbina seleccionado hasta el momento.
 		# best_turb_params=list_turb_params[list_scores.index(max(list_scores))]
 		# eval_score=evaluation(best_turb_params,default_N,False)
 
@@ -162,13 +162,13 @@ def learn(seed,default_N,N,blade_number,max_time):
 #==================================================================================================
 
 #--------------------------------------------------------------------------------------------------
-# Ejecución normal.
+# Ejecucion normal.
 #--------------------------------------------------------------------------------------------------
 
-# Valor por defecto del parámetro.
+# Valor por defecto del parametro.
 default_N=50
 
-# Límite de tiempo de entrenamiento.
+# Limite de tiempo de entrenamiento.
 max_time=60*9
 
 # Blade-number.
@@ -194,7 +194,7 @@ for accuracy in list_acc:
 		# Entrenamiento.
 		list_turb_params=learn(seed,default_N,N,blade_number,max_time)
 
-		# Cuando estemos con el accuracy mínimo (con el que más turbinas se podrán evaluar), se guardarán los diseños de turbinas evaluados.
+		# Cuando estemos con el accuracy minimo (con el que mas turbinas se podran evaluar), se guardaran los disenos de turbinas evaluados.
 		if accuracy==min(list_acc):
 			df_turb_params=pd.DataFrame(list_turb_params)
 			df_turb_params.to_csv('results/data/Turbines/ConstantAccuracyAnalysis_RandomPopulation/df_turb_params_blade_number'+str(blade_number)+'_seed'+str(seed)+'.csv')
@@ -206,6 +206,6 @@ for accuracy in list_acc:
 # Guardar lista de accuracys.
 np.save('results/data/Turbines/ConstantAccuracyAnalysis_RandomPopulation/list_acc',list_acc)
 
-# Guardar límite de tiempo de entrenamiento.
+# Guardar limite de tiempo de entrenamiento.
 np.save('results/data/Turbines/ConstantAccuracyAnalysis_RandomPopulation/max_time',max_time)
 

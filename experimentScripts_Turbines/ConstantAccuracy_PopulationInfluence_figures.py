@@ -1,5 +1,5 @@
 #==================================================================================================
-# LIBRERÍAS
+# LIBRERIAS
 #==================================================================================================
 import numpy as np
 import matplotlib as mpl
@@ -36,7 +36,7 @@ def common_n_gen_per_seed(blade_number,list_seeds):
 
     return n_gen_per_seed
 #--------------------------------------------------------------------------------------------------
-# Funciones para gráficas de rankings.
+# Funciones para graficas de rankings.
 #--------------------------------------------------------------------------------------------------
 def from_argsort_to_ranking(list):
     new_list=[0]*len(list)
@@ -48,7 +48,7 @@ def from_argsort_to_ranking(list):
 
 def ranking_matrix(df,gen):
 
-    # Reducir df a filas de interés.
+    # Reducir df a filas de interes.
     df=df[df['n_gen']==gen]
 
     # Guardar rankings de cada N en una matriz por filas.
@@ -62,7 +62,7 @@ def ranking_matrix(df,gen):
         ranking=from_argsort_to_ranking(np.argsort(-np.array(list_scores)))# Orden descendente.
         matrix.append(ranking)
 
-    # Reordenar filas de la matriz para que la fila de la máxima precisión represente un ranking 
+    # Reordenar filas de la matriz para que la fila de la maxima precision represente un ranking 
     # ordenado de forma perfecta (de mejor a peor).
     matrix_sort=[]
     ind_sort=np.argsort(matrix[0])
@@ -81,14 +81,14 @@ def draw_rankings_per_generation(size,blade_number,seed,figure):
     # Cargar base de datos.
     df=pd.read_csv('results/data/Turbines/PopulationInfluence/df_blade_number'+str(blade_number)+'_seed'+str(seed)+'.csv',index_col=0)
 
-    # Número de evaluaciones total.
+    # Numero de evaluaciones total.
     total_n_eval=df['n_eval'].max()
 
     # Valores de N considerados.
     list_N=list(set(df['N']))
     list_N.sort(reverse=True)
 
-    # Por cada generación dibujar la matriz de rankings.
+    # Por cada generacion dibujar la matriz de rankings.
     for gen in range(1,size[1]+1):
         ax=plt.subplot(size[0],size[1],gen+(seed-1)*size[1])
 
@@ -114,7 +114,7 @@ def draw_rankings_per_generation(size,blade_number,seed,figure):
     return color
 
 #--------------------------------------------------------------------------------------------------
-# Funciones para gráfica de tiempos de evaluación y comparación de rankings.
+# Funciones para grafica de tiempos de evaluacion y comparacion de rankings.
 #--------------------------------------------------------------------------------------------------
 def pearson_corr(x,y):
     return sc.stats.pearsonr(x,y)[0]
@@ -126,7 +126,7 @@ def join_df(blade_number,list_seeds):
     # Primera base de datos.
     df=pd.read_csv('results/data/Turbines/PopulationInfluence/df_blade_number'+str(blade_number)+'_seed'+str(list_seeds[0])+'.csv',index_col=0)
     
-    # Las demás.
+    # Las demas.
     for seed in list_seeds[1:]:
         new_df=pd.read_csv('results/data/Turbines/PopulationInfluence/df_blade_number'+str(blade_number)+'_seed'+str(seed)+'.csv',index_col=0)
         df=pd.concat([df,new_df],ignore_index=True)    
@@ -134,7 +134,7 @@ def join_df(blade_number,list_seeds):
 
 def score_matrix(df_seed,gen):
 
-     # Reducir df a filas de interés.
+     # Reducir df a filas de interes.
     df_seed_gen=df_seed[df_seed['n_gen']==gen]
 
     # Guardar scores de cada N en una matriz por filas.
@@ -158,10 +158,10 @@ def draw_ranking_comparison_per_gen(position,legend,blade_number,list_seeds,type
     list_N=list(set(df['N']))
     list_N.sort(reverse=True)
 
-    # Número de generaciones a considerar.
+    # Numero de generaciones a considerar.
     n_gen_considered=min(df.groupby('seed')['n_gen'].max())
 
-    # Inicializar gráfica.
+    # Inicializar grafica.
     ax=plt.subplot(position)
 
     # Para cada valor de N dibujar una curva.
@@ -171,7 +171,7 @@ def draw_ranking_comparison_per_gen(position,legend,blade_number,list_seeds,type
         all_q05=[]
         all_q95=[]
 
-        # Por generación ir actualizando las listas anteriores.
+        # Por generacion ir actualizando las listas anteriores.
         for gen in range(1,n_gen_considered+1):
             list_metric=[]
             for seed in list_seeds:
@@ -194,7 +194,7 @@ def draw_ranking_comparison_per_gen(position,legend,blade_number,list_seeds,type
         ax.fill_between(range(1,n_gen_considered+1),all_q05,all_q95,alpha=.5,linewidth=0)
         plt.plot(range(1,n_gen_considered+1),all_mean,linewidth=2,label=str(list_N[ind_N]))
 
-    # Detalles de la gráfica.
+    # Detalles de la grafica.
     ax.set_ylabel(str(type)+' correlation')
     ax.set_xlabel('Generation')
     ax.set_title('Comparing similarity between the perfect \n and each '+str(what)+' ranking (blade-number '+str(blade_number)+')')
@@ -209,10 +209,10 @@ def draw_total_eval_time_per_gen(position,legend,blade_number,list_seeds):
     list_N=list(set(df['N']))
     list_N.sort(reverse=True)
 
-    # Número de generaciones a considerar.
+    # Numero de generaciones a considerar.
     n_gen_considered=min(df.groupby('seed')['n_gen'].max())
 
-    # Inicializar gráfica.
+    # Inicializar grafica.
     ax=plt.subplot(position)
 
     # Para cada valor de N dibujar una curva.
@@ -222,7 +222,7 @@ def draw_total_eval_time_per_gen(position,legend,blade_number,list_seeds):
         all_q05=[]
         all_q95=[]
 
-        # Por generación ir actualizando las listas anteriores.
+        # Por generacion ir actualizando las listas anteriores.
         for gen in range(1,n_gen_considered+1):
             list_times=list(df[(df['N']==N) & (df['n_gen']==gen)].groupby('seed')['time'].sum())
 
@@ -235,7 +235,7 @@ def draw_total_eval_time_per_gen(position,legend,blade_number,list_seeds):
         ax.fill_between(range(1,n_gen_considered+1),all_q05,all_q95,alpha=.5,linewidth=0)
         plt.plot(range(1,n_gen_considered+1),all_mean,linewidth=2,label=str(N))
 
-    # Detalles de la gráfica.
+    # Detalles de la grafica.
     ax.set_ylabel('Evaluation time (seconds)')
     ax.set_xlabel('Generation')
     ax.set_title('Evaluation time depending on N \n (blade-number '+str(blade_number)+')')
@@ -250,10 +250,10 @@ def draw_best_turbine_score_per_gen(position,legend,blade_number,list_seeds):
     list_N=list(set(df['N']))
     list_N.sort(reverse=True)
 
-    # Número de generaciones a considerar.
+    # Numero de generaciones a considerar.
     n_gen_considered=min(df.groupby('seed')['n_gen'].max())
 
-    # Inicializar gráfica.
+    # Inicializar grafica.
     ax=plt.subplot(position)
 
     # Para cada valor de N dibujar una curva.
@@ -263,7 +263,7 @@ def draw_best_turbine_score_per_gen(position,legend,blade_number,list_seeds):
         all_q05=[]
         all_q95=[]
 
-        # Por generación ir actualizando las listas anteriores.
+        # Por generacion ir actualizando las listas anteriores.
         for gen in range(1,n_gen_considered+1):
             df_N_gen=df[(df['N']==N) & (df['n_gen']==gen)]
             ind_max_score_per_seed=df_N_gen.groupby('seed')['score'].idxmax()
@@ -285,7 +285,7 @@ def draw_best_turbine_score_per_gen(position,legend,blade_number,list_seeds):
         ax.fill_between(range(1,n_gen_considered+1),all_q05,all_q95,alpha=.5,linewidth=0)
         plt.plot(range(1,n_gen_considered+1),all_mean,linewidth=2,label=str(N))
 
-    # Detalles de la gráfica.
+    # Detalles de la grafica.
     ax.set_ylabel('Real score')
     ax.set_xlabel('Generation')
     ax.set_title('Real score depending on N \n (blade-number '+str(blade_number)+')')
@@ -300,10 +300,10 @@ def draw_n_null_score_turb_per_gen(position,legend,blade_number,list_seeds):
     list_N=list(set(df['N']))
     list_N.sort(reverse=True)
 
-    # Número de generaciones a considerar.
+    # Numero de generaciones a considerar.
     n_gen_considered=min(df.groupby('seed')['n_gen'].max())
 
-    # Inicializar gráfica.
+    # Inicializar grafica.
     ax=plt.subplot(position)
 
     # Para cada valor de N dibujar una curva.
@@ -313,7 +313,7 @@ def draw_n_null_score_turb_per_gen(position,legend,blade_number,list_seeds):
         all_q05=[]
         all_q95=[]
 
-        # Por generación ir actualizando las listas anteriores.
+        # Por generacion ir actualizando las listas anteriores.
         for gen in range(1,n_gen_considered+1):
             df_N_gen=df[(df['N']==N) & (df['n_gen']==gen)]
             n_seed=len(set(df_N_gen['seed']))
@@ -329,7 +329,7 @@ def draw_n_null_score_turb_per_gen(position,legend,blade_number,list_seeds):
         ax.fill_between(range(1,n_gen_considered+1),all_q05,all_q95,alpha=.5,linewidth=0)
         plt.plot(range(1,n_gen_considered+1),all_mean,linewidth=2,label=str(N))
 
-    # Detalles de la gráfica.
+    # Detalles de la grafica.
     ax.set_ylabel('Number of null scores')
     ax.set_xlabel('Generation')
     ax.set_title('Number of null score turbines per generation \n depending on N (blade-number '+str(blade_number)+')')
@@ -337,13 +337,13 @@ def draw_n_null_score_turb_per_gen(position,legend,blade_number,list_seeds):
         ax.legend(title="N",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
 
 #--------------------------------------------------------------------------------------------------
-# Funciones para gráficas de ilustración de diseños de turbinas por generación para cada semilla.
+# Funciones para graficas de ilustracion de disenos de turbinas por generacion para cada semilla.
 #--------------------------------------------------------------------------------------------------
 def define_bounds():
     # Blade-number values.
     bn_values=[3,5,7]
 
-    # Definir rangos de los parámetros que definen el diseño de la turbina.
+    # Definir rangos de los parametros que definen el diseno de la turbina.
     sigma_hub = [0.4, 0.7]# Hub solidity gene.
     sigma_tip = [0.4, 0.7]# Tip solidity gene.
     nu = [0.4, 0.75] # Hub-to-tip-ratio gene.
@@ -381,11 +381,11 @@ def draw_turb_params_per_generation(size,blade_number,seed,popsize,figure):
     # Cargar base de datos.
     df=pd.read_csv('results/data/Turbines/PopulationInfluence/df_turb_params_blade_number'+str(blade_number)+'_seed'+str(seed)+'.csv',index_col=0)
 
-    # Por cada generación dibujar la matriz de diseños de turbinas.
+    # Por cada generacion dibujar la matriz de disenos de turbinas.
     for gen in range(1,size[1]+1):
         ax=plt.subplot(size[0],size[1],gen+(seed-1)*size[1])
 
-        # Crear matriz de parámetros de turbinas.
+        # Crear matriz de parametros de turbinas.
         matrix=np.matrix(turb_params_matrix(df,(figure-1)*size[1]+gen,popsize))
 
         # Dibujar la matriz
@@ -420,7 +420,7 @@ def draw_turb_params_per_generation(size,blade_number,seed,popsize,figure):
 #==================================================================================================
 
 #--------------------------------------------------------------------------------------------------
-# Gráfica 1: rankings para blade-number 3.
+# Grafica 1: rankings para blade-number 3.
 #--------------------------------------------------------------------------------------------------
 # Cargar datos.
 list_seeds=np.load('results/data/Turbines/PopulationInfluence/list_seeds.npy')
@@ -428,11 +428,11 @@ list_seeds=np.load('results/data/Turbines/PopulationInfluence/list_seeds.npy')
 # Blade-number.
 blade_number=3
 
-# Número de generaciones en común para todas las semillas.
+# Numero de generaciones en comun para todas las semillas.
 n_gen_per_seed=common_n_gen_per_seed(blade_number,list_seeds)
 n_gen_per_figure=int(np.load("results/data/Turbines/PopulationInfluence/popsize.npy"))
 
-# Inicializar estructura de la gráfica.
+# Inicializar estructura de la grafica.
 for figure in range(1,int(n_gen_per_seed/n_gen_per_figure+1)):
     plt.figure(figsize=[15,9])
     plt.subplots_adjust(left=0.1,bottom=0.05,right=0.95,top=0.89,wspace=0.14,hspace=0.3)
@@ -452,9 +452,9 @@ for figure in range(1,int(n_gen_per_seed/n_gen_per_figure+1)):
     plt.close()
 
 #--------------------------------------------------------------------------------------------------
-# Gráfica 2: comparar diseños de turbinas considerados en cada generación para blade-number 3.
+# Grafica 2: comparar disenos de turbinas considerados en cada generacion para blade-number 3.
 #--------------------------------------------------------------------------------------------------
-# Crear gráfica.
+# Crear grafica.
 for figure in range(1,int(n_gen_per_seed/n_gen_per_figure+1)):
     plt.figure(figsize=[15,10])
     plt.subplots_adjust(left=0.1,bottom=0.05,right=0.95,top=0.89,wspace=0.14,hspace=0.4)
@@ -473,27 +473,27 @@ for figure in range(1,int(n_gen_per_seed/n_gen_per_figure+1)):
     plt.close()
 
 #--------------------------------------------------------------------------------------------------
-# Gráfica 3:
+# Grafica 3:
 #--------------------------------------------------------------------------------------------------
-# Inicializar gráfica.
+# Inicializar grafica.
 plt.figure(figsize=[12,10])
 plt.subplots_adjust(left=0.12,bottom=0.05,right=0.84,top=0.87,wspace=0.22,hspace=0.3)
 
-# SUBGRÁFICA 1: comparación de rankings (usando los posiciones) por generación para blade-number 3.
+# SUBGRAFICA 1: comparacion de rankings (usando los posiciones) por generacion para blade-number 3.
 draw_ranking_comparison_per_gen(222,True,blade_number,list_seeds,'spearman','positions')
 
-# SUBGRÁFICA 2: tiempo ahorrado por generación al considerar valores menos preciso de N para
+# SUBGRAFICA 2: tiempo ahorrado por generacion al considerar valores menos preciso de N para
 # blade-number 3.
 draw_total_eval_time_per_gen(223,False,blade_number,list_seeds)
 
-# SUBGRÁFICA 3: comparación de scores reales obtenidos por generación para lasmejores turbinas
+# SUBGRAFICA 3: comparacion de scores reales obtenidos por generacion para lasmejores turbinas
 # seleccionadas con diferentes valores de N.
 draw_best_turbine_score_per_gen(221,False,blade_number,list_seeds)
 
-# SUBGRÁFICA 4: número de diseños de turbinas por generación con score 0 asociado.
+# SUBGRAFICA 4: numero de disenos de turbinas por generacion con score 0 asociado.
 draw_n_null_score_turb_per_gen(224,False,blade_number,list_seeds)
 
-# Guardar gráfica.
+# Guardar grafica.
 plt.savefig('results/figures/Turbines/PopulationInfluence/eval_time_and_ranking_comparison.png')
 plt.show()
 plt.close()
