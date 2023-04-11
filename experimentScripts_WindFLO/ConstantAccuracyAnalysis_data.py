@@ -178,7 +178,7 @@ def new_stop_lower_acc(self, check=True, ignore_list=(), check_in_same_iteration
 list_seeds=range(1,51,1)
 
 # Lista de accuracys a considerar.
-list_acc=[1.0,0.5,0.2,0.1,0.05,0.02,0.01,0.005,0.002,0.001]
+list_acc=[round(i,3) for i in np.arange(1.0,0.001-(1.0-0.001)/9,-(1.0-0.001)/9)]
 
 # Construir base de datos con datos relevantes por cada ejecucion con un valor de accuracy.
 for accuracy in list_acc:
@@ -211,4 +211,4 @@ for accuracy in list_acc:
 np.save('results/data/WindFLO/ConstantAccuracyAnalysis/list_acc',list_acc)
 
 # Eliminar ficheros auxiliares.
-os.remove(os.path.sep.join(sys.path[0].split(os.path.sep)[:-1])+'/terrain.dat')
+# os.remove(os.path.sep.join(sys.path[0].split(os.path.sep)[:-1])+'/terrain.dat')
