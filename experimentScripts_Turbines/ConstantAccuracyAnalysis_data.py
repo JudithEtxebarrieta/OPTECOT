@@ -107,12 +107,15 @@ def learn(accuracy,seed,blade_number,popsize=20):
 
         # Obtener scores y tiempos por evaluacion.
         list_scores=[]
-        for turb_params in list_turb_params:
-            t=time.time()
-            score=fitness_function(turb_params, N=int(default_N*accuracy))
-            eval_time+=time.time()-t
 
-            list_scores.append(score)
+        from joblib import Parallel, delayed
+
+        def parallel_f(turb_params):
+            fitness_function(turb_params, N=int(default_N*accuracy))
+
+        t=time.time()
+        list_scores = Parallel(n_jobs=4)(delayed(parallel_f)(params) for params in list_turb_params)
+        eval_time+=time.time()-t
 
         # Para construir la siguiente generacion.
         es.tell(solutions, list_scores)
