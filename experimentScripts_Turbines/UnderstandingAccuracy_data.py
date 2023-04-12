@@ -205,8 +205,8 @@ df.to_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyI.cs
 # Para el analisis de motivacion (SEGUNDO ANALISIS).
 #--------------------------------------------------------------------------------------------------
 
-# El blade-number que se considerara sera aquel que menos soluciones nulas tiene asociadas de la muestra.
-for blade_number in [3,5,7]:
+# Analisis para seleccionar la definicion de blade-number que se considerara.
+for blade_number in [3,5,7,[3,5,7]]:
 	# Escoger aleatoriamente una conjunto de configuraciones.
 	list_seeds=range(0,100)#Fijar semillas para la reproducibilidad
 	set_turb_params = choose_random_configurations(list_seeds,blade_number=blade_number)
@@ -216,7 +216,7 @@ for blade_number in [3,5,7]:
 	list_acc=[]
 	for n in list_n:
 		list_acc.append(n/100)
-
+	list_acc=[1]
 	# Guardar en una base de datos los datos asociados a la evaluacion del conjunto de soluciones
 	# para cada valor de N considerado.
 	default_N=100
@@ -225,21 +225,14 @@ for blade_number in [3,5,7]:
 		set_evaluation(set_turb_params,int(default_N*acc),accuracy=acc)
 
 	df_motivation=pd.DataFrame(df,columns=['accuracy','n_solution','score','time'])
-	df_motivation.to_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyII_bladenumber'+str(blade_number)+'.csv')
-
-null_solution_bladenumber=[]
-for blade_number in [3,5,7]:
-	df=pd.read_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyII_bladenumber'+str(blade_number)+'.csv',index_col=0)
-	list_acc=list(set(df['accuracy']))
-	null=[]
-	for acc in list_acc:
-		null.append(sum((df['accuracy']==acc) & (df['score']==0)))
-	null_solution_bladenumber.append(np.mean(null))
-blade_number=[3,5,7][null_solution_bladenumber.index(max(null_solution_bladenumber))]
+	if type(blade_number)==list:
+		df_motivation.to_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyII_bladenumberAll.csv')
+	else:
+		df_motivation.to_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyII_bladenumber'+str(blade_number)+'.csv')
 
 # Reducir base de datos del blade-number fijado a los valores de accuracy de interes.
 list_acc=[1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1]
-df=pd.read_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyII_bladenumber'+str(blade_number)+'.csv',index_col=0)
+df=pd.read_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyII_bladenumberAll.csv',index_col=0)
 df=df.iloc[[i in list_acc for i in df['accuracy']]]
 df.to_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyII.csv')
 

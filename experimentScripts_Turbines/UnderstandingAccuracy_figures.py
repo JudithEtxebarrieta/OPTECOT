@@ -275,7 +275,7 @@ def from_data_to_figuresII(df,blade_number):
     ax.set_xlabel('Accuracy')
     ax.set_ylabel('Number of extra evaluations')
     plt.xticks(rotation = 45)
-    ax.set_title('Extra evaluations in the same amount \n of time required for maximum accuracy')
+    ax.set_title('Extra evaluations in the same amount of time required for maximum accuracy')
 
 
     #----------------------------------------------------------------------------------------------
@@ -434,12 +434,15 @@ df2=pd.read_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccura
 df2_bladenumber3=pd.read_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyII_bladenumber3.csv',index_col=0)
 df2_bladenumber5=pd.read_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyII_bladenumber5.csv',index_col=0)
 df2_bladenumber7=pd.read_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyII_bladenumber7.csv',index_col=0)
+df2_bladenumberAll=pd.read_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyII_bladenumberAll.csv',index_col=0)
 
 # Dibujar graficas.
 from_data_to_figuresI(df1)
+from_data_to_figuresII(df2_bladenumberAll,'All')
 from_data_to_figuresII(df2_bladenumber3,3)
 from_data_to_figuresII(df2_bladenumber5,5)
 from_data_to_figuresII(df2_bladenumber7,7)
+from_data_to_figures_paper(df2_bladenumberAll,blade_number='All')
 from_data_to_figures_paper(df2_bladenumber3,blade_number=3)
 from_data_to_figures_paper(df2_bladenumber5,blade_number=5)
 from_data_to_figures_paper(df2_bladenumber7,blade_number=7)
