@@ -1,8 +1,10 @@
-# Mediante este script se representan graficamente los resultados numericos calculados por 
-# "UnderstandingAccuracy_data.py".
+'''
+This script is used to graphically represent the numerical results obtained in 
+"UnderstandingAccuracy_data.py".
+'''
 
 #==================================================================================================
-# LIBRERIAS
+# LIBRARIES
 #==================================================================================================
 import numpy as np
 from scipy.stats import norm
@@ -21,25 +23,30 @@ import scipy as sc
 from itertools import combinations
 
 #==================================================================================================
-# FUNCIONES
+# FUNCTIONS
 #==================================================================================================
-# FUNCION 1
-# Parametros:
-#   >data: datos sobre los cuales se calculara el rango entre percentiles.
-#   >bootstrap_iterations: numero de submuestras que se consideraran de data para poder calcular el 
-#    rango entre percentiles de sus medias.
-# Devolver: la media de los datos originales junto a los percentiles de las medias obtenidas del 
-# submuestreo realizado sobre data.
 
 def bootstrap_mean_and_confidence_interval(data,bootstrap_iterations=1000):
+    '''
+    The 95% confidence interval of a given data sample is calculated.
+
+    Parameters
+    ==========
+    data (list): Data on which the range between percentiles will be calculated.
+    bootstrap_iterations (int): Number of subsamples of data to be considered to calculate the percentiles of their means. 
+
+    Return
+    ======
+    The mean of the original data together with the percentiles of the means obtained from the subsampling of the data. 
+    '''
     mean_list=[]
     for i in range(bootstrap_iterations):
         sample = np.random.choice(data, len(data), replace=True) 
         mean_list.append(np.mean(sample))
     return np.mean(data),np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
 
-# FUNCION 2 (Obtener ranking a partir de lista conseguida tras aplicar "np.argsort" sobre una lista original)
 def from_argsort_to_ranking(list):
+    '''Obtain ranking from a list get after applying "np.argsort" on an original list.'''
     new_list=[0]*len(list)
     i=0
     for j in list:
@@ -47,17 +54,16 @@ def from_argsort_to_ranking(list):
         i+=1
     return new_list
 
-# FUNCION 3 (Ordenar lista segun el orden para cada posicion definido en argsort)
 def custom_sort(list,argsort):
+    '''Sort list according to the order for each position defined in argsort.'''
     new_list=[]
     for index in argsort:
         new_list.append(list[index])
     return new_list
 
-
-# FUNCION 4 (Calculo de la distancia inversa normalizada de tau kendall entre dos rankings)
 def inverse_normalized_tau_kendall(x,y):
-    # Numero de pares con orden inverso.
+    '''Calculation of the normalized inverse tau kendall distance between two rankings.'''
+    # Number of pairs with reverse order.
     pairs_reverse_order=0
     for i in range(len(x)):
         for j in range(i+1,len(x)):
@@ -67,33 +73,32 @@ def inverse_normalized_tau_kendall(x,y):
             if case1 or case2:
                 pairs_reverse_order+=1  
     
-    # Numero de pares total.
+    # Number of total pairs.
     total_pairs=len(list(combinations(x,2)))
-    # Distancia tau Kendall normalizada.
+    # Normalized tau kendall distance.
     tau_kendall=pairs_reverse_order/total_pairs
 
     return 1-tau_kendall
 
-# FUNCION 5 (Eliminar elementos en ciertas posiciones de una lista)
 def remove_element_in_idx(list_elements,list_idx):
+    '''Delete elements at certain positions in a list.'''
     new_list=[]
     for i in range(len(list_elements)):
         if i not in list_idx:
             new_list.append(list_elements[i])
     return new_list
 
-# FUNCION 6 (Construir las graficas deseadas a partir de la base de datos)
 def from_data_to_figures(df):
+    '''Construct the desired graphs from the database.'''
 
-    # Inicializar grafica.
+    # Initialize graph.
     plt.figure(figsize=[15,10])
     plt.subplots_adjust(left=0.06,bottom=0.11,right=0.95,top=0.88,wspace=0.3,hspace=0.69)
 
     #----------------------------------------------------------------------------------------------
-    # GRAFICA 1: tiempo de ejecucion por accuracy.
+    # GRAPH 1: evaluation time per accuracy.
     #----------------------------------------------------------------------------------------------
     ax=plt.subplot2grid((4, 4), (0,0), colspan=2,rowspan=2)
-    # ax=plt.subplot(221)
 
     list_acc=list(set(df['accuracy']))
     list_acc.sort()
@@ -116,18 +121,17 @@ def from_data_to_figures(df):
 
 
     #----------------------------------------------------------------------------------------------
-    # GRAFICA 2: extra de evaluaciones.
+    # GRAPH 2: extra evaluations.
     #----------------------------------------------------------------------------------------------
     ax=plt.subplot2grid((4, 4), (0,2), colspan=2,rowspan=2)
-    # ax=plt.subplot(222)
 
     list_total_times=list(df.groupby('accuracy')['steps'].sum())
 
     list_extra_eval=[]
     for i in range(0,len(list_total_times)):
-        # Ahorro de tiempo.
+        # Time saving.
         save_time=list_total_times[-1]-list_total_times[i]
-        # Numero de evaluaciones extra que se podrian hacer para agotar el tiempo que se necesita por defecto.
+        # Number of extra evaluations that can be done to exhaust the default time needed to evaluate the entire sample.
         extra_eval=int(save_time/all_means[i])
         list_extra_eval.append(extra_eval)
 
@@ -139,13 +143,15 @@ def from_data_to_figures(df):
 
 
     #----------------------------------------------------------------------------------------------
-    # GRAFICA 3: comparacion de ranking asociados a las 100 soluciones con cada accuracy.
+    # GRAPH 3: comparison of rankings associated with the 100 solutions with each accuracy.
     #----------------------------------------------------------------------------------------------
     def ranking_matrix_sorted_by_max_acc(ranking_matrix):
-        # Argumentos asociados al ranking del accuracy 1 ordenado de menor a mayor.
+        '''Reorder ranking matrix according to the order established by the original ranking.'''
+
+        # Indexes associated with the maximum accuracy ranking ordered from lowest to highest.
         argsort_max_acc=np.argsort(ranking_matrix[-1])
 
-        # Reordenar filas de la matriz.
+        # Reorder matrix rows.
         sorted_ranking_list=[]
         for i in range(len(ranking_list)):
             sorted_ranking_list.append(custom_sort(ranking_list[i],argsort_max_acc))
@@ -166,7 +172,7 @@ def from_data_to_figures(df):
     color = sns.cubehelix_palette(start=2, rot=0, dark=0, light=.95, reverse=True, as_cmap=True)
     color=cm.get_cmap(color)
     color=color(np.linspace(0,1,ranking_matrix.shape[1]))
-    color[:1, :]=np.array([248/256, 67/256, 24/256, 1])# Rojo (codigo rgb)
+    color[:1, :]=np.array([248/256, 67/256, 24/256, 1])# Red (rgb code)
     color = ListedColormap(color)
 
     ax = sns.heatmap(ranking_matrix, cmap=color,linewidths=.5, linecolor='lightgray')
@@ -186,19 +192,18 @@ def from_data_to_figures(df):
     ax.set_yticklabels(list_acc,rotation=0)
 
     #----------------------------------------------------------------------------------------------
-    # GRAFICA 4: perdida de calidad.
+    # GRAPH 4: solution quality loss.
     #----------------------------------------------------------------------------------------------
     ax=plt.subplot2grid((4, 4), (2,2), colspan=2,rowspan=2)
-    # ax=plt.subplot(224)
 
-    # Similitud entre rankings enteros.
+    # Similarity between entire rankings.
     list_corr=[]
     for i in range(ranking_matrix.shape[0]):
         list_corr.append(inverse_normalized_tau_kendall(ranking_list[-1],ranking_list[i]))
 
     plt.plot(list_acc, list_corr, linewidth=2,label='All ranking') 
 
-    # Similitud entre el 50% inicial de los rankings.
+    # Similarity between the initial 50% of the rankings.
     list_ind=[]
     for i in range(int(ranking_matrix.shape[1]*0.5),ranking_matrix.shape[1]):
         ind=ranking_list[-1].index(i)
@@ -212,7 +217,7 @@ def from_data_to_figures(df):
 
     plt.plot(list_acc, list_corr, linewidth=2,label='The best 50%') 
 
-    # Similitud entre el 10% inicial de los rankings.
+    # Similarity between the initial 10% of the rankings.
     list_ind=[]
     for i in range(int(ranking_matrix.shape[1]*0.1),ranking_matrix.shape[1]):
         ind=ranking_list[-1].index(i)
@@ -229,138 +234,17 @@ def from_data_to_figures(df):
     ax.set_xlabel("Accuracy")
     ax.set_ylabel("1 - normalized tau Kendall")
     ax.set_title('Comparing the similarity between the best and the rest rankings')
-    # ax.set_xscale('log')
 
-    # Guardar imagen.
+    # Save graphs.
     plt.savefig('results/figures/CartPole/UnderstandingAccuracy.png')
     plt.show()
     plt.close()
 
-# FUNCION 7 (Graficas para el paper)
-def from_data_to_figures_paper(df):
-
-    # Inicializar grafica.
-    fig=plt.figure(figsize=[15,3.5],constrained_layout=True)
-    # plt.subplots_adjust(left=0.06,bottom=0.21,right=0.95,top=0.78,wspace=0.1,hspace=0.69)
-    subfigs = fig.subfigures(1, 4, width_ratios=[2,2,0.1,4], wspace=0)
-
-    #----------------------------------------------------------------------------------------------
-    # GRAFICA 1: tiempo de ejecucion por accuracy y extra de evaluaciones.
-    #----------------------------------------------------------------------------------------------
-    list_acc=list(set(df['accuracy']))
-    list_acc.sort()
-    list_acc_str=[str(acc) for acc in list_acc]
-    list_acc_str.reverse()
-
-    # Tiempos de ejecucion por evaluacion.
-    all_means=[]
-    all_q05=[]
-    all_q95=[]
-
-    for accuracy in list_acc:
-        mean,q05,q95=bootstrap_mean_and_confidence_interval(list(df[df['accuracy']==accuracy]['steps']))
-        all_means.append(mean)
-        all_q05.append(q05)
-        all_q95.append(q95)
-
-    # Evaluaciones extra.
-    list_extra_eval=[]
-    for i in range(0,len(all_means)):
-        # Ahorro de tiempo.
-        save_time=all_means[-1]-all_means[i]
-        # Numero de evaluaciones extra que se podrian hacer para agotar el tiempo que se necesita por defecto.
-        extra_eval=save_time/all_means[i]
-        list_extra_eval.append(extra_eval)
-
-    color = sns.cubehelix_palette(start=2, rot=0, dark=0, light=.95, reverse=True, as_cmap=True)
-    color=cm.get_cmap(color)
-    color=color(np.linspace(0,1,3))
-
-    ax=subfigs[0].subplots()
-    y=[i*(-1) for i in all_means]
-    y.reverse()
-    plt.barh(list_acc_str, y, align='center',color=color[0])
-    plt.title("\n Cost per evaluation")
-    plt.ylabel("Accuracy")
-    plt.xlabel("Steps")
-    ax.set_xticks(range(0,-70,-10))
-    ax.set_xticklabels(range(0,70,10),rotation=0)
-
-    ax=subfigs[1].subplots()
-    for i in range(len(list_extra_eval)):
-        if list_extra_eval[i]<0:
-            list_extra_eval[i]=0
-    list_extra_eval.reverse()
-    plt.barh(list_acc_str, list_extra_eval, align='center',color=color[1])
-    plt.yticks([])
-    plt.title("Extra evaluations in the same amount of \n time required for maximum accuracy")
-    # plt.ylabel("Accuracy")
-    plt.xlabel("Evaluations")
-
-
-
-    #----------------------------------------------------------------------------------------------
-    # GRAFICA 2: perdida de calidad en las evaluaciones considerar accuracys menores y existencia 
-    # de un accuracy menor con el que se obtiene la maxima calidad.
-    #----------------------------------------------------------------------------------------------
-    def ranking_matrix_sorted_by_max_acc(ranking_matrix):
-        # Argumentos asociados al ranking del accuracy 1 ordenado de menor a mayor.
-        argsort_max_acc=np.argsort(ranking_matrix[-1])
-
-        # Reordenar filas de la matriz.
-        sorted_ranking_list=[]
-        for i in range(len(ranking_list)):
-            sorted_ranking_list.append(custom_sort(ranking_list[i],argsort_max_acc))
-
-        return sorted_ranking_list
-
-    def absolute_distance_matrix_between_rankings(ranking_matrix):
-        abs_dist_matrix=[]
-        for i in range(len(ranking_matrix)):
-            abs_dist_matrix.append(np.abs(list(np.array(ranking_matrix[i])-np.array(ranking_matrix[-1]))))
-
-        max_value=max(max(i) for i in abs_dist_matrix)
-        norm_abs_dist_matrix=list(np.array(abs_dist_matrix)/max_value)
-        
-        return norm_abs_dist_matrix
-
-    ax=subfigs[3].subplots()
-
-    ranking_list=[]
-
-    for accuracy in list_acc:
-        df_acc=df[df['accuracy']==accuracy]
-        ranking=from_argsort_to_ranking(list(df_acc['reward'].argsort()))
-        ranking_list.append(ranking)
-
-    ranking_matrix=np.matrix(absolute_distance_matrix_between_rankings(ranking_matrix_sorted_by_max_acc(ranking_list)))
-    color = sns.cubehelix_palette(start=2, rot=0, dark=0, light=.95, reverse=False, as_cmap=True)
-
-    ax = sns.heatmap(ranking_matrix, cmap=color,linewidths=.5, linecolor='lightgray')
-
-    colorbar=ax.collections[0].colorbar
-    colorbar.set_label('Normalized distance')
-
-    ax.set_xlabel('Solution (sorted by the ranking of maximum accuracy)')
-    ax.set_xticks(range(0,ranking_matrix.shape[1],10))
-    ax.set_xticklabels(range(1,ranking_matrix.shape[1]+1,10),rotation=0)
-
-    ax.set_ylabel('Accuracy')
-    ax.set_title('Normalized absolute distances between the respective positions \n of the best and the rest rankings')
-    ax.set_yticks(np.arange(0.5,len(list_acc)+0.5,1))
-    ax.set_yticklabels(list_acc,rotation=0)
-
-    # Guardar imagen.
-    plt.savefig('results/figures/CartPole/UnderstandingAccuracy_paper.png')
-    plt.show()
-    plt.close()
-
 #==================================================================================================
-# PROGRAMA PRINCIPAL
+# MAIN PROGRAM
 #==================================================================================================
-# Leer base de datos.
+# read database.
 df=pd.read_csv('results/data/CartPole/UnderstandingAccuracy.csv',index_col=0)
 
-# Construir grafica.
+# Build the graph.
 from_data_to_figures(df)
-from_data_to_figures_paper(df)

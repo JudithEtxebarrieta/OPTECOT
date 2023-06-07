@@ -1,11 +1,11 @@
-# Mediante este script se evaluan 100 politicas aleatorias (asociadas a una precision maxima) 
-# sobre 10 episodios de un entorno definido con 10 valores de accuracy diferentes para el parametro
-# timesteps (tiempo transcurrido entre frame y frame de un episodio). Los datos relevantes (medias 
-# de rewards y numero de steps por evaluacion) se almacenan para despues poder acceder a ellos.
-
+'''
+This script evaluates 100 random policies (associated with a maximum accuracy) on 10 episodes of 
+a defined environment with 10 different accuracy values for the time-step parameter. The relevant
+data (average rewards and number of steps per evaluation) are stored for later access.
+'''
 
 #==================================================================================================
-# LIBRERIAS
+# LIBRARIES
 #==================================================================================================
 from stable_baselines3 import PPO
 from stable_baselines3.ppo import MlpPolicy
@@ -15,14 +15,16 @@ import pandas as pd
 from tqdm import tqdm
 
 #==================================================================================================
-# FUNCIONES
+# FUNCTIONS
 #==================================================================================================
-# FUNCION 1 (construir muestra aleatoria de politicas)
+
 def build_policy_sample(n_sample=100):
-    # Inicializar entorno.
+    '''Build random sample of policies.'''
+
+    # Initialize environment.
     env = gym.make('CartPole-v1')
 
-    # Construir muestra de politicas.
+    # Build sample of policies.
     policy_sample=[]
     for i in range(0,n_sample):
         policy = PPO(MlpPolicy,env,seed=i)
@@ -30,15 +32,16 @@ def build_policy_sample(n_sample=100):
 
     return policy_sample
 
-# FUNCION 2 (evaluar politica sobre 10 episodios de un entorno definido con un accuracy concreto)
 def evaluate_policy(policy,accuracy):
-    # Inicializar entorno de entrenamiento con el accuracy indicado.
+    ''' Evaluate policy on 10 episodes of a defined environment with a given accuracy.'''
+
+    # Initialize the training environment with the specified accuracy.
     env = gym.make('CartPole-v1')
     env.env.tau = env.env.tau / accuracy
     env.env.spec.max_episode_steps = int(env.env.spec.max_episode_steps*accuracy)
     env._max_episode_steps = env.unwrapped.spec.max_episode_steps
     
-    #Para garantizar que en cada llamada a la funcion se usaran los mismos episodios.
+    # To ensure that the same episodes are used in each call to the function.
     env.seed(0)
     obs=env.reset()
     
@@ -60,28 +63,28 @@ def evaluate_policy(policy,accuracy):
     
     return np.mean(all_episode_reward),np.mean(all_episode_steps)
 
-# FUNCION 3 (evaluar conjunto de politicas sobre 10 episodios de un entorno definido con un accuracy concreto)
 def evaluate_policy_sample(policy_sample,accuracy):
+    '''Evaluate set of policies on 10 episodes of a defined environment with a specific accuracy.'''
+
     for i in tqdm(range(len(policy_sample))):
         reward,steps=evaluate_policy(policy_sample[i],accuracy)
         df.append([accuracy,i,reward,steps])
 
 #==================================================================================================
-# PROGRAMA PRINCIPAL
+# MAIN PROGRAM
 #==================================================================================================
-# Construir muestra de politicas.
+# Build sample of policies.
 policy_sample=build_policy_sample(100)
 
-# Lista de accuracys.
+# list of accuracies.
 list_acc=[1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1]
 
-# Construir base de datos con informacion de rewards y costes obtenidos al evaluar las politicas de
-# la muestra con los diferentes valores de accuracy.
+# Build a database with information on rewards and evaluation times obtained by evaluating the policy sample with different accuracy values.
 df=[]
 for accuracy in tqdm(list_acc):
     evaluate_policy_sample(policy_sample,accuracy)
 
-# Guardar base de datos.
+# Save the database.
 df=pd.DataFrame(df,columns=['accuracy','n_policy','reward','steps'])
 df.to_csv('results/data/CartPole/UnderstandingAccuracy.csv')
 

@@ -1,23 +1,27 @@
-# Mediante este script se guarda la informacion relevante extraida del proceso de entrenamiento 
-# de diferentes politicas sobre el entorno CartPole. Cada politicas se entrena con un 
-# time-step diferente (en total se consideran 10 valores diferentes de accuracy) considerando un 
-# total de 30 semillas (30 formas diferentes de definir los episodios sobre los cuales se entrena la politica).
-# Las validaciones se hacen sobre un entorno independiente al de entrenamiento (100 episodios) con
-# una maxima precision del time-step.
+'''
+This script saves the relevant information extracted from the execution process of the PPO 
+algorithm on the CartPole environment, using 10 different time-step values and considering 
+a total of 30 seeds for each one. 
 
-# Basado en: https://colab.research.google.com/github/Stable-Baselines-Team/rl-colab-notebooks/blob/sb3/stable_baselines_getting_started.ipynb
+Based on:
+https://colab.research.google.com/github/Stable-Baselines-Team/rl-colab-notebooks/blob/sb3/stable_baselines_getting_started.ipynb
+'''
 
 #==================================================================================================
-# LIBRERIAS
+# LIBRARIES
 #==================================================================================================
-import stable_baselines3 # Libreria que sirve para crear un modelo RL, entrenarlo y evaluarlo.
-import gym # Stable-Baselines funciona en entornos que siguen la interfaz gym.
-from stable_baselines3 import PPO # Importar el modelo RL.
-from stable_baselines3.ppo import MlpPolicy # Importar la clase de politica que se usara para crear las redes.
-                                            # Elegimos MlpPolicy porque la entrada de CartPole es un vector de caracteristicas, no imagenes.
+# Special libraries for the environment.
+import stable_baselines3 # Library used to create an RL model, train it and evaluate it.
+import gym # Stable-Baselines works in environments that follow the gym interface.
+from stable_baselines3 import PPO # Import the RL model.
+from stable_baselines3.ppo import MlpPolicy # Import the type of policy to be used to create the networks.
+from stable_baselines3.common.type_aliases import GymEnv, MaybeCallback, Schedule
+from stable_baselines3.common.callbacks import BaseCallback, CallbackList, ConvertCallback, ProgressBarCallback
+from sklearn.neighbors import KernelDensity
+
+# Generic libraries.
 import numpy as np
 from scipy.stats import norm
-from sklearn.neighbors import KernelDensity
 import time
 from tqdm import tqdm as tqdm
 import matplotlib.pyplot as plt
@@ -25,16 +29,17 @@ import matplotlib.colors as mcolors
 import random
 import pandas as pd
 import multiprocessing as mp
-from stable_baselines3.common.type_aliases import GymEnv, MaybeCallback, Schedule
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, TypeVar, Union
-from stable_baselines3.common.callbacks import BaseCallback, CallbackList, ConvertCallback, ProgressBarCallback
+
 
 #==================================================================================================
-# CLASES
+# CLASSES
 #==================================================================================================
-# CLASE 1
-# Se definen los metodos necesarios para medir el tiempo de ejecucion durante el entrenamiento.
+
 class stopwatch:
+    '''
+    Defines the methods necessary to measure time during execution process.
+    '''
     
     def __init__(self):
         self.reset()
@@ -56,58 +61,66 @@ class stopwatch:
         return time.time() - self.start_t - self.pause_t
 
 #==================================================================================================
-# NUEVAS FUNCIONES
+# NEW FUNCTIONS
 #==================================================================================================
 
-# FUNCION 1
-# Parametros:
-#   >model: modelo que se desea evaluar.
-#   >eval_env: entorno de evaluacion.
-#   >init_obs: estado inicial del primer episodio/evaluacion del entorno de evaluacion.
-#   >seed: semilla del entorno de evaluacion.
-#   >n_eval_episodes: numero de episodios (evaluaciones) en los que se evaluara el modelo.
-# Devuelve: media de las recompensa obtenida en los n_eval_episodes episodios.
-
 def evaluate(model,eval_env,eval_seed,n_eval_episodes):
-    #Para guardar el reward por episodio.
+    '''
+    The current policy is evaluated using the episodes of the validation environment.
+
+    Parameters
+    ==========
+    model: Policy to be evaluated.
+    val_env : Validation environment.
+    init_obs : Initial state of the first episode of the validation environment.
+    seed (int): Seed of the validation environment.
+    n_eval_episodes (int): Number of episodes (evaluations) in which the model will be evaluated.
+
+    Returns
+    =======
+    Average of the rewards obtained in the n_eval_episodes episodes.
+    '''
+    # To save the reward per episode.
     all_episode_reward=[]
 
-    #Para garantizar que en cada llamada a la funcion se usaran los mismos episodios.
+    # To ensure that the same episodes are used in each call to the function.
     eval_env.seed(eval_seed)
     obs=eval_env.reset()
     
     for i in range(n_eval_episodes):
 
         episode_rewards = 0
-        done = False # Parametro que nos indica despues de cada accion si la evaluacion sigue (False) o se ha acabado (True).
+        done = False # Parameter that indicates after each action if the episode continues (False) or is finished (True).
         while not done:
             action, _states = model.predict(obs, deterministic=True) # Se predice la accion que se debe tomar con el modelo.         
-            obs, reward, done, info = eval_env.step(action) # Se aplica la accion en el entorno.
-            episode_rewards+=reward # Se guarda la recompensa.
+            obs, reward, done, info = eval_env.step(action) # The action to be taken with the policy is predicted.
+            episode_rewards+=reward # The reward is saved.
 
-        # Guardar reward total de episodio.
+        # Save total episode reward.
         all_episode_reward.append(episode_rewards)
 
-        # Para cada episodio se devuelve al estado original el entorno.
+        # Reset the episode.
         obs = eval_env.reset() 
     
     return np.mean(all_episode_reward)
 
 
 #==================================================================================================
-# FUNCIONES EXISTENTES MODIFICADAS
+# MODIFIED EXISTING FUNCTIONS
 #==================================================================================================
-# FUNCION 2
-# Esta funcion es la version adaptada de la funcion "_update_current_progress_remaining" ya existente.
-# Se define con intencion de poder evaluar el modelo durante el proceso de entrenamiento y poder
-# recolectar informacion relevante (steps dados, evaluaciones hechas, calidad del modelo medida en
-# reward, tiempo computacional gastado, semilla utilizada,...) asociado a ese momento del entrenamiento. 
 
 def callback_in_each_iteration(self, num_timesteps: int, total_timesteps: int) -> None:
-    # Pausar el tiempo durante la validacion.
+    '''
+    This function is the adapted version of the existing "_update_current_progress_remaining" function. 
+    It is modified to be able to evaluate the solution (policy) during the training process and to collect 
+    relevant information (number of steps, number of episodes, model quality measured in reward, 
+    computational time spent, seed,...).
+    '''
+
+    # Pause time during validation.
     sw.pause() 
 
-    # Extraer la informacion relevante.
+    # Extract relevant information.
     mean_reward = evaluate(model,eval_env,eval_seed,n_eval_episodes)
     info=pd.DataFrame(model.ep_info_buffer)
     info_steps=sum(info['r'])
@@ -115,22 +128,15 @@ def callback_in_each_iteration(self, num_timesteps: int, total_timesteps: int) -
     n_eval=len(info)
     max_step_per_eval=max(info['r'])
 
-    #Reanudar el tiempo.
-    sw.resume()
-
-    #Guardar la informacion extraida.
+    # Save the extracted information.
     df_train_acc.append([num_timesteps, info_steps,model.seed,n_eval,max_step_per_eval,sw.get_time(),info_time,mean_reward])
 
-    #Reanudar el tiempo.
+    # Resume time.
     sw.resume()
 
-    # Esta linea la usa la funcion que sustituimos: no cambiar esta linea.
+    # This line is used by the function we are replacing: do not change this line.
     self._current_progress_remaining = 1.0 - float(num_timesteps) / float(total_timesteps) 
 
-# FUNCION 3
-# Esta funcion es la version adaptada de la funcion "_setup_learn" ya existente.
-# Se modifica para que el limite al entrenamiento sea el numero de steps de entrenamiento definido 
-# y no el numero maximo de evaluaciones que viene fijado por defecto (numero maximo de episodios,maxlen).
 def _setup_learn(
         self,
         total_timesteps: int,
@@ -140,6 +146,10 @@ def _setup_learn(
         progress_bar: bool = False,
     ) -> Tuple[int, BaseCallback]:
         """
+        This function is the adapted version of the existing "_setup_learn" function. It is modified so 
+        that the training limit is the defined number of training steps and not the default maximum 
+        number of evaluations (maxlen).
+
         Initialize different variables needed for training.
 
         :param total_timesteps: The total number of samples (env steps) to train on
@@ -153,8 +163,8 @@ def _setup_learn(
 
         if self.ep_info_buffer is None or reset_num_timesteps:
             # Initialize buffers if they don't exist, or reinitialize if resetting counters
-            self.ep_info_buffer = deque(maxlen=max_train_steps)#MODIFICACION(antes:maxlen=100)
-            self.ep_success_buffer = deque(maxlen=max_train_steps)#MODIFICACION (antes:maxlen=100)
+            self.ep_info_buffer = deque(maxlen=max_train_steps)#MODIFICATION(previously:maxlen=100)
+            self.ep_success_buffer = deque(maxlen=max_train_steps)#MODIFICATION (previously:maxlen=100)
 
         if self.action_noise is not None:
             self.action_noise.reset()
@@ -187,50 +197,50 @@ def _setup_learn(
 
 
 #==================================================================================================
-# PROGRAMA PRINCIPAL
+# MAIN PROGRAM
 #==================================================================================================
-# Para usar la funcion callback modificada.
+# To use the modified callback function.
 import stable_baselines3.common.base_class
 stable_baselines3.common.base_class.BaseAlgorithm._update_current_progress_remaining = callback_in_each_iteration
-# Para usar la funcion _setup_learn modificada.
+# To use the modified funcion _setup_learn function.
 from stable_baselines3.common.base_class import *
 BaseAlgorithm._setup_learn=_setup_learn
     
-# Variables y parametros de entrenamiento.
+# Training environment and parameters.
 train_env = gym.make('CartPole-v1')
 max_train_steps=10000
 
-# Variables y parametros de validacion.
+# Validation environment and parameters.
 eval_env = gym.make('CartPole-v1')
 eval_seed=0
 n_eval_episodes=100
 
-# Parametros por defecto.
+# Default parameters.
 default_tau = 0.02
 default_max_episode_steps = 500
 
-# Mallados.
-grid_acc=[1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1]
+# Grids.
+grid_acc=[1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1] # Time-step accuracy.
 grid_seed=range(1,31,1)
 
-# Funcion para ejecucion en paralelo.
+# Function for parallel execution.
 def parallel_processing(accuracy):
-    # Actualizar parametros del entorno de entrenamiento.
+    # Update parameters of the training environment.
     train_env.env.tau = default_tau / accuracy
     train_env.env.spec.max_episode_steps = int(default_max_episode_steps*accuracy)
     train_env._max_episode_steps = train_env.unwrapped.spec.max_episode_steps
     
-    # Guardar en una base de datos la informacion del proceso de entrenamiento para el accuracy seleccionado.
+    # Save in a database the information of the training process for the selected accuracy.
     global df_train_acc,seed
     df_train_acc=[]
 
     for seed in tqdm(grid_seed):
-        # Empezar a contar el tiempo.
+        # Start counting time.
         global sw
         sw = stopwatch()
         sw.reset()
 
-        # Entrenamiento.
+        # Algorithm execution.
         global model
         model = PPO(MlpPolicy,train_env,seed=seed, verbose=0,n_steps=train_env._max_episode_steps)
         model.set_random_seed(seed)
@@ -239,15 +249,15 @@ def parallel_processing(accuracy):
     df_train_acc=pd.DataFrame(df_train_acc,columns=['steps','info_steps','seed','n_eval','max_step_per_eval','time','info_time','mean_reward'])
     df_train_acc.to_csv('results/data/CartPole/ConstantAccuracyAnalysis/df_train_acc'+str(accuracy)+'_.csv')
 
-# Procesamiento en paralelo.
+# Parallel processing.
 pool=mp.Pool(mp.cpu_count())
 pool.map(parallel_processing,grid_acc)
 pool.close()
 
-# Guardar los demas datos que se usaran para las graficas.
+# Save the accuracy list.
 np.save('results/data/CartPole/ConstantAccuracyAnalysis/grid_acc',grid_acc)
 
-# Guardar numero maximo de steps de entrenamiento.
+# Save execution time limit.
 np.save('results/data/CartPole/ConstantAccuracyAnalysis/max_train_steps',max_train_steps)
 
 
