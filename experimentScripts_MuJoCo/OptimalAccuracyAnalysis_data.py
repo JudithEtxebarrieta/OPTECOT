@@ -1,6 +1,25 @@
+'''
+In this script, the proposed heuristics are applied to the MuJoCo's Swimmer environment. The CMA-ES 
+algorithm is run on this environment using 100 different seeds. A database is built with the 
+relevant information obtained during the execution of each seed. The code is written to execute 
+two heuristics. The first one considers the constant frequency t^{freq} defined in the paper for the 
+readjustment. The second one instead, matches the same heuristic of the paper (the update frequency
+is determined by the change of variance).
+
+The following databases are stored:
+
+1) df_OptimalAccuracyAnalysis_hI_CInone.csv: Data associated with the execution of the first heuristic.
+
+2) df_OptimalAccuracyAnalysis_hII_CIbootstrap.csv: Data associated with the execution of the second 
+heuristic, calculating the confidence intervals of the variances using the bootstrap method.
+
+3) df_OptimalAccuracyAnalysis_hII_CImean_sd.csv: Data associated with the execution of the second 
+heuristic, calculating the confidence intervals using the deviating mean of the previous variances.
+
+'''
 
 #==================================================================================================
-# LIBRERIAS
+# LIBRARIES
 #==================================================================================================
 import os
 os.environ['TF_ENABLE_ONEDNN_OPTS']='0'
@@ -51,15 +70,17 @@ import cma
 import copy
 
 #==================================================================================================
-# NUEVAS FUNCIONES
+# NEW FUNCTIONS
 #==================================================================================================
 #--------------------------------------------------------------------------------------------------
-# Funciones para el proceso de aprendizaje o busqueda de la optima politica.
+# Functions for the search process of the optimal policy.
 #--------------------------------------------------------------------------------------------------
-# FUNCION  (aprender politica optima con CMA-ES)
+
 @wrap_experiment(snapshot_mode="none", log_dir="/tmp/",archive_launch_repo=False)
 def learn(ctxt=None, gymEnvName=None, action_space=None, max_episode_length=None,
                        policy_name=None,seed=None,heuristic=None,heuristic_param=None):
+    
+    '''Learning optimal policy with CMA-ES.'''
 
     global global_heuristic, global_heuristic_param,optimal_acc,train_env
     global_heuristic=heuristic
@@ -67,35 +88,35 @@ def learn(ctxt=None, gymEnvName=None, action_space=None, max_episode_length=None
     optimal_acc=1
     
 
-    # Inicializacion de contadores.
+    # Initialization of counters.
     global n_steps_proc,n_steps_acc,n_episodes,n_generations
-    n_steps_proc=0 # Contador que indica el numero de steps consumidos hasta el momento para el procedimiento.
-    n_steps_acc=0 # Contador que indica el numero de steps consumidos hasta el momento para el ajuste del accuracy.
-    n_episodes = 0 # Contador que indica en que episodio estamos.
-    n_generations=0 # Contador que indica en que generacion estamos.
+    n_steps_proc=0 # Counter indicating the number of steps consumed so far for the procedure.
+    n_steps_acc=0 # Counter indicating the number of steps consumed so far for accuracy adjustment.
+    n_episodes = 0 # Counter that indicates which episode we are in.
+    n_generations=0 # Counter that indicates which generation we are in.
 
-    # Definicion de parametros para el algoritmos CMA-ES.
+    # Definition of parameters for the CMA-ES algorithm.
     global popsize,batch_size_ep,total_generations
-    popsize= 20 # Tamano de las generaciones/poblaciones en CMA-ES.
-    batch_size_ep=1 # Numero de episodios que se van a considerar para evaluar cada politica/individuos de una generacion.
+    popsize= 20 # Population size in CMA-ES.
+    batch_size_ep=1 # Number of episodes to be considered in evaluating each policy for a population.
 
-    # Fijar semilla.
+    # set seed.
     set_seed(seed)
 
     with TFTrainer(ctxt) as trainer:
 
-        # Definir entorno de entrenamiento con el accuracy seleccionado.
+        # Define training environment with the selected accuracy.
         current_max_episode_length=int(max_episode_length*optimal_acc)
         train_env = GymEnv(gymEnvName, max_episode_length=current_max_episode_length)
         train_env._env.unwrapped.model.opt.timestep=default_frametime/optimal_acc
         train_env._env.seed(seed=train_env_seed)
 
-        # Definir entorno de validacion con el accuracy maximo.
+        # Define validation environment with maximum accuracy.
         global test_env
         test_env = GymEnv(gymEnvName, max_episode_length=max_episode_length)
         test_env._env.unwrapped.model.opt.timestep=default_frametime
         
-        # Definir politica.
+        # Define type of policy.
         is_action_space_discrete=bool(["continuous", "discrete"].index(action_space))
         if is_action_space_discrete:
             policy = CategoricalMLPPolicy(name=policy_name, env_spec=train_env.spec)
@@ -103,23 +124,24 @@ def learn(ctxt=None, gymEnvName=None, action_space=None, max_episode_length=None
             policy = ContinuousMLPPolicy(name=policy_name, env_spec=train_env.spec)
         sampler = LocalSampler(agents=policy, envs=train_env, max_episode_length=train_env.spec.max_episode_length, is_tf_worker=True)
 
-        # Inicializar algoritmo CMA-ES.
+        # Initialize CMA-ES algorithm.
         algo= CMAES(env_spec=train_env.spec, policy=policy, sampler=sampler, n_samples=popsize)
         trainer.setup(algo, train_env)
 
-        # Entrenamiento.
-        total_generations= int(max_steps/(popsize*batch_size_ep*current_max_episode_length)) # Numero de generaciones a evaluar, dependiendo del numero maximo de steps definido para entrenar. (CRITERIO DE PARADA)
+        # Execution process (policy training).
+        total_generations= int(max_steps/(popsize*batch_size_ep*current_max_episode_length)) # Number of populations to be evaluated, depending on the maximum number of steps defined for training (STOPPING CRITERION).
         trainer.train(n_epochs=total_generations, batch_size=batch_size_ep*current_max_episode_length)
 
 #--------------------------------------------------------------------------------------------------
-# Funciones auxiliares para definir el accuracy apropiado en cada momento del proceso.
+# Auxiliary functions to define the appropriate accuracy during the execution process.
 #--------------------------------------------------------------------------------------------------
-# FUNCION (Calculo de la correlacion de Spearman entre dos secuencias)
+
 def spearman_corr(x,y):
+    '''Calculation of Spearman's correlation between two sequences.'''
     return sc.stats.spearmanr(x,y)[0]
 
-# FUNCION (Convertir vector de rewards en vector de ranking)
 def from_rewards_to_ranking(list_rewards):
+    '''Convert rewards list to ranking list.'''
     list_pos_ranking=np.argsort(np.array(list_rewards))
     ranking=[0]*len(list_pos_ranking)
     i=0
@@ -128,19 +150,19 @@ def from_rewards_to_ranking(list_rewards):
         i+=1
     return ranking
 
-# FUNCION (validar una politica)
 def evaluate_policy_test(agent,env,n_eval_episodes):
+    '''Validate a policy.'''
     global n_generations
 
-    # Fijar semilla del entorno (para que los episodios a validar sena los mismos por cada 
-    # llamada a la funcion) y definir el estado inicial (obs) del primer episodio.
+    # Set seed of the environment (so that the episodes to validate are the same 
+    # for each call to the function) and define the initial state (obs) of the first episode. 
     env._env.seed(seed=test_env_seed)
     obs,_=env.reset()
 
-    # Guardar reward por episodios evaluado.
+    # Save reward for evaluated episodes.
     all_ep_reward=[]
     for _ in range(n_eval_episodes):
-        # Evaluar episodio con la politica y guardar el reward asociado.
+        # Evaluate episode with the policy and save the associated reward.
         episode_reward=0
         done=False
         while not done:
@@ -154,24 +176,26 @@ def evaluate_policy_test(agent,env,n_eval_episodes):
 
     return np.mean(all_ep_reward)
 
-# FUNCION  (Generar lista con los rewards asociados a cada politica que forma la muestra de la generacion para el metodo de biseccion)
 def generation_reward_list(df_sample_policy_info,accuracy,count_time_acc=True):
+    '''Generate a list of rewards associated with each policy that forms the sample population for the bisection method.'''
 
     global batch_size_ep,n_steps_acc
     
-    # Obtener rewards asociados a las politicas que forman la muestra de la poblacion.
+    # Obtain rewards associated with the policies that make up the sample population.
     list_rewards=list(df_sample_policy_info[df_sample_policy_info['accuracy']==accuracy]['reward'])
 
-    # Actualizar contadores relacionados con el tiempo (steps) de entrenamiento.
+    # Update counters related to training time (steps).
     if count_time_acc:
         n_steps_acc+=len(list_rewards)*batch_size_ep*int(max_episode_length*accuracy)
 
     return list_rewards
 #--------------------------------------------------------------------------------------------------
-# Funciones asociadas a los heuristicos que se aplicaran para ajustar el accuracy.
+# Functions associated with the heuristics to be applied to adjust the accuracy.
 #--------------------------------------------------------------------------------------------------
-# FUNCION (calcular los posibles valores intermedios que se pueden evaluar en el metodo de biseccion)
+
 def possible_accuracy_values_bisection():
+    '''Calculating the possible midpoints that can be evaluated in the bisection method.'''
+
     df_bisection=pd.read_csv('results/data/MuJoCo/UnderstandingAccuracy/df_Bisection.csv')
     interpolation_acc=list(df_bisection['accuracy'])
     interpolation_time=list(df_bisection['cost_per_eval'])
@@ -179,43 +203,43 @@ def possible_accuracy_values_bisection():
     upper=max(list(interpolation_time))
 
     list_bisection_acc=[]
-    list_bisection_time=np.arange(lower,upper+(upper-lower)/(2**4),(upper-lower)/(2**4))[1:]# Se consideran 4 iteraciones del metodo de biseccion.
+    list_bisection_time=np.arange(lower,upper+(upper-lower)/(2**4),(upper-lower)/(2**4))[1:]# Four iterations of the bisection method are considered.
     for time in list_bisection_time:
         list_bisection_acc.append(np.interp(time,interpolation_time,interpolation_acc))
     
     return list_bisection_acc
 
-# FUNCION  (Implementacion adaptada del metodo de biseccion)
-def bisection_method(lower_time,upper_time,df_sample_policy_info,interpolation_pts,threshold=0.95):
 
-    # Inicializar limite inferior y superior.
+def bisection_method(lower_time,upper_time,df_sample_policy_info,interpolation_pts,threshold=0.95):
+    '''Adapted implementation of bisection method.'''
+
+    # Initialize lower and upper limit.
     time0=lower_time
     time1=upper_time 
 
-    # Punto intermedio.
+    # First midpoint.
     prev_m=lower_time
     m=(time0+time1)/2
 
-    # Funcion para calcular la correlacion entre los rankings de sample_size politicas
-    # aleatoria usando el accuracy actual y el maximo.
+    # Function to calculate the correlation between the rankings of random sample_size policies using the current and maximum accuracy.
     def similarity_between_current_best_acc(acc,df_sample_policy_info,first_iteration):
 
-        # Guardar los rewards asociados a cada solucion seleccionada.
-        best_rewards=generation_reward_list(df_sample_policy_info,1,count_time_acc=first_iteration)# Con el maximo accuracy. 
-        new_rewards=generation_reward_list(df_sample_policy_info,acc)# Accuracy nuevo. 
+        # Save the rewards associated with each selected solution.
+        best_rewards=generation_reward_list(df_sample_policy_info,1,count_time_acc=first_iteration)# with the maximum accuracy.
+        new_rewards=generation_reward_list(df_sample_policy_info,acc)# With the new accuracy. 
 
-        # Obtener vectores de rankings asociados.
-        new_ranking=from_rewards_to_ranking(new_rewards)# Accuracy nuevo. 
-        best_ranking=from_rewards_to_ranking(best_rewards)# Maximo accuracy. 
+        # Obtain lists of associated rankings.
+        new_ranking=from_rewards_to_ranking(new_rewards)# New accuracy. 
+        best_ranking=from_rewards_to_ranking(best_rewards)# Maximum accuracy. 
 
-        # Comparar ambos rankings.
+        # Compare both rankings.
         metric_value=spearman_corr(new_ranking,best_ranking)
-        # print('corr bisec: '+str(metric_value))
+
         return metric_value
 
-    # Reajustar limites del intervalo hasta que este tenga un rango lo suficientemente pequeno.
+    # Reset interval limits until the interval has a sufficiently small range.
     first_iteration=True
-    stop_threshold=(time1-time0)*0.1# Equivalente a 4 iteraciones.
+    stop_threshold=(time1-time0)*0.1# Equivalent to 4 iterations.
     while time1-time0>stop_threshold:
         metric_value=similarity_between_current_best_acc(np.interp(m,interpolation_pts[0],interpolation_pts[1]),df_sample_policy_info,first_iteration)
         if metric_value>=threshold:
@@ -230,8 +254,10 @@ def bisection_method(lower_time,upper_time,df_sample_policy_info,interpolation_p
 
     return np.interp(prev_m,interpolation_pts[0],interpolation_pts[1])
 
-# FUNCION (Ejecutar heuristicos durante el proceso de entrenamiento)
+
 def execute_heuristic(gen,acc,df_sample_policy_info,list_variances,heuristic,param):
+    '''Running heuristics during the training process.'''
+
     global last_time_heuristic_accepted,unused_bisection_executions
     global n_steps_proc
     global n_steps_acc
@@ -241,14 +267,14 @@ def execute_heuristic(gen,acc,df_sample_policy_info,list_variances,heuristic,par
 
     heuristic_accepted=False
     
-    # Para la interpolacion en el metodo de biseccion..
+    # For interpolation in the bisection method.
     df_interpolation=pd.read_csv('results/data/MuJoCo/UnderstandingAccuracy/df_Bisection.csv')
     interpolation_acc=list(df_interpolation['accuracy'])
     interpolation_time=list(df_interpolation['cost_per_eval'])
     lower_time=min(interpolation_time)
     upper_time=max(interpolation_time)
 
-    # HEURISTICO I de Symbolic Regressor: Biseccion con frecuencia constante (el umbral es el parametro).
+    # HEURISTIC I of Symbolic Regressor: Bisection with constant frequency (the quality threshold is the parameter).
     if heuristic=='I': 
         if gen==0:
             acc=bisection_method(lower_time,upper_time,df_sample_policy_info,[interpolation_time,interpolation_acc],threshold=param)
@@ -258,8 +284,8 @@ def execute_heuristic(gen,acc,df_sample_policy_info,list_variances,heuristic,par
                 acc=bisection_method(lower_time,upper_time,df_sample_policy_info,[interpolation_time,interpolation_acc],threshold=param)
                 heuristic_accepted=True
 
-    # HEURISTICO II de Symbolic Regressor: Biseccion con definicion automatica para frecuencia 
-    # de actualizacion de accuracy (depende de parametro) y umbral del metodo de biseccion fijado en 0.95.
+    # HEURISTIC II of Symbolic Regressor: Bisection with automatic setting for accuracy update frequency (parameter dependent) 
+    # and bisection method quality threshold set to 0.95.    
     if heuristic=='II': 
         if gen==0: 
             acc=bisection_method(lower_time,upper_time,df_sample_policy_info,[interpolation_time,interpolation_acc])
@@ -268,18 +294,24 @@ def execute_heuristic(gen,acc,df_sample_policy_info,list_variances,heuristic,par
             
         else:
             if len(list_variances)>=param+1:
-                # Funcion para calcular el intervalo de confianza.
+                # Calculate the confidence interval.
+                global CI
                 def bootstrap_confidence_interval(data,bootstrap_iterations=1000):
                     mean_list=[]
                     for i in range(bootstrap_iterations):
                         sample = np.random.choice(data, len(data), replace=True) 
                         mean_list.append(np.mean(sample))
                     return np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
+                
+                if CI=='bootstrap':
+                    variance_q05,variance_q95=bootstrap_confidence_interval(list_variances[(-2-param):-2])
+                if CI=='mean_sd':
+                    variance_q05=np.mean(list_variances[(-2-param):-2])-2*np.std(list_variances[(-2-param):-2])
+                    variance_q95=np.mean(list_variances[(-2-param):-2])+2*np.std(list_variances[(-2-param):-2])
 
-                variance_q05,variance_q95=bootstrap_confidence_interval(list_variances[(-2-param):-2])
                 last_variance=list_variances[-1]
 
-                # Calcular el minimo accuracy con el que se obtiene la maxima calidad.
+                # Calculate the minimum accuracy with which the maximum quality is obtained.
                 if last_variance<variance_q05 or last_variance>variance_q95:
 
                     if (n_steps_proc+n_steps_acc)-last_time_heuristic_accepted>=heuristic_freq:   
@@ -302,98 +334,100 @@ def execute_heuristic(gen,acc,df_sample_policy_info,list_variances,heuristic,par
     return acc
 
 #==================================================================================================
-# FUNCIONES DISEñADAS PARA SUSTITUIR ALGUNAS YA EXISTENTES
+# FUNCTIONS DESIGNED TO REPLACE SOME ALREADY EXISTING ONES
 #==================================================================================================
-# FUNCION (Esta funcion esta disenada para sustituir la funcion "rollout" ya existente. Se modifica
-# para poder evaluar la muestra de politicas de una generacion en el metodo de biseccion.)
+
 def save_policy_train_bisection_info(self):
-    # Nuevo codigo.
+    '''
+    This function is designed to replace the existing "rollout" function. It is modified to be 
+    able to evaluate the policy sample of a population in the bisection method.
+    '''
+
+    # New code.
     global df_policy_train_bisection_info,list_idx_bisection,idx_sample,list_bisection_acc,n_sample
     if idx_sample in list_idx_bisection:
         n_sample+=1
         for accuracy in list_bisection_acc:
             self.start_episode()
-            self._max_episode_length = int(max_episode_length*accuracy) # Fijar tamano maximo del episodio.
+            self._max_episode_length = int(max_episode_length*accuracy) # Set maximum episode size.
             policy_reward=0
             episode_steps=0
-            while not self.step_episode(): # Hasta que no se puedan dar mas steps en el episodio.
+            while not self.step_episode(): # Until more steps can not be given in the episode.
                 policy_reward+=self._env_steps[episode_steps].reward # Dar un nuevo step.
-                episode_steps+= 1 # Sumar step.
+                episode_steps+= 1 # Add step.
             df_policy_train_bisection_info.append([n_sample,accuracy,policy_reward])
 
-    # Codigo por defecto.
+    # Default code.
     self.start_episode()
     while not self.step_episode():
         pass
     return self.collect_episode()
 
-
-# FUNCION  (para poder almacenar los datos de interes durante el entrenamiento).
 def rollout(self):
+    '''The original function is modified to be able to store the data of interest during the execution process.'''
+
     global n_steps_proc,n_steps_acc,n_episodes,n_generations,df,test_n_eval_episodes,popsize,total_generations
     global seed,global_heuristic_param,optimal_acc
     global list_gen_policies,list_gen_policies_rewards,policy_reward_per_ep
     global sample_size,heuristic_accepted,last_time_heuristic_accepted
 
-    # Listas para guardar los rewards de las politicas asociadas a una generacion.
-    n_policies=n_episodes/batch_size_ep #Politicas evaluadas hasta el momento.
+    # Lists to store the rewards of the policies associated with a population.
+    n_policies=n_episodes/batch_size_ep # Policies evaluated so far.
     if n_policies%popsize==0:
         list_gen_policies=[]
         list_gen_policies_rewards=[]
 
         policy_reward_per_ep=[]
 
-    # En caso de usar un entorno con criterio de parada dependiente del parametro 
-    # terminate_when_unhealthy, anular este tipo de parada.
+    # In case of using an environment with stopping criterion dependent on the terminate_when_unhealthy parameter, 
+    # override this type of stop.
     if DTU:
         self.env._env.env._terminate_when_unhealthy = False
 
-    # Inicializar episodio.
+    # Initialize episode.
     self.start_episode() 
-    self._max_episode_length = int(max_episode_length*optimal_acc) # Fijar tamano maximo del episodio.
+    self._max_episode_length = int(max_episode_length*optimal_acc) # Set maximum episode size.
 
-    # Actualizar contadores tras evaluar el episodio.
-    episode_steps = 0 # Inicializar contador para sumar el numero de steps dados en este episodio.
+    # Update counters after evaluating the episode.
+    episode_steps = 0 # Initialize counter to add the number of steps taken in this episode.
     policy_reward=0
-    while not self.step_episode(): # Hasta que no se puedan dar mas steps en el episodio.
-        policy_reward+=self._env_steps[episode_steps].reward # Dar un nuevo step.
-        episode_steps+= 1 # Sumar step.
+    while not self.step_episode(): # Until more steps can not be given in the episode.
+        policy_reward+=self._env_steps[episode_steps].reward # Take a new step.
+        episode_steps+= 1 # Add step.
 
-    n_steps_proc += episode_steps #  Steps totales dados hasta el momento.
-    n_episodes += 1 # Episodios evaluados hasta el momento.
+    n_steps_proc += episode_steps # Total steps taken so far.
+    n_episodes += 1 # Episodes evaluated so far.
     policy_reward_per_ep.append(policy_reward)
 
-    # Cuando se haya evaluado una politica/individuo al completo (numero de episodios evaluado=batch_size_ep),
-    # se almacena su correspondiente reward (reward total en batch_size_ep).
+    # When a complete policy has been evaluated (number of episodes evaluated=batch_size_ep), 
+    # its corresponding reward is stored (total reward in batch_size_ep).
     if n_episodes%batch_size_ep==0:
         list_gen_policies.append(self.agent)
         list_gen_policies_rewards.append(np.mean(policy_reward_per_ep))
         policy_reward_per_ep=[]
     
-    # Cuando se han evaluado las suficientes politicas como para poder completar una generacion nueva,
-    # se guarda la informacion obtenida de la nueva generacion.
-    n_policies=n_episodes/batch_size_ep#Politicas evaluadas hasta el momento.
+    # When enough policies have been evaluated to be able to complete a new population, the
+    # information obtained from the new population is saved.    
+    n_policies=n_episodes/batch_size_ep # Policies evaluated so far.
     if n_policies!=0 and n_policies%popsize == 0:
 
-        # Restar numero de steps sumados de forma duplicada (en la ultima iteracion del metodo de biseccion ya se han evaluado 
-        # sample_size politicas que forman la generacion, y los steps dados se han vuelto a contar ahora en n_steps_proc)
+        # Subtract number of steps added in duplicate (in the last iteration of the bisection 
+        # method we have already evaluated sample_size policies that form the population, and 
+        # the given steps have now been re-counted in n_steps_proc).        
         if heuristic_accepted:
             n_steps_acc-=sample_size*batch_size_ep*int(max_episode_length*optimal_acc)
             last_time_heuristic_accepted=n_steps_proc+n_steps_acc
 
-        # Actualizar base de datos.
+        # Update database.
         n_generations+=1
         best_policy=list_gen_policies[list_gen_policies_rewards.index(max(list_gen_policies_rewards))]
         reward=evaluate_policy_test(best_policy,test_env,test_n_eval_episodes)
-        df.append([global_heuristic_param,seed,n_generations,reward,optimal_acc,np.var(list_gen_policies_rewards),n_steps_proc,n_steps_acc,n_steps_proc+n_steps_acc])
+        df.append([global_heuristic_param,seed,n_generations,reward,optimal_acc,np.var(list_gen_policies_rewards),heuristic_accepted,n_steps_proc,n_steps_acc,n_steps_proc+n_steps_acc])
         
-        
-        # print('accuracy: '+str(optimal_acc)+'n_steps_proc: '+str(n_steps_proc)+'n_steps_acc: '+str(n_steps_acc)+'n_steps: '+str(n_steps_proc+n_steps_acc))
-
     return self.collect_episode()
 
-# FUNCION (para poder aplicar los heuristicos durante el proceso de entrenamiento)
 def train(self, trainer):
+    '''The original function is modified so that heuristics can be applied during the execution process.'''
 
     init_mean = self.policy.get_param_values()
     self._es = cma.CMAEvolutionStrategy(init_mean, self._sigma0,
@@ -409,8 +443,8 @@ def train(self, trainer):
     global n_generations,df,global_heuristic,global_heuristic_param,optimal_acc,batch_size_ep
     
     global n_steps_proc,n_steps_acc,train_env,last_time_heuristic_accepted,unused_bisection_executions
-    while n_steps_proc+n_steps_acc<max_steps:# MODIFICACION: cambiar criterio de parada.
-        # MODIFICACION: obtener individuos de la generacion.
+    while n_steps_proc+n_steps_acc<max_steps:# MODIFICATION: Change stopping criterion.
+        # MODIFICATION: To obtain individuals from the population.
         global df_policy_train_bisection_info
         def obtain_population():
             global seed,idx_sample,df_policy_train_bisection_info,list_idx_bisection,list_bisection_acc,n_sample
@@ -444,7 +478,8 @@ def train(self, trainer):
                 df_seed=df_seed[df_seed[1]==seed]
                 list_variances=list(df_seed[5])
 
-                # Funcion para calcular el intervalo de confianza.
+                # Calculate the confidence interval.
+                global CI
                 def bootstrap_confidence_interval(data,bootstrap_iterations=1000):
                     mean_list=[]
                     for i in range(bootstrap_iterations):
@@ -452,7 +487,12 @@ def train(self, trainer):
                         mean_list.append(np.mean(sample))
                     return np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
 
-                variance_q05,variance_q95=bootstrap_confidence_interval(list_variances[(-2-global_heuristic_param):-2])
+                if CI=='bootstrap':
+                    variance_q05,variance_q95=bootstrap_confidence_interval(list_variances[(-2-global_heuristic_param):-2])
+                if CI=='mean_sd':
+                    variance_q05=np.mean(list_variances[(-2-global_heuristic_param):-2])-2*np.std(list_variances[(-2-global_heuristic_param):-2])
+                    variance_q95=np.mean(list_variances[(-2-global_heuristic_param):-2])+2*np.std(list_variances[(-2-global_heuristic_param):-2])
+                
                 last_variance=list_variances[-1]
 
                 if (len(list_variances)>=global_heuristic_param+1) and (last_variance<variance_q05 or last_variance>variance_q95):
@@ -463,7 +503,7 @@ def train(self, trainer):
                 elif len(list_variances)<global_heuristic_param+1 and (n_steps_proc+n_steps_acc)-last_time_heuristic_accepted>=heuristic_freq: 
                     obtain_population()
 
-        # MODIFICACION: aplicar el heuristico.
+        # MODIFICATION: apply the heuristic.
         df_policy_train_bisection_info=pd.DataFrame(df_policy_train_bisection_info,columns=['n_sample','accuracy','reward'])
 
         if n_generations==0:
@@ -479,7 +519,7 @@ def train(self, trainer):
         trainer._env=train_env   
         trainer._train_args.batch_size=batch_size_ep*int(max_episode_length*optimal_acc)
 
-        # MODIFICACION: evaluar la generacion.
+        # MODIFICATION: to evaluate the population.
         garage.sampler.default_worker.DefaultWorker.rollout = rollout
         trainer.step_itr = trainer._stats.total_itr
         trainer.step_episode = None
@@ -490,17 +530,20 @@ def train(self, trainer):
 
     return last_return
 
-# FUNCION (para poder evaluar cada politica de cada generacion durante el entrenamiento con el mismo
-# conjunto de episodios, esta modificacion hace que el proceso sea determinista y las comparaciones 
-# de individuos por generacion sean justas).
+
 def start_episode(self):
+    '''
+    The original function is modified to be able to evaluate each policy of each population during
+    training with the same set of episodes, this modification makes the process deterministic and the 
+    comparisons of individuals per population are fair.
+    '''
 
     self._eps_length = 0
 
-    # MODIFICACION: para que siempre se usen los mismos episodios para validar las politicas/individuos y estas puedan ser comparables.
+    # MODIFICATION: so that the same episodes are always used to validate the policies and these can be comparable.
     global n_episodes,batch_size_ep,n_generations
     if n_episodes%batch_size_ep==0:
-        self.env._env.seed(seed=n_generations)#seed=train_env_seed (si se quiere evaluar los mismos episodios en todas las generaciones)
+        self.env._env.seed(seed=n_generations)#seed=train_env_seed (if the same episodes are to be evaluated in all populations).
     self._prev_obs, episode_info = self.env.reset()
 
     for k, v in episode_info.items():
@@ -509,50 +552,50 @@ def start_episode(self):
     self.agent.reset()
 
 #==================================================================================================
-# PROGRAMA PRINCIPAL
+# MAIN PROGRAM
 #==================================================================================================
 
-# Modificacion de funcion existente ( para no perder tiempo).
+# Modification of existing function (not to waste time).
 garage.trainer.Trainer.save = lambda self, epoch: "skipp save."
-# Modificacion de funcion existente (para no imprimir informacion de episodio durante el entrenamiento).
+# Modification of existing function (not to print episode information during execution).
 Logger.log= lambda self, data: 'skipp info message.'
 warnings.filterwarnings("ignore")
-# Modificacion de funciones existentes (para poder aplicar los heuristicos durante el entrenamiento)
+# Modification of existing functions (to be able to apply heuristics during execution).
 CMAES.train=train
-# Modificacion de funcion existente (para evaluar todas las politicas/individuos de cada generacion con los mismos episodios y asi puedan ser comparables).
+#Modification of existing function (to evaluate all the policies of each population with the same episodes so that they can be comparable).
 from garage.sampler.default_worker import DefaultWorker
 DefaultWorker.start_episode=start_episode
 
-
-# Caracteristicas del entorno.
+# Environment features.
 gymEnvName='Swimmer-v3'
 action_space="continuous"
 max_episode_length=1000
-default_frametime=0.01 # Parametro del que se modificara el accuracy.
+default_frametime=0.01 # Parameter from which the accuracy will be modified.
 policy_name='SwimmerPolicy'
-DTU=False # Criterio de parada dependiente de terminate_when_unhealthy.
+DTU=False # Stopping criterion dependent on terminate_when_unhealthy.
 
-# Mallados y parametros para el entrenamiento.
-list_train_seeds = list(range(2,102,1)) # Lista de semillas de entrenamiento.
-train_env_seed=0 # Semilla para el entorno de entrenamiento.
-max_steps=1000000 # Limite de entrenamiento medido en steps (asumiendo que el coste de todos los steps es el mismo). (Referencia: https://huggingface.co/sb3/ppo-Swimmer-v3/tree/main)
+# Grids and parameters for training.
+list_train_seeds = list(range(2,102,1)) # List of training seeds.
+train_env_seed=0 # Seed for the training environment.
+max_steps=1000000 # Training limit measured in steps (assuming that the cost of all steps is the same). (Reference: https://huggingface.co/sb3/ppo-Swimmer-v3/tree/main)
 
-# Parametros de validacion.
-test_env_seed=1 # Semilla para el entorno de validacion.
-test_n_eval_episodes=10 # Numero de episodios que se evaluaran en la validacion.
+# Validation parameters.
+test_env_seed=1 # Seed for the validation environment.
+test_n_eval_episodes=10 # Number of episodes to be evaluated in the validation.
 
-# Lista de argumentos para el procesamiento en paralelo.
-list_arg=[['I',0.8],['I',0.95],['II',5],['II',10]]
-sample_size_freq='BisectionOnly'
-df_sample_freq=pd.read_csv('results/data/general/sample_size_freq_'+str(sample_size_freq)+'.csv',index_col=0)
+# Argument list for parallel processing.
+list_arg=[['II',5,'mean_sd'],['I',0.8,'none'],['I',0.95,'none'],['II',5,'bootstrap'],['II',10,'bootstrap']]
+df_sample_freq=pd.read_csv('results/data/general/sample_size_freq.csv',index_col=0)
 sample_size=int(df_sample_freq[df_sample_freq['env_name']=='MuJoCo']['sample_size'])
 heuristic_freq=float(df_sample_freq[df_sample_freq['env_name']=='MuJoCo']['frequency_time'])
 
-# Funcion para ejecucion en paralelo.
+# Function for parallel execution.
 def parallel_processing(arg):
 
     heuristic=arg[0]
     heuristic_param=arg[1]
+    global CI
+    CI=arg[2]
 
     global df
     df=[]
@@ -562,13 +605,27 @@ def parallel_processing(arg):
     for seed in tqdm(list_train_seeds):
         learn(gymEnvName=gymEnvName, action_space=action_space, max_episode_length=max_episode_length,policy_name=policy_name,seed=seed,heuristic=heuristic,heuristic_param=heuristic_param) 
 
-    # Guardar base de datos.
-    df=pd.DataFrame(df,columns=['heuristic_param','seed','n_gen','reward','accuracy','variance','n_steps_proc','n_steps_acc','n_steps'])
-    df.to_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_param'+str(heuristic_param)+'.csv')
+    # Save database.
+    df=pd.DataFrame(df,columns=['heuristic_param','seed','n_gen','reward','accuracy','variance','update','n_steps_proc','n_steps_acc','n_steps'])
+    df.to_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_param'+str(heuristic_param)+'_CI'+str(CI)+'.csv')
 
-# Procesamiento en paralelo.
+# Parallel processing.
 phisical_cpu=ps.cpu_count(logical=False)
 pool=mp.Pool(phisical_cpu)
 pool.map(parallel_processing,list_arg)
 pool.close()
+
+# Join databases.
+def join_df(heuristic,list_param,CI):
+    df=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_param'+str(list_param[0])+'_CI'+str(CI)+'.csv', index_col=0)
+    for param in list_param[1:]:
+        df_new=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_param'+str(list_param[0])+'_CI'+str(CI)+'.csv', index_col=0)
+        df=pd.concat([df,df_new],ignore_index=True)
+
+    df.to_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_CI'+str(CI)+'.csv')
+
+join_df('I',[0.8,0.95],'none')
+join_df('II',[5,10],'bootstrap')
+join_df('II',[5],'mean_sd')
+
 
