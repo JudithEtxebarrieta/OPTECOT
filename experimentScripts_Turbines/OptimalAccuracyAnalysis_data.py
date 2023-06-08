@@ -1,5 +1,13 @@
+
+'''
+In this script, the proposed heuristic is applied to the Turbines environment. The CMA-ES 
+algorithm is run on this environment using 100 different seeds. A database is built with the 
+relevant information obtained during the execution of each seed. 
+
+'''
+
 #==================================================================================================
-# LIBRERIAS
+# LIBRARIES
 #==================================================================================================
 import numpy as np
 import cma
@@ -7,6 +15,11 @@ import time
 import os
 from tqdm import tqdm
 import pandas as pd
+import scipy as sc
+import random
+import itertools
+from joblib import Parallel, delayed
+import shutil
 
 import sys
 sys.path.append("OptimizationAlgorithms_KONFLOT/packages")
@@ -15,17 +28,20 @@ import turbine_classes
 import MathTools as mt
 
 #==================================================================================================
-# FUNCIONES
+# FUNCTIONS
 #==================================================================================================
 #--------------------------------------------------------------------------------------------------
-# Funciones auxiliares para definir el accuracy apropiado en cada momento del proceso.
+# Auxiliary functions to define the appropriate accuracy at each stage of the execution process.
 #--------------------------------------------------------------------------------------------------
-# FUNCION 1 (Calculo de la correlacion de Spearman entre dos secuencias)
+
 def spearman_corr(x,y):
+    '''Calculation of Spearman's correlation between two lists.'''
+
     return sc.stats.spearmanr(x,y)[0]
 
-# FUNCION 2 (Convertir vector de scores en vector de ranking)
 def from_scores_to_ranking(list_scores):
+    '''Convert score list to ranking list.'''
+
     list_pos_ranking=np.argsort(np.array(list_scores))
     ranking=[0]*len(list_pos_ranking)
     i=0
@@ -34,46 +50,56 @@ def from_scores_to_ranking(list_scores):
         i+=1
     return ranking
 
-# FUNCION 3 (Generar lista con los scores asociados a cada diseno que forma la generacion)
-# Parametros:
-#   >population: lista con las soluciones que forman la generacion.
-#   >accuracy: accuracy fijado como optimo en la generacion anterior.
-#   >count_time_acc: True o False si se quieren sumar o no respectivamente, el tiempo de evaluacion
-#    como tiempo adicional para ajustar el accuracy.
-#   >count_time_gen: True o False si se quiere sumar o no respectivamente, el tiempo de evaluacion
-#    como tiempo natural para la evaluacion de la generacion.
-# Devolver: lista con los scores asociados a cada solucion que forma la generacion.
-
 def generation_score_list(population,accuracy,count_time_acc=True,count_time_gen=False):
+    '''
+    Generate a list of scores associated with each design in the population.
+
+    Parameters
+    ==========
+    population: List of solutions forming the population.
+    accuracy: Accuracy set as optimal in the previous population.
+    count_time_acc: True or False if you want to add or not respectively the evaluation time as additional time to adjust the accuracy.
+    count_time_gen: True or False if you want to add or not respectively the evaluation time as natural time for the population evaluation.
+
+    Return
+    ======
+    list_scores: List with the scores associated to each solution that forms the population.
+    '''
     global time_acc,time_proc
 
-    # Evaluar poblacion.
-    list_scores=[]
-    for sol in population:
-        t=time.time()
-        score=fitness_function(sol,N=int(default_N*accuracy))
-        elapsed_time=time.time()-t
-        if count_time_acc and not count_time_gen:
-            time_acc+=elapsed_time
-        if count_time_gen:
-            time_proc+=elapsed_time
-        list_scores.append(score)
+    # Obtain scores and times per evaluation.
+    os.makedirs(sys.path[0]+'/PopulationScores'+str(task))
+
+    def parallel_f(turb_params,index):
+        score=fitness_function(turb_params, N=int(default_N*accuracy))
+        np.save(sys.path[0]+'/PopulationScores'+str(task)+'/'+str(index),score)
+
+    t=time.time()
+    Parallel(n_jobs=4)(delayed(parallel_f)(population[i],i) for i in range(len(population)))
+    elapsed_time=time.time()-t
+
+    def obtain_score_list(popsize):
+        list_scores=[]
+        for i in range(popsize):
+            score=float(np.load(sys.path[0]+'/PopulationScores'+str(task)+'/'+str(i)+'.npy'))
+            list_scores.append(score) 
+        shutil.rmtree(sys.path[0]+'/PopulationScores'+str(task),ignore_errors=True)
+        return list_scores
+    list_scores=obtain_score_list(len(population))
+
+    # Evaluate population.
+    if count_time_acc and not count_time_gen:
+        time_acc+=elapsed_time
+    if count_time_gen:
+        time_proc+=elapsed_time
 
     return list_scores
 #--------------------------------------------------------------------------------------------------
-# Funciones asociadas a los heuristicos que se aplicaran para ajustar el accuracy..
+# Functions associated with the heuristics to be applied to adjust the accuracy.
 #--------------------------------------------------------------------------------------------------
-# FUNCION 4 (Implementacion adaptada del metodo de biseccion)
-# Parametros:
-#   >init_acc: accuracy inicial (el minimo considerado).
-#   >population: lista con las soluciones que forman la generacion.
-#   >train_seed: semilla de entrenamiento.
-#   >threshold: umbral del metodo de biseccion con el que se ira actualizando el intervalo que contiene el valor de accuracy optimo.
-# Devuelve: 
-#   >prev_m: valor de accuracy seleccionado como optimo.
-#   >last_time_acc_increase: tiempo de evaluacion consumido en la ultima iteracion del metodo de biseccion.
 
 def bisection_method(lower_time,upper_time,population,train_seed,sample_size,interpolation_pts,threshold=0.95):
+    '''Adapted implementation of bisection method.'''
 
     # Inicializar limite inferior y superior.
     time0=lower_time
@@ -124,21 +150,24 @@ def bisection_method(lower_time,upper_time,population,train_seed,sample_size,int
         first_iteration=False
     return np.interp(prev_m,interpolation_pts[0],interpolation_pts[1]),last_time_acc_increase
 
-# FUNCION 5 (Ejecutar heuristicos durante el proceso de entrenamiento)
-# Parametros:
-#   >gen: numero de generacion en el algoritmo CMA-ES.
-#   >min_acc: accuracy minimo a considerar en el metodo de biseccion.
-#   >acc: accuracy asociado a la generacion anterior.
-#   >population: lista con las soluciones que forman la generacion.
-#   >train_seed: semilla de entrenamiento.
-#   >list_variances: lista con las varianzas de los scores de las anteriores generaciones.
-#   >heuristic: numero que identifica al heuristico que se desea considerar.
-#   >param: valor del parametro asociado al heuristico que se desea aplicar.
-# Devuelve: 
-#   >acc: valor de accuracy seleccionado como optimo.
-#   >time_best_acc: tiempo de evaluacion consumido en la ultima iteracion del metodo de biseccion.
+def execute_heuristic(gen,acc,population,train_seed,list_variances,param):
+    '''
+    Running heuristics during the training process.
 
-def execute_heuristic(gen,acc,population,train_seed,list_variances,heuristic,param):
+    Parameters
+    ==========
+    gen: Generation/population number in the CMA-ES algorithm.
+    acc: Accuracy associated with the previous generation.
+    population: List of solutions forming the population.
+    train_seed: Training seed.
+    list_variances: List with the variances of the scores of the previous populations.
+    param: Value of the parameter associated with the heuristic (number of previous variances to compute the confidence interval).
+
+    Returns
+    =======
+    acc: Accuracy value selected as optimal.
+    time_best_acc: Evaluation time consumed in the last iteration of the bisection method.
+    '''
 
     global time_proc
     global time_acc,time_best_acc 
@@ -148,8 +177,8 @@ def execute_heuristic(gen,acc,population,train_seed,list_variances,heuristic,par
 
     time_best_acc=0
 
-    # Para el metodo de biseccion: tamano de muestra, frecuencia y expresion de interpolacion.
-    df_sample_freq=pd.read_csv('results/data/general/sample_size_freq_'+str(sample_size_freq)+'.csv',index_col=0)
+    # For the bisection method: sample size, frequency and interpolation expression.
+    df_sample_freq=pd.read_csv('results/data/general/sample_size_freq.csv',index_col=0)
     df_interpolation=pd.read_csv('results/data/Turbines/UnderstandingAccuracy/df_Bisection.csv')
     sample_size=int(df_sample_freq[df_sample_freq['env_name']=='Turbines']['sample_size'])
     heuristic_freq=float(df_sample_freq[df_sample_freq['env_name']=='Turbines']['frequency_time'])
@@ -159,63 +188,62 @@ def execute_heuristic(gen,acc,population,train_seed,list_variances,heuristic,par
     upper_time=max(interpolation_time)
 
    
-    # HEURISTICO I de Symbolic Regressor: Biseccion de generacion en generacion (el umbral es el parametro).
-    if heuristic=='I': 
-        if gen==0:
-            acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc],threshold=param)            
+    # HEURISTICO II of Symbolic Regressor: Bisection with automatic setting for accuracy update frequency 
+    # (parameter dependent) and threshold of bisection method set to 0.95.
+    if gen==0: 
+        acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc])
+        unused_bisection_executions=0
+    else:
+        if len(list_variances)>=param+1:
+            # Calculate the confidence interval.
+            global CI
+            def bootstrap_confidence_interval(data,bootstrap_iterations=1000):
+                mean_list=[]
+                for i in range(bootstrap_iterations):
+                    sample = np.random.choice(data, len(data), replace=True) 
+                    mean_list.append(np.mean(sample))
+                return np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
+
+            if CI=='bootstrap':
+                variance_q05,variance_q95=bootstrap_confidence_interval(list_variances[(-2-param):-2])
+            if CI=='mean_sd':
+                variance_q05=np.mean(list_variances[(-2-param):-2])-2*np.std(list_variances[(-2-param):-2])
+                variance_q95=np.mean(list_variances[(-2-param):-2])+2*np.std(list_variances[(-2-param):-2])
+
+            last_variance=list_variances[-1]
+            
+            # Calculate the minimum accuracy with which the maximum quality is obtained.
+            if last_variance<variance_q05 or last_variance>variance_q95:
+
+                if (time_proc+time_acc)-last_time_heuristic_accepted>=heuristic_freq:   
+                    unused_bisection_executions+=int((time_proc+time_acc-last_time_heuristic_accepted)/heuristic_freq)-1
+
+                    acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc])
+                else:
+                    if unused_bisection_executions>0:
+                        acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc])
+                        unused_bisection_executions-=1
         else:
             if (time_acc+time_proc)-last_time_heuristic_accepted>=heuristic_freq:
-                acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc],threshold=param)
-
-    # HEURISTICO II de Symbolic Regressor: Biseccion con definicion automatica para frecuencia 
-    # de actualizacion de accuracy (depende de parametro) y umbral del metodo de biseccion fijado en 0.95.
-    if heuristic=='II': 
-        if gen==0: 
-            acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc])
-            unused_bisection_executions=0
-        else:
-            if len(list_variances)>=param+1:
-                # Funcion para calcular el intervalo de confianza.
-                def bootstrap_confidence_interval(data,bootstrap_iterations=1000):
-                    mean_list=[]
-                    for i in range(bootstrap_iterations):
-                        sample = np.random.choice(data, len(data), replace=True) 
-                        mean_list.append(np.mean(sample))
-                    return np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
-
-                variance_q05,variance_q95=bootstrap_confidence_interval(list_variances[(-2-param):-2])
-                last_variance=list_variances[-1]
-                
-                # Calcular el minimo accuracy con el que se obtiene la maxima calidad.
-                if last_variance<variance_q05 or last_variance>variance_q95:
-
-                    if (time_proc+time_acc)-last_time_heuristic_accepted>=heuristic_freq:   
-                        unused_bisection_executions+=int((time_proc+time_acc-last_time_heuristic_accepted)/heuristic_freq)-1
-
-                        acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc])
-                    else:
-                        if unused_bisection_executions>0:
-                            acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc])
-                            unused_bisection_executions-=1
-            else:
-                if (time_acc+time_proc)-last_time_heuristic_accepted>=heuristic_freq:
-                    acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc])
-                            
+                acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc])
+                        
     return acc,time_best_acc
     
 #--------------------------------------------------------------------------------------------------
-# Funciones para el proceso de aprendizaje o busqueda del optimo diseno de turbina.
+# Functions for the search process of the optimal turbine design.
 #--------------------------------------------------------------------------------------------------
-def transform_turb_params(scaled_x, blade_number):
+def transform_turb_params(scaled_x):
+    '''Transform the scaled values of the parameters to the real values.'''
 
-    # Definir rangos de los parametros que definen el diseno de la turbina.
+    # Set the ranges of the parameters defining the turbine design.
+    blade_number = [3,5,7]# Blade-number gene.
     sigma_hub = [0.4, 0.7]# Hub solidity gene.
     sigma_tip = [0.4, 0.7]# Tip solidity gene.
     nu = [0.4, 0.75] # Hub-to-tip-ratio gene.
     tip_clearance=[0,3]# Tip-clearance gene.	  
     airfoil_dist = np.arange(0, 27)# Airfoil dist. gene.  
 
-    # Array con los rangos.
+    # List with ranges.
     bounds=np.array([
     [sigma_hub[0]    , sigma_hub[1]],
     [sigma_tip[0]    , sigma_tip[1]],
@@ -224,17 +252,26 @@ def transform_turb_params(scaled_x, blade_number):
     [0               , 26]
     ])
 
-    # Transformar los valores escalados de los parametros a los valores reales.
-    real_x = scaled_x * (bounds[:,1] - bounds[:,0]) + bounds[:,0]
+    # To transform the discrete parameter blade-number.
+    def blade_number_transform(posible_blade_numbers,scaled_blade_number):
+        discretization=np.arange(0,1+1/len(posible_blade_numbers),1/len(posible_blade_numbers))
+        detection_list=discretization>scaled_blade_number
+        return posible_blade_numbers[list(detection_list).index(True)-1]
 
-    return [blade_number]+list(real_x[:-1])+[round(real_x[-1])]
+    # Transformation.
+    real_x = scaled_x[1:] * (bounds[:,1] - bounds[:,0]) + bounds[:,0]
+    real_bladenumber= blade_number_transform(blade_number,scaled_x[0])
+
+    return [real_bladenumber]+list(real_x[:-1])+[round(real_x[-1])]
 
 
 def fitness_function(turb_params,N=100):
 
-    # Construir diccionario de parametros constantes.
+    '''Evaluating a turbine design.'''
+
+    # Build dictionary of constant parameters.
     def build_constargs_dict(N):
-        # Definir parametros constantes.
+        # Define constant parameters.
         omega = 2100# Rotational speed.
         rcas = 0.4# Casing radius.
         airfoils = ["NACA0015", "NACA0018", "NACA0021"]# Set of possible airfoils.
@@ -245,7 +282,7 @@ def fitness_function(turb_params,N=100):
         Nmin = 1000#Max threshold rotational speeds
         Nmax = 3200#Min threshold rotational speeds
 
-        # Construir el diccionario que necesita la funcion fitness
+        # Construct the dictionary needed by the fitness function.
         constargs = {"N": N,
                 "omega": omega,
                 "rcas": rcas,
@@ -262,48 +299,50 @@ def fitness_function(turb_params,N=100):
 
     constargs=build_constargs_dict(N)
 
-    # Crear turbina instantantanea.
+    # Create instantaneous turbine.
     os.chdir('OptimizationAlgorithms_KONFLOT')
     turb = turbine_classes.instantiate_turbine(constargs, turb_params)	
     os.chdir('../')
 
-    # Calcular evaluacion.
+    # Calculate evaluation.
     scores = turbine_classes.fitness_func(constargs=constargs, turb=turb, out='brfitness')
 
     return -scores[1]
 
-def learn(seed,blade_number,heuristic,heuristic_param,accuracy=1,popsize=20):
+def learn(seed,heuristic_param,accuracy=1,popsize=20):
+    '''Run the CMA-ES algorithm with specific seed and using heuristic with the parameter value heuristic_param.'''
+
     global time_best_acc, last_time_heuristic_accepted
     
-    # Inicializar CMA-ES.
+    # Initialize CMA-ES.
     np.random.seed(seed)
-    es = cma.CMAEvolutionStrategy(np.random.random(5), 0.33,inopts={'bounds': [0, 1],'seed':seed,'popsize':popsize})
+    es = cma.CMAEvolutionStrategy(np.random.random(6), 0.33,inopts={'bounds': [0, 1],'seed':seed,'popsize':popsize})
 
-    # Inicializar contadores de tiempo.
+    # Initialize time counters.
     global time_proc,time_acc
     time_proc=0
     time_acc=0
 
-    # Evaluar los disenos de las generaciones hasta agotar el tiempo maximo definido por el accuracy maximo.
+    # Evaluate population designs until the maximum time is exhausted.
     n_gen=0
     while time_proc+time_acc<max_time:
 
-        # Nueva generacion.
+        # New population.
         solutions = es.ask()
 
-        # Transformar los valores escalados de los parametros a los valores reales.
-        list_turb_params=[transform_turb_params(x, blade_number) for x in solutions]
+        # Transform the scaled values of the parameters to the real values.
+        list_turb_params=[transform_turb_params(x) for x in solutions]
 
-        # Aplicar el heuristico.
+        # Apply the heuristic.
         if n_gen==0:
-            accuracy,time_best_acc=execute_heuristic(n_gen,accuracy,list_turb_params,seed,[],heuristic,heuristic_param)
+            accuracy,time_best_acc=execute_heuristic(n_gen,accuracy,list_turb_params,seed,[],heuristic_param)
         else:
             df_seed=pd.DataFrame(df)
             df_seed=df_seed[df_seed[1]==seed]
-            accuracy,time_best_acc=execute_heuristic(n_gen,accuracy,list_turb_params,seed,list(df_seed[6]),heuristic,heuristic_param)
+            accuracy,time_best_acc=execute_heuristic(n_gen,accuracy,list_turb_params,seed,list(df_seed[6]),heuristic_param)
 
 
-        # Obtener scores por evaluacion y actualizar contadores de tiempo.
+        # Obtain scores per evaluation and update time counters.
         list_scores=generation_score_list(list_turb_params,accuracy,count_time_gen=True)
         if time_best_acc!=0:
             time_acc-=time_best_acc
@@ -312,42 +351,39 @@ def learn(seed,blade_number,heuristic,heuristic_param,accuracy=1,popsize=20):
         else:
             readjustement=False
 
-        # Para construir la siguiente generacion.
+        # To build the following population.
         es.tell(solutions, list_scores)
 
-        # Acumular datos de interes.
-        test_score= fitness_function(transform_turb_params(es.result.xbest,blade_number))
+        # Accumulate data of interest.
+        test_score= fitness_function(transform_turb_params(es.result.xbest))
         df.append([heuristic_param,seed,n_gen,-test_score,readjustement,accuracy,np.var(list_scores),time_proc,time_acc,time_acc+time_proc])
 
         n_gen+=1
         
 #==================================================================================================
-# PROGRAMA PRINCIPAL
+# MAIN PROGRAM
 #==================================================================================================
+# List of seeds.
+list_seeds=range(2,102,1) 
 
-# Lista de semillas.
-list_seeds=np.range(2,102,1)
+# Lista de task que se desean ejecutar en el cluster
+list_tasks=list_seeds
 
 # Parametros.
-blade_number=3
 default_N=100
 sample_size_freq='BisectionOnly'
-max_time=np.load('results/data/Turbines/ConstantAccuracyAnalysis/max_time.npy')
+max_time=60*60 # 1h por semilla.
+heuristic_param=5
 
-# Definicion de heuristicos que se desean ejecutar.
-list_args=[['I',0.8],['I',0.95],['II',5],['II',10]]
+# Confidence interval calculation.
+CI_types=['bootstrap','mean_sd']
 
-# Guardar base de datos con informacion de interes asociada al entrenamiento.
-for arg in list_args:
-    heuristic=arg[0]
-    heuristic_param=arg[1]
-
+# Save database with information of interest associated with the training.
+for CI in CI_types:
     df=[]
 
     for seed in tqdm(list_seeds):
-        learn(seed,blade_number,heuristic,heuristic_param)
+        learn(seed,heuristic_param)
 
     df=pd.DataFrame(df,columns=['heuristic_param','seed','n_gen','score','readjustement','accuracy','variance','elapsed_time_proc','elapsed_time_acc','elapsed_time'])
-    df.to_csv('results/data/Turbines/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_param'+str(heuristic_param)+'.csv')
-
-
+    df.to_csv('results/data/Turbines/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_CI'+str(CI)+'.csv')

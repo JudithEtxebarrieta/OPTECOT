@@ -1,7 +1,7 @@
-# Mediante este script se guardan las imagenes del diseno de diferentes turbinas.
+'''This script is used to save the images of the design of different turbines.'''
 
 #==================================================================================================
-# LIBRERIAS
+# LIBRERIES
 #==================================================================================================
 import numpy as np
 import matplotlib as mpl
@@ -28,7 +28,7 @@ import turbine_classes
 import MathTools as mt
 
 #==================================================================================================
-# FUNCIONES
+# FUNCTIONS
 #==================================================================================================
 def build_constargs_dict(N):
 
@@ -70,10 +70,10 @@ def build_turbine(turb_params,N=50):
 	return turb
 
 #==================================================================================================
-# FUNCIONES
+# MAIN PROGRAM
 #==================================================================================================
 
-# Parametros de la turbina.
+# Turbine parameters.
 blade_number = [3, 5, 7]# Blade-number gene.
 sigma_hub = [0.4, 0.7]# Hub solidity gene.
 sigma_tip = [0.4, 0.7]# Tip solidity gene.
@@ -81,12 +81,12 @@ nu = [0.4, 0.75]  # Hub-to-tip-ratio gene.
 tip_clearance=[0,3]# Tip-clearance gene.
 airfoil_dist = np.arange(0, 27)# Airfoil dist. gene. 
 
-# Mis ejemplos de turbinas.
+# Examples of turbines.
 turb1=build_turbine([3,0.4,0.4,0.4,0,0])
 turb2=build_turbine([5,0.55,0.55,0.55,0.5,13.5])
 turb3=build_turbine([7,0.7,0.7,0.7,1,13.5])
 
-# Imagenes de las turbinas definidas.
+# Images of defined turbines.
 fig,ax=turbine_classes.plot_turbine(turb1)
 fig.savefig('results/figures/Turbines/ExampleTurb1.png')
 

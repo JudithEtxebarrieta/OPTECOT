@@ -1,5 +1,11 @@
+'''
+This script saves the relevant information extracted from the execution process of the CMA-ES 
+algorithm on the Turbines environment, using 10 different N values and considering 
+a total of 100 seeds for each one. 
+'''
+
 #==================================================================================================
-# LIBRERIAS
+# LIBRARIES
 #==================================================================================================
 import numpy as np
 import cma
@@ -18,13 +24,13 @@ import turbine_classes
 import MathTools as mt
 
 #==================================================================================================
-# FUNCIONES
+# FUNCTIONS
 #==================================================================================================
 
-
 def transform_turb_params(scaled_x):
+    '''Transform the scaled values of the parameters to the real values.'''
 
-    # Definir rangos de los parametros que definen el diseno de la turbina.
+    # Set the ranges of the parameters defining the turbine design.
     blade_number = [3,5,7]# Blade-number gene.
     sigma_hub = [0.4, 0.7]# Hub solidity gene.
     sigma_tip = [0.4, 0.7]# Tip solidity gene.
@@ -32,7 +38,7 @@ def transform_turb_params(scaled_x):
     tip_clearance=[0,3]# Tip-clearance gene.	  
     airfoil_dist = np.arange(0, 27)# Airfoil dist. gene.  
 
-    # Array con los rangos.
+    # List with ranges.
     bounds=np.array([
     [sigma_hub[0]    , sigma_hub[1]],
     [sigma_tip[0]    , sigma_tip[1]],
@@ -41,12 +47,13 @@ def transform_turb_params(scaled_x):
     [0               , 26]
     ])
 
-    # Transformar los valores escalados de los parametros a los valores reales.
+    # To transform the discrete parameter blade-number.
     def blade_number_transform(posible_blade_numbers,scaled_blade_number):
         discretization=np.arange(0,1+1/len(posible_blade_numbers),1/len(posible_blade_numbers))
         detection_list=discretization>scaled_blade_number
         return posible_blade_numbers[list(detection_list).index(True)-1]
 
+    # Transformation.
     real_x = scaled_x[1:] * (bounds[:,1] - bounds[:,0]) + bounds[:,0]
     real_bladenumber= blade_number_transform(blade_number,scaled_x[0])
 
@@ -54,10 +61,11 @@ def transform_turb_params(scaled_x):
 
 
 def fitness_function(turb_params,N=100):
+    '''Evaluating a turbine design.'''
 
-    # Construir diccionario de parametros constantes.
+    # Build dictionary of constant parameters.
     def build_constargs_dict(N):
-        # Definir parametros constantes.
+        # Define constant parameters.
         omega = 2100# Rotational speed.
         rcas = 0.4# Casing radius.
         airfoils = ["NACA0015", "NACA0018", "NACA0021"]# Set of possible airfoils.
@@ -68,7 +76,7 @@ def fitness_function(turb_params,N=100):
         Nmin = 1000#Max threshold rotational speeds
         Nmax = 3200#Min threshold rotational speeds
 
-        # Construir el diccionario que necesita la funcion fitness
+        # Construct the dictionary needed by the fitness function.
         constargs = {"N": N,
                 "omega": omega,
                 "rcas": rcas,
@@ -85,37 +93,38 @@ def fitness_function(turb_params,N=100):
 
     constargs=build_constargs_dict(N)
 
-    # Crear turbina instantantanea.
+    # Create instantaneous turbine.
     os.chdir('OptimizationAlgorithms_KONFLOT')
     turb = turbine_classes.instantiate_turbine(constargs, turb_params)	
     os.chdir('../')
 
-    # Calcular evaluacion.
+    # Calculate evaluation.
     scores = turbine_classes.fitness_func(constargs=constargs, turb=turb, out='brfitness')
 
     return -scores[1]
 
 
 def learn(accuracy,seed,popsize=20):
+    '''Run the CMA-ES algorithm with specific seed and N accuracy values.'''
 
-    # Inicializar CMA-ES.
+    # Initialize CMA-ES.
     np.random.seed(seed)
     es = cma.CMAEvolutionStrategy(np.random.random(6), 0.33,inopts={'bounds': [0, 1],'seed':seed,'popsize':popsize})
 
-    # Inicializar contadores de tiempo.
+    # Initialize time counters.
     eval_time = 0
 
-    # Evaluar los disenos de las generaciones hasta agotar el tiempo maximo definido por el accuracy maximo.
+    # Evaluate populations designs until the maximum time is exhausted.
     n_gen=0
     while eval_time<max_time:
 
-        # Nueva generacion.
+        # New population.
         solutions = es.ask()
 
-        # Transformar los valores escalados de los parametros a los valores reales.
+        # Transform the scaled values of the parameters to the real values.
         list_turb_params=[transform_turb_params(x) for x in solutions]
 
-        # Obtener scores y tiempos por evaluacion.
+        # Obtain scores and times per evaluation.
         os.makedirs(sys.path[0]+'/PopulationScores'+str(task))
 
         def parallel_f(turb_params,index):
@@ -135,47 +144,30 @@ def learn(accuracy,seed,popsize=20):
             return list_scores
         list_scores=obtain_score_list(popsize)
 
-        # Para construir la siguiente generacion.
+        # To build the next generation.
         es.tell(solutions, list_scores)
 
-        # Acumular datos de interes.
+        # Accumulate data of interest.
         test_score= fitness_function(transform_turb_params(es.result.xbest))
         df.append([accuracy,seed,n_gen,-test_score,eval_time])
 
         n_gen+=1
-        # print('eval_time: '+str(eval_time)+'/'+str(max_time))
 
 #==================================================================================================
-# PROGRAMA PRINCIPAL
+# MAIN PROGRAM
 #==================================================================================================
-# Mallados.
-list_acc=[round(i,3) for i in np.arange(0.06,1+(1-0.06)/9,(1-0.06)/9)]# Lista de accuracys a considerar.                    
-list_seeds=range(2,102,1)# Lista con semillas de entrenamiento.
+# Grids.
+list_acc=[1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1]# List of accuracies.                    
+list_seeds=range(2,102,1)# List with train seeds.
 
-# Combinación de valores (accuracy,seed) que definen cada task de la ejecución en el cluster.
+# Combination of values (accuracy,seed) that define each task of the execution in the cluster.
 list_tasks=list(itertools.product(list_acc,list_seeds))
 
-# Parametros.
+# Parameters.
 default_N=100
-max_time=30*60 # 50h 100 semillas y 1 accuracy.
+max_time=60*60 # one hour per seed and accuracy value.
 
-#--------------------------------------------------------------------------------------------------
-# Para ejecutar en el Cluster (comentar lineas 179-188)
-#--------------------------------------------------------------------------------------------------
-# # Construir base de datos con datos relevantes de la ejecución del task.
-# task=int(sys.argv[1])
-# accuracy,seed=list_tasks[int(sys.argv[1])]
-# df=[]
-# learn(accuracy,seed)
-
-# # Guardar base de datos.
-# df=pd.DataFrame(df,columns=['accuracy','seed','n_gen','score','elapsed_time'])
-# df.to_csv('results/data/Turbines/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis_acc'+str(accuracy)+'_seed'+str(seed)+'.csv')
-
-#--------------------------------------------------------------------------------------------------
-# Para ejecutar en el PC (comentar lineas 165-173)
-#--------------------------------------------------------------------------------------------------
-# Construir base de datos con datos relevantes de la ejecución del task.
+# Build a database with relevant data on task execution.
 for accuracy in list_acc:
 
     for seed in tqdm(list_seeds):
@@ -183,13 +175,13 @@ for accuracy in list_acc:
         df=[]
         learn(accuracy,seed)
 
-    # Guardar base de datos.
+    # Save database.
     df=pd.DataFrame(df,columns=['accuracy','seed','n_gen','score','elapsed_time'])
     df.to_csv('results/data/Turbines/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis_acc'+str(accuracy)+'.csv')
 
-# Guardar lista con valores de accuracy.
+# Save list with accuracy values.
 np.save('results/data/Turbines/ConstantAccuracyAnalysis/list_acc',list_acc)
 
-# Guardar limite de entrenamiento.
+# Save runtime limit.
 np.save('results/data/Turbines/ConstantAccuracyAnalysis/max_time',max_time)
 

@@ -1,7 +1,7 @@
-# Mediante este codigo se calcula la evaluacion de un diseno de turbina aleatorio.
+'''This code is used to calculate the evaluation of a random turbine design.'''
 
 #==================================================================================================
-# LIBRERIAS
+# LIBRARIES
 #==================================================================================================
 import numpy as np
 import matplotlib as mpl
@@ -29,13 +29,13 @@ import MathTools as mt
 import time
 
 #==================================================================================================
-# PROGRAMA PRINCIPAL
+# MAIN PROGRAM
 #==================================================================================================
 
 #--------------------------------------------------------------------------------------------------
-# Definir un diseno de turbina de forma aleatoria
+# Define a random turbine design.
 #--------------------------------------------------------------------------------------------------
-# Definicion de parametros a optimizar.
+# Definition of parameters to be optimized.
 blade_number = [3, 5, 7] # Blade-number gene.
 sigma_hub = [0.4, 0.7]# Hub solidity gene.
 sigma_tip = [0.4, 0.7]# Tip solidity gene.
@@ -44,7 +44,7 @@ tip_clearance = [0, 3]# Tip-clearance gene.
 airfoil_dist = np.arange(0, 27)# Airfoil dist. gene.   
 
 
-# Obtener un diseno aleatorio de turbina.
+# Obtain a random turbine design.
 turb_params = [np.random.choice(blade_number),
                np.random.uniform(sigma_hub[0], sigma_hub[1]),
                np.random.uniform(sigma_tip[0], sigma_tip[1]),
@@ -53,21 +53,21 @@ turb_params = [np.random.choice(blade_number),
                np.random.choice(airfoil_dist)]
 
 #--------------------------------------------------------------------------------------------------
-# Definicion de parametros constantes
+# Definition of constant parameters.
 #--------------------------------------------------------------------------------------------------
-# Definicion de parametros constantes.
-N = 50  # Number of blade elements.                                          <<<<<<<<<<<<<<<<<<<<<< PARAMETRO QUE PODEMOS MODIFICAR
+# Parameters.
+N = 50  # Number of blade elements.                                          <<<<<<<<<<<<<<<<<<<<<< PARAMETER THAT CAN BE MODIFIED
 airfoils = ["NACA0015", "NACA0018", "NACA0021"]# Set of possible airfoils.
 omega = 2100# Rotational speed.
 rcas = 0.4# Casing radius.
-polars = turbine_classes.polar_database_load(filepath="OptimizationAlgorithms_KONFLOT/", pick=False)# Base de datos.
+polars = turbine_classes.polar_database_load(filepath="OptimizationAlgorithms_KONFLOT/", pick=False)# Database.
 cpobjs = [933.78, 1089.41, 1089.41, 1011.59, 1011.59, 1011.59, 933.78, 933.78, 933.78, 855.96]# Target dumping coefficients.
 devobjs = [2170.82, 2851.59, 2931.97, 2781.80, 2542.296783, 4518.520988, 4087.436172, 3806.379812, 5845.986619, 6745.134759]# Input sea-state standard pressure deviations.
 weights = [0.1085, 0.1160, 0.1188, 0.0910, 0.0824, 0.1486, 0.0882, 0.0867, 0.0945, 0.0652]# Input sea-state weights.
 Nmin = 1000# Min threshold rotational speeds.
 Nmax = 3200# Max threshold rotational speeds.
 
-# Diccionario con parametros constantes (necesario para calcular una evaluacion).
+# Dictionary with constant parameters (necessary to calculate an evaluation).
 constargs = {"N": N,
              "omega": omega,
              "rcas": rcas,
@@ -81,17 +81,17 @@ constargs = {"N": N,
              "Mode": "mono"}
 
 #--------------------------------------------------------------------------------------------------
-# Evaluar el diseno de turbina seleccionado.
+# Evaluate the selected turbine design.
 #--------------------------------------------------------------------------------------------------
-# Crear turbina instantanea.
-os.chdir('OptimizationAlgorithms_KONFLOT')# Cambiar directorio por defecto para poder acceder a COORDS.
+# Create instantaneous turbine.
+os.chdir('OptimizationAlgorithms_KONFLOT')# Change default directory to be able to access COORDS.
 turb = turbine_classes.instantiate_turbine(constargs, turb_params)
-os.chdir('../')# Volver a directorio por defecto.
+os.chdir('../')# Return to default directory.
 
-# Calcular score y tiempo de ejecucion.
+# Calculate score and execution time.
 t=time.time()
 scores = turbine_classes.fitness_func(constargs=constargs, turb=turb, out='brfitness')
-print('TIEMPO DE EJECUCION DE UNA EVALUACION:'+str(time.time()-t))
+print('Evaluation time: '+str(time.time()-t))
 for e, score in enumerate(scores[0]):
     print("Fitness at sea-state #" + str(e) + ": " + str(score) + "\n")
 print("Total fitness: " + str(scores[1]))

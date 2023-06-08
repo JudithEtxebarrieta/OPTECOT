@@ -1,11 +1,12 @@
-# Mediante este script se guarda en una base de datos la informacion relevante asociada a la 
-# evaluacion de un conjunto de configuraciones/disenos de turbinas. El conjunto esta formado por
-# un total de 10 o 100 disenos de turbina escogidos de forma aleatoria, y todas las configuraciones del
-# mismo se evaluan considerando diferentes valores de N. Se construiran unas bases de datos con la 
-# informacion de scores y tiempos de ejecucion por evaluacion.
+'''
+This script stores in a database the relevant information associated with the evaluation of a set of 
+turbine designs. The set is formed by a total of 10 or 100 turbine designs chosen randomly, and all
+the designs of the set are evaluated considering different values of N. A database is built 
+with the information of scores and execution times per evaluation.
+'''
 
 #==================================================================================================
-# LIBRERIAS
+# LIBRARIES
 #==================================================================================================
 import numpy as np
 import matplotlib as mpl
@@ -34,17 +35,13 @@ from tqdm import tqdm
 import pandas as pd
 
 #==================================================================================================
-# FUNCIONES
+# FUNCTIONS
 #==================================================================================================
-# FUNCION 1
-# Parametros:
-#   >list_seeds: lista de semillas a partir de las cuales se seleccionaran el
-#    conjunto de turbinas aleatorias, (tantas turbinas como cardinal de esta lista).
-# Devuelve: lista con configuraciones aleatorias de los parametros que definen el diseno 
-# de las turbinas.
 
 def choose_random_configurations(list_seeds,blade_number=[3,5,7]):
-	# Definir rangos de los parametros que definen el diseno de la turbina.
+	'''Create a random set of turbine designs (as many designs as the size of the list of seeds).'''
+
+	# Define ranges of parameters defining the turbine design.
 	blade_number = blade_number# Blade-number gene.
 	sigma_hub = [0.4, 0.7]# Hub solidity gene.
 	sigma_tip = [0.4, 0.7]# Tip solidity gene.
@@ -52,7 +49,7 @@ def choose_random_configurations(list_seeds,blade_number=[3,5,7]):
 	tip_clearance=[0,3]# Tip-clearance gene.	  
 	airfoil_dist = np.arange(0, 27)# Airfoil dist. gene.  
 
-	# Guardar tantas configuraciones aleatorias como semillas en list_seeds.
+	# Save as many random configurations as seeds in list_seeds.
 	list_turb_params=[]
 	for seed in list_seeds: 
 		np.random.seed(seed)
@@ -70,14 +67,10 @@ def choose_random_configurations(list_seeds,blade_number=[3,5,7]):
 
 	return list_turb_params
 
-# FUNCION 2
-# Parametros:
-#   >N: parametro originariamente constante, y del cual se quiere modificar su precision.
-# Devuelve: un diccionario con todos los parametros constantes que sera necesario para hacer una 
-# evaluacion.
-
 def build_constargs_dict(N):
-	# Definir parametros constantes.
+	'''Build a dictionary with all the constant parameters needed to make an evaluation.'''
+
+	# Define constant parameters.
 	omega = 2100# Rotational speed.
 	rcas = 0.4# Casing radius.
 	airfoils = ["NACA0015", "NACA0018", "NACA0021"]# Set of possible airfoils.
@@ -88,7 +81,7 @@ def build_constargs_dict(N):
 	Nmin = 1000#Max threshold rotational speeds
 	Nmax = 3200#Min threshold rotational speeds
 
-	# Construir el diccionario que necesita la funcion fitness
+	# Construct the dictionary needed by the fitness function.
 	constargs = {"N": N,
 		     "omega": omega,
 		     "rcas": rcas,
@@ -103,25 +96,19 @@ def build_constargs_dict(N):
 
 	return constargs
 
-# FUNCION 3
-# Parametros:
-#   >turb_params: lista que representa una configuracion de los parametros que definen el
-#	 diseno de las turbinas.
-#	>N: parametro originariamente constante, y del cual se quiere modificar su precision.
-# Devuelve: scores por individual (de cada estado de mar) y escore total (la suma ponderada de
-# los anteriores), asociado a la evaluacion del diseno turb_params. 
-
 def evaluation(turb_params,N=100):
 
-	# Construir diccionario de parametros constantes.
+	'''Evaluating a turbine design.'''
+
+	# Build dictionary of constant parameters.
 	constargs=build_constargs_dict(N)
 
-	# Crear turbina instantantanea.
+	# Create instantaneous turbine.
 	os.chdir('OptimizationAlgorithms_KONFLOT')
 	turb = turbine_classes.instantiate_turbine(constargs, turb_params)	
 	os.chdir('../')
 
-	# Calcular evaluacion.
+	# Evaluate design.
 	scores = turbine_classes.fitness_func(constargs=constargs, turb=turb, out='brfitness')
 
 	total_fitness=scores[1]
@@ -131,17 +118,10 @@ def evaluation(turb_params,N=100):
 
 	return total_fitness,partial_fitness
 
-# FUNCION 4
-# Parametros:
-#   >set_turb_params: lista de listas que representan configuraciones de los parametros 
-#    que definen el diseno de las turbinas.
-#	>N: parametro originariamente constante, y del cual se quiere modificar su precision.
-# Devuelve: una lista con informacion asociada a la evaluacion de todas las configuraciones/disenos
-# que forman set_turb_params para el N fijado.
-
 def set_evaluation(set_turb_params,N,accuracy=None):
+	'''Evaluate a set of turbine designs.'''
 
-	# Calcular scores y tiempos de ejecucion para la evaluacion de cada configuracion.
+	# Calculate scores and run times for the evaluation of each design.
 	all_scores=[]
 	all_times=[]
 	n_solution=0
@@ -157,7 +137,7 @@ def set_evaluation(set_turb_params,N,accuracy=None):
 		if accuracy!=None:
 			df.append([accuracy,n_solution,total_fitness,elapsed])
 
-	# Calcular datos que se guardaran en la base de datos.
+	# Calculate data to be stored in the database.
 	ranking=from_argsort_to_ranking(np.argsort(all_scores))
 	total_time=sum(all_times)
 	time_per_eval=np.mean(all_times)
@@ -165,12 +145,9 @@ def set_evaluation(set_turb_params,N,accuracy=None):
 	if accuracy==None:
 		return [N,all_scores,ranking,all_times,total_time,time_per_eval]
 
-	
-# FUNCION 5
-# Parametros:
-#   >list: lista conseguida tras aplicar "np.argsort" sobre una lista (original).
-# Devolver: nueva lista que representa el ranking de los elementos de la lista original.
+
 def from_argsort_to_ranking(list):
+    '''Obtain ranking from a list get after applying "np.argsort" on an original list.'''
     new_list=[0]*len(list)
     i=0
     for j in list:
@@ -179,21 +156,20 @@ def from_argsort_to_ranking(list):
     return new_list
 
 #==================================================================================================
-# PROGRAMA PRINCIPAL
+# MAIN PROGRAM
 #==================================================================================================
 
 #--------------------------------------------------------------------------------------------------
-# Para el analisis de motivacion (PRIMER ANALISIS).
+# First motivational analysis.
 #--------------------------------------------------------------------------------------------------
-# Escoger aleatoriamente una conjunto de configuraciones.
-list_seeds=range(0,10)#Fijar semillas para la reproducibilidad
+# Randomly choose a set of 10 configurations.
+list_seeds=range(0,10)# Seed setting for reproducibility.
 set_turb_params = choose_random_configurations(list_seeds)
 
-# Mallado para N.
+# Grid for N.
 grid_N=[1000,900,800,700,600,500,400,300,200,100,50,45,40,35,30,25,20,15,10,5]
 
-# Guardar en una base de datos los datos asociados a la evaluacion del conjunto de configuraciones/
-# disenos para cada valor de N considerado.
+# Store in a database the data associated with the evaluation of the set of designs for each value of N considered.
 df=[]
 for n in tqdm(grid_N):
 	df.append(set_evaluation(set_turb_params,n))
@@ -202,23 +178,23 @@ df=pd.DataFrame(df,columns=['N','all_scores','ranking','all_times','total_time',
 df.to_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyI.csv')
 
 #--------------------------------------------------------------------------------------------------
-# Para el analisis de motivacion (SEGUNDO ANALISIS).
+# Second motivational analysis.
 #--------------------------------------------------------------------------------------------------
 
-# Analisis para seleccionar la definicion de blade-number que se considerara.
+# Analysis to select the blade-number definition to be considered.
 for blade_number in [3,5,7,[3,5,7]]:
-	# Escoger aleatoriamente una conjunto de configuraciones.
-	list_seeds=range(0,100)#Fijar semillas para la reproducibilidad
+	# Randomly choose a set of 100 configurations.
+	list_seeds=range(0,100)# Seed setting for reproducibility.
 	set_turb_params = choose_random_configurations(list_seeds,blade_number=blade_number)
 
-	# Mallado para N.
+	# Grid for N.
 	list_n=range(5,101,1)
 	list_acc=[]
 	for n in list_n:
 		list_acc.append(n/100)
 	list_acc=[1]
-	# Guardar en una base de datos los datos asociados a la evaluacion del conjunto de soluciones
-	# para cada valor de N considerado.
+
+	# Store in a database the data associated with the evaluation of the set of designs for each value of N considered.
 	default_N=100
 	df=[]
 	for acc in tqdm(list_acc):
@@ -230,16 +206,16 @@ for blade_number in [3,5,7,[3,5,7]]:
 	else:
 		df_motivation.to_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyII_bladenumber'+str(blade_number)+'.csv')
 
-# Reducir base de datos del blade-number fijado a los valores de accuracy de interes.
+# Reduce database of the selected blade-number (list of all possible) to the accuracy values of interest.
 list_acc=[1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1]
 df=pd.read_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyII_bladenumberAll.csv',index_col=0)
 df=df.iloc[[i in list_acc for i in df['accuracy']]]
 df.to_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyII.csv')
 
 #--------------------------------------------------------------------------------------------------
-# Para la definicion de los valores (tiempo) sobre los cuales se aplicara la biseccion.
+# For the definition of the values (times) on which the bisection will be applied.
 #--------------------------------------------------------------------------------------------------
-# Guardar base de datos.
+# Save database.
 df.columns=['accuracy','n_solution','score','cost_per_eval']
 df_bisection=df[['accuracy','cost_per_eval']]
 df_bisection=df_bisection.groupby('accuracy').mean()

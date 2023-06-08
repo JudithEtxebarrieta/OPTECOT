@@ -1,8 +1,10 @@
-# Mediante este script se representan graficamente los resultados numericos obtenidos al 
-# ejecutar "UnderstandingAccuracy_data.py".
+'''
+This script is used to graphically represent the numerical results obtained in 
+"UnderstandingAccuracy_data.py".
+'''
 
 #==================================================================================================
-# LIBRERIAS
+# LIBRARIES
 #==================================================================================================
 import numpy as np
 import matplotlib as mpl
@@ -16,43 +18,56 @@ import matplotlib.cm as cm
 from matplotlib.colors import ListedColormap
 
 #==================================================================================================
-# FUNCIONES
+# FUNCTIONS
 #==================================================================================================
-# FUNCION 1
-# Parametros:
-#   >data: datos sobre los cuales se calculara el rango entre percentiles.
-#   >bootstrap_iterations: numero de submuestras que se consideraran de data para poder calcular el 
-#    rango entre percentiles de sus medias.
-# Devolver: la media de los datos originales junto a los percentiles de las medias obtenidas del 
-# submuestreo realizado sobre data.
 
 def bootstrap_mean_and_confidence_interval(data,bootstrap_iterations=1000):
+    '''
+    The 95% confidence interval of a given data sample is calculated.
+
+    Parameters
+    ==========
+    data (list): Data on which the range between percentiles will be calculated.
+    bootstrap_iterations (int): Number of subsamples of data to be considered to calculate the percentiles of their means. 
+
+    Return
+    ======
+    The mean of the original data together with the percentiles of the means obtained from the subsampling of the data. 
+    '''
     mean_list=[]
     for i in range(bootstrap_iterations):
         sample = np.random.choice(data, len(data), replace=True) 
         mean_list.append(np.mean(sample))
     return np.mean(data),np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
 
-# FUNCION 2
-# Parametros:
-#   >str_col: columna de la base de datos cuyos elementos son originariamente listas de numeros 
-#    (float o integer), pero al guardar la base de datos y leerla se consideran como strings.
-#   >type_elems: tipo de numeros que guardan las listas de las columnas, float o integer.
-# Devolver: una lista de listas.
-
 def form_str_col_to_float_list_col(str_col,type_elems):
+    '''
+    Convert string elements of a database column to list form.
+
+    Parameters
+    ==========
+    str_col: Database column whose elements are originally lists of numbers (float or integer), but are 
+    considered as strings when the database is saved and read. 
+    type_elems: Type of numbers that keep the lists of the columns, float or integer.
+
+    Return
+    ======
+    Database column transformed to the appropriate format.
+
+    '''
+
     float_list_col=[]
     for str in str_col:
-        #Eliminar corchetes string.
+        # Remove string brackets.
         str=str.replace('[','')
         str=str.replace(']','')
 
-        #Convertir str en lista de floats.
+        # Convert str to float list.
         float_list=str.split(", ")
         if len(float_list)==1:
             float_list=str.split(" ")
         
-        #Acumular conversiones.
+        # Accumulate conversions.
         if type_elems=='float':
             float_list=[float(i) for i in float_list]
         if type_elems=='int':
@@ -61,8 +76,8 @@ def form_str_col_to_float_list_col(str_col,type_elems):
 
     return float_list_col
 
-# FUNCION 3 (Obtener ranking a partir de lista conseguida tras aplicar "np.argsort" sobre una lista original)
 def from_argsort_to_ranking(list):
+    '''Obtain ranking from a list get after applying "np.argsort" on an original list.'''
     new_list=[0]*len(list)
     i=0
     for j in list:
@@ -70,17 +85,17 @@ def from_argsort_to_ranking(list):
         i+=1
     return new_list
 
-# FUNCION 4 (Ordenar lista segun el orden para cada posicion definido en argsort)
 def custom_sort(list,argsort):
+    '''Sort list according to the order for each position defined in argsort.'''
     new_list=[]
     for index in argsort:
         new_list.append(list[index])
     return new_list
 
-
-# FUNCION 5 (Calculo de la distancia inversa normalizada de tau kendall entre dos rankings)
 def inverse_normalized_tau_kendall(x,y):
-    # Numero de pares con orden inverso.
+    '''Calculation of the normalized inverse tau kendall distance between two rankings.'''
+
+    # Number of pairs with reverse order.
     pairs_reverse_order=0
     for i in range(len(x)):
         for j in range(i+1,len(x)):
@@ -90,36 +105,36 @@ def inverse_normalized_tau_kendall(x,y):
             if case1 or case2:
                 pairs_reverse_order+=1  
     
-    # Numero de pares total.
+    # Total number of pairs.
     total_pairs=len(list(combinations(x,2)))
-    # Distancia tau Kendall normalizada.
+    # Normalized tau Kendall distance.
     tau_kendall=pairs_reverse_order/total_pairs
 
     return 1-tau_kendall
 
-# FUNCION 6 (Eliminar elementos en ciertas posiciones de una lista)
 def remove_element_in_idx(list_elements,list_idx):
+    '''Delete items at certain positions in a list.'''
     new_list=[]
     for i in range(len(list_elements)):
         if i not in list_idx:
             new_list.append(list_elements[i])
     return new_list
 
-# FUNCION 7 (Grafica de motivacion I)
-def from_data_to_figuresI(df):
 
-    # Poner en formato adecuado las columnas que contienen listas
+def from_data_to_figuresI(df):
+    '''Build first motivation graph.'''
+
+    # Change columns containing lists to proper formatting.
     df['all_scores']=form_str_col_to_float_list_col(df['all_scores'],'float')
     df['ranking']=form_str_col_to_float_list_col(df['ranking'],'int')
     df['all_times']=form_str_col_to_float_list_col(df['all_times'],'float')
 
-    # Inicializar figura (tamano y margenes)
+    # Initialize figure (size and margins).
     plt.figure(figsize=[12,9])
     plt.subplots_adjust(left=0.09,bottom=0.11,right=0.95,top=0.88,wspace=0.3,hspace=0.4)
 
     #--------------------------------------------------------------------------------------------------
-    # GRAFICA 1 
-    # Repercusion de la precision de N en el tiempo requerido para hacer una evaluacion.
+    # GRAPH 1: Impact of the accuracy of N on the time required to make an evaluation.
     #--------------------------------------------------------------------------------------------------
     x=df['N']
     y_mean=[]
@@ -145,14 +160,10 @@ def from_data_to_figuresI(df):
     axins.set_xlim(0,60)
     axins.set_ylim(2,7)
     axins.yaxis.tick_right()
-    #plt.xticks(visible=False)
-    #plt.yticks(visible=False)
-    #mark_inset(ax1,axins,loc1=2,loc2=4)
 
     #--------------------------------------------------------------------------------------------------
-    # GRAFICA 2 
-    # Repercusion de la precision de N en la calidad de la solucion del problema de optimizacion
-    # (comparando rankings).
+    # GRAPH 2: Impact of the accuracy of N on the optimization problem solution quality 
+    # (comparing rankings).
     #--------------------------------------------------------------------------------------------------
     x=range(1,len(df['all_scores'][0])+1)
     ax2=plt.subplot(224)
@@ -180,9 +191,8 @@ def from_data_to_figuresI(df):
     ax2.set_title('Comparing rankings depending on N')
 
     #--------------------------------------------------------------------------------------------------
-    # GRAFICA 3 
-    # Repercusion de la precision de N en la calidad de la solucion del problema de optimizacion
-    # (comparando perdidas de score).
+    # GRAPH 3: Impact of the accuracy of N on the optimization problem solution quality 
+    # (comparing score losses).
     #--------------------------------------------------------------------------------------------------
     x=[str(i) for i in df['N']]
     y=[]
@@ -202,8 +212,7 @@ def from_data_to_figuresI(df):
 
 
     #--------------------------------------------------------------------------------------------------
-    # GRAFICA 4 
-    # Evaluaciones extra que se pueden hacer al considerar un N menos preciso.
+    # GRAPH 4: Extra evaluations that can be made when considering a less accurate N.
     #--------------------------------------------------------------------------------------------------
     x=[str(i) for i in df['N']]
     y=[]
@@ -218,20 +227,19 @@ def from_data_to_figuresI(df):
     plt.xticks(rotation = 45)
     ax4.set_title('Extra evaluations in the same time required by maximum N')
 
-
-
     plt.savefig('results/figures/Turbines/UnderstandingAccuracyI.png')
     plt.show()
 
-# FUNCION 8 (Grafica de motivacion II)
-def from_data_to_figuresII(df,blade_number):
 
-    # Inicializar grafica.
+def from_data_to_figuresII(df,blade_number):
+    '''Build second motivation graph.'''
+
+    # Initialize graph.
     plt.figure(figsize=[20,10])
     plt.subplots_adjust(left=0.06,bottom=0.11,right=0.95,top=0.88,wspace=0.3,hspace=0.69)
 
     #----------------------------------------------------------------------------------------------
-    # GRAFICA 1: tiempo de ejecucion por accuracy.
+    # GRAPH 1: evaluation time per accuracy.
     #----------------------------------------------------------------------------------------------
     ax=plt.subplot(311)
 
@@ -257,15 +265,15 @@ def from_data_to_figuresII(df,blade_number):
 
 
     #----------------------------------------------------------------------------------------------
-    # GRAFICA 2: extra de evaluaciones.
+    # GRAPH 2: extra evaluations.
     #----------------------------------------------------------------------------------------------
     ax=plt.subplot(312)
 
     list_extra_eval=[]
     for i in range(0,len(all_means)):
-        # Ahorro de tiempo.
+        # Time saving.
         save_time=all_means[-1]-all_means[i]
-        # Numero de evaluaciones extra que se podrian hacer para agotar el tiempo que se necesita por defecto.
+        # Number of extra evaluations that could be done to exhaust the default time needed.
         extra_eval=save_time/all_means[i]
         if extra_eval<0:
             extra_eval=0
@@ -277,9 +285,8 @@ def from_data_to_figuresII(df,blade_number):
     plt.xticks(rotation = 45)
     ax.set_title('Extra evaluations in the same amount of time required for maximum accuracy')
 
-
     #----------------------------------------------------------------------------------------------
-    # GRAFICA 3: soluciones nulas por valor de accuracy.
+    # GRAPH 3: null solutions per accuracy value.
     #----------------------------------------------------------------------------------------------
     ax=plt.subplot(313)
 
@@ -294,32 +301,28 @@ def from_data_to_figuresII(df,blade_number):
     ax.set_title('Presence of null solutions')
 
 
-    # Guardar imagen.
+    # Save graph.
     plt.savefig('results/figures/Turbines/UnderstandingAccuracyII_nullsolutions_bladenumber'+str(blade_number)+'.png')
     plt.show()
     plt.close()
 
-# FUNCION 9 (Grafica para el paper)
-def from_data_to_figures_paper(df,blade_number=None):
 
-    # Inicializar grafica.
-    if blade_number==None:
-        fig=plt.figure(figsize=[15,3.5],constrained_layout=True)
-    else:
-        fig=plt.figure(figsize=[15,15],constrained_layout=True)
+def from_data_to_figures_bladenumber(df,blade_number):
+    '''Construct graphs to help decide the blade-number value to be considered.'''
 
-    # plt.subplots_adjust(left=0.06,bottom=0.21,right=0.95,top=0.78,wspace=0.1,hspace=0.69)
+    # Initialize graph.
+    fig=plt.figure(figsize=[15,15],constrained_layout=True)
     subfigs = fig.subfigures(1, 4, width_ratios=[2,2,0.1,4], wspace=0)
 
     #----------------------------------------------------------------------------------------------
-    # GRAFICA 1: tiempo de ejecucion por accuracy y extra de evaluaciones.
+    # GRAPH 1: execution time per accuracy and extra evaluations.
     #----------------------------------------------------------------------------------------------
     list_acc=list(set(df['accuracy']))
     list_acc.sort()
     list_acc_str=[str(acc) for acc in list_acc]
     list_acc_str.reverse()
 
-    # Tiempos de ejecucion por evaluacion.
+    # Evaluation times.
     all_means=[]
     all_q05=[]
     all_q95=[]
@@ -330,12 +333,12 @@ def from_data_to_figures_paper(df,blade_number=None):
         all_q05.append(q05)
         all_q95.append(q95)
 
-    # Evaluaciones extra.
+    # Extra evaluations.
     list_extra_eval=[]
     for i in range(0,len(all_means)):
-        # Ahorro de tiempo.
+        # Time saving.
         save_time=all_means[-1]-all_means[i]
-        # Numero de evaluaciones extra que se podrian hacer para agotar el tiempo que se necesita por defecto.
+        # Number of extra evaluations that could be done to exhaust the default time needed.
         extra_eval=save_time/all_means[i]
         list_extra_eval.append(extra_eval)
 
@@ -362,19 +365,20 @@ def from_data_to_figures_paper(df,blade_number=None):
     plt.barh(list_acc_str, list_extra_eval, align='center',color=color[1])
     plt.yticks([])
     plt.title("Extra evaluations in the same amount of \n time required for maximum accuracy")
-    # plt.ylabel("Accuracy")
     plt.xlabel("Evaluations")
 
 
     #----------------------------------------------------------------------------------------------
-    # GRAFICA 2: perdida de calidad en las evaluaciones considerar accuracys menores y existencia 
-    # de un accuracy menor con el que se obtiene la maxima calidad.
+    # GRAPH 2: loss of quality in the evaluations when considering minor accuracys and existence
+    # of a minor accuracy with which maximum quality is obtained
     #----------------------------------------------------------------------------------------------
     def ranking_matrix_sorted_by_max_acc(ranking_matrix):
-        # Argumentos asociados al ranking del accuracy 1 ordenado de menor a mayor.
+        '''Reorder ranking matrix according to the order established by the original ranking.'''
+
+        # Indexes associated with the maximum accuracy ranking ordered from lowest to highest.
         argsort_max_acc=np.argsort(ranking_matrix[-1])
 
-        # Reordenar filas de la matriz.
+        # Reorder matrix rows.
         sorted_ranking_list=[]
         for i in range(len(ranking_list)):
             sorted_ranking_list.append(custom_sort(ranking_list[i],argsort_max_acc))
@@ -417,18 +421,15 @@ def from_data_to_figures_paper(df,blade_number=None):
     ax.set_yticks(np.arange(0.5,len(list_acc)+0.5,1))
     ax.set_yticklabels(list_acc,rotation=0)
 
-    # Guardar imagen.
-    if blade_number==None:
-        plt.savefig('results/figures/Turbines/UnderstandingAccuracy_paper.png')
-    else:
-        plt.savefig('results/figures/Turbines/UnderstandingAccuracy_bladenumber'+str(blade_number)+'.png')
+    # Save graph.
+    plt.savefig('results/figures/Turbines/UnderstandingAccuracy_bladenumber'+str(blade_number)+'.png')
     plt.show()
     plt.close()
 
 #==================================================================================================
-# PROGRAMA PRINCIPAL
+# MAIN PROGRAM
 #==================================================================================================
-# Lectura de datos.
+# Read databases.
 df1=pd.read_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyI.csv',index_col=0)
 df2=pd.read_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyII.csv',index_col=0)
 df2_bladenumber3=pd.read_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyII_bladenumber3.csv',index_col=0)
@@ -436,15 +437,15 @@ df2_bladenumber5=pd.read_csv('results/data/Turbines/UnderstandingAccuracy/Unders
 df2_bladenumber7=pd.read_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyII_bladenumber7.csv',index_col=0)
 df2_bladenumberAll=pd.read_csv('results/data/Turbines/UnderstandingAccuracy/UnderstandingAccuracyII_bladenumberAll.csv',index_col=0)
 
-# Dibujar graficas.
+# Draw graphs.
 from_data_to_figuresI(df1)
 from_data_to_figuresII(df2_bladenumberAll,'All')
 from_data_to_figuresII(df2_bladenumber3,3)
 from_data_to_figuresII(df2_bladenumber5,5)
 from_data_to_figuresII(df2_bladenumber7,7)
-from_data_to_figures_paper(df2_bladenumberAll,blade_number='All')
-from_data_to_figures_paper(df2_bladenumber3,blade_number=3)
-from_data_to_figures_paper(df2_bladenumber5,blade_number=5)
-from_data_to_figures_paper(df2_bladenumber7,blade_number=7)
-from_data_to_figures_paper(df2)
+from_data_to_figures_bladenumber(df2_bladenumberAll,blade_number='All')
+from_data_to_figures_bladenumber(df2_bladenumber3,blade_number=3)
+from_data_to_figures_bladenumber(df2_bladenumber5,blade_number=5)
+from_data_to_figures_bladenumber(df2_bladenumber7,blade_number=7)
+
 
