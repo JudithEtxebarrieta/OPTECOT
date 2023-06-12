@@ -1,8 +1,10 @@
-# Mediante este script se representan graficamente los resultados numericos calculados por 
-# "UnderstandingAccuracyShape.py".
+'''
+This script is used to graphically represent the numerical results obtained in 
+"UnderstandingAccuracyShape.py".
+'''
 
 #==================================================================================================
-# LIBRERIAS
+# LIBRARIES
 #==================================================================================================
 import numpy as np
 from scipy.stats import norm
@@ -16,17 +18,22 @@ from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes,mark_inset
 import plotly.express as px
 
 #==================================================================================================
-# FUNCIONES
+# FUNCTIONS
 #==================================================================================================
-# FUNCION 1
-# Parametros:
-#   >data: datos sobre los cuales se calculara el rango entre percentiles.
-#   >bootstrap_iterations: numero de submuestras que se consideraran de data para poder calcular el 
-#    rango entre percentiles de sus medias.
-# Devolver: la media de los datos originales junto a los percentiles de las medias obtenidas del 
-# submuestreo realizado sobre data.
 
-def bootstrap_mean_and_confiance_interval(data,bootstrap_iterations=1000):
+def bootstrap_mean_and_confidence_interval(data,bootstrap_iterations=1000):
+    '''
+    The 95% confidence interval of a given data sample is calculated.
+
+    Parameters
+    ==========
+    data (list): Data on which the range between percentiles will be calculated.
+    bootstrap_iterations (int): Number of subsamples of data to be considered to calculate the percentiles of their means. 
+
+    Return
+    ======
+    The mean of the original data together with the percentiles of the means obtained from the subsampling of the data. 
+    '''
     mean_list=[]
     for i in range(bootstrap_iterations):
         sample = np.random.choice(data, len(data), replace=True) 
@@ -38,14 +45,18 @@ def bootstrap_mean_and_confiance_interval(data,bootstrap_iterations=1000):
 # Devolver: nada, construye directamente la graica.
 
 def from_data_to_figure(list_threshold_corr):
-    # Lista de colores.
+    '''
+    Convert the database associated with each correlation threshold into the curve 
+    representing the optimal accuracy behavior during the execution process.
+    '''
+    # list of colors.
     colors=px.colors.qualitative.D3
 
-    # Inicializar imagen.
+    # Initialize graph.
     plt.figure(figsize=[13,5])
     plt.subplots_adjust(left=0.09,bottom=0.11,right=0.85,top=0.88,wspace=0.40,hspace=0.76)
 
-    # SUBGRAFICA 1
+    # GRAPH 1 (assuming that the accuracy has an optimal upward behavior)
     ax=plt.subplot(121)
 
     curve=1
@@ -57,7 +68,7 @@ def from_data_to_figure(list_threshold_corr):
         all_q05=[]
         all_q95=[]
         for gen in range(1,max(df['gen'])+1):
-            mean,q05,q95=bootstrap_mean_and_confiance_interval(df[df['gen']==gen]['acc'])
+            mean,q05,q95=bootstrap_mean_and_confidence_interval(df[df['gen']==gen]['acc'])
             all_mean.append(mean)
             all_q05.append(q05)
             all_q95.append(q95)
@@ -70,7 +81,7 @@ def from_data_to_figure(list_threshold_corr):
     ax.set_ylabel("Accuracy")
     ax.set_title('Ascendant accuracy shape depending \n on correlation threshold')
 
-    # SUBGRAFICA 2
+    # GRAPH 2 (assuming that the optimal performance of the accuracy can be non-monotonic)
     ax=plt.subplot(122)
 
     curve=1
@@ -82,7 +93,7 @@ def from_data_to_figure(list_threshold_corr):
         all_q05=[]
         all_q95=[]
         for gen in range(1,max(df['gen'])+1):
-            mean,q05,q95=bootstrap_mean_and_confiance_interval(df[df['gen']==gen]['acc'])
+            mean,q05,q95=bootstrap_mean_and_confidence_interval(df[df['gen']==gen]['acc'])
             all_mean.append(mean)
             all_q05.append(q05)
             all_q95.append(q95)
@@ -94,17 +105,17 @@ def from_data_to_figure(list_threshold_corr):
     ax.set_xlabel("Generation")
     ax.set_ylabel("Accuracy")
     ax.set_title('Optimal accuracy shape depending \n on correlation threshold')
-
     ax.legend(title="Correlation \n threshold",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
-    plt.savefig('results/figures/SymbolicRegressor/AccuracyShape.png')
+
+    # Save graph.
+    plt.savefig('results/figures/SymbolicRegressor/UnderstandingAccuracyShape.png')
     plt.show()
     plt.close()
     
 
 #==================================================================================================
-# PROGRAMA PRINCIPAL
+# MAIN PROGRAM
 #==================================================================================================
-
 list_threshold_corr=np.load('results/data/SymbolicRegressor/UnderstandingAccuracyShape/list_threshold_corr.npy')
 from_data_to_figure(list_threshold_corr)
 

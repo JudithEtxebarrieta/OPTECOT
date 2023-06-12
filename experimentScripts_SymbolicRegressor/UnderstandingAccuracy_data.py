@@ -1,12 +1,13 @@
-# Mediante este script se evalua una muestra aleatoria de 100 superficies usando 10 valores 
-# diferentes de accuracy. Se construye una base de datos con la informacion de score y numero de 
-# puntos evaluados por evaluacion. Al mismo tiempo, se guarda la informacion del numero de puntos 
-# que se evaluan por evaluacion (coste por evaluacion) al considerar los valores de accuracy 
-# correspondientes a la aplicacion mas costosa del metodo de biseccion (esta tabla sera util para
-# definir los futuros heuristicos).
+'''
+This script evaluates a random sample of 100 surfaces using 10 different accuracy values. It builds 
+a database with the score information and number of points evaluated per evaluation. At the same time,
+the information of the number of points evaluated per evaluation (cost per evaluation) is stored when
+considering the accuracy values concerning the most expensive application of the bisection method 
+(this table will be useful to define future heuristics).
+'''
 
 #==================================================================================================
-# LIBRERIAS
+# LIBRARIES
 #==================================================================================================
 from gplearn.genetic import SymbolicRegressor
 from sklearn.utils.random import check_random_state
@@ -32,34 +33,48 @@ from gplearn.utils import check_random_state
 from gplearn.genetic import _parallel_evolve, MAX_INT
 
 #==================================================================================================
-# NUEVAS FUNCIONES
+# NEW FUNCTIONS
 #==================================================================================================
-# FUNCION 1 (construir conjunto de puntos extraido de una superficie)
-def build_pts_sample(n_sample,seed,expr_surf):
 
-    # Fijar la semilla.
+def build_pts_sample(n_sample,seed,expr_surf):
+    '''
+    Obtain a set of points belonging to a surface.
+
+    Parameters
+    ==========
+    n_sample: Number of points to be constructed.
+    seed: Seed for the random selection of points.
+    expr_surf: Expression of the surface from which you want to extract the sample of points.
+
+    Return
+    ======
+    Database with the three coordinates of the sample points.
+    '''
+
+    # Set seed.
     rng = check_random_state(seed)
 
-    # Mallado aleatorio (x,y).
+    # Random grid for (x,y) coordinates.
     xy_sample=rng.uniform(-1, 1, n_sample*2).reshape(n_sample, 2)
     x=xy_sample[:,0]
     y=xy_sample[:,1]
 
-    # Calcular alturas correspondientes (valor z).
+    # Calculate corresponding heights (z values).
     z_sample=eval(expr_surf)
 
-    # Todos los datos en un array.
+    # All data in a single array.
     pts_sample=np.insert(xy_sample, xy_sample.shape[1], z_sample, 1)
 
     return pts_sample
 
-# FUNCION 2 (construir una muestra aleatoria con expresiones de superficies)
-def build_surface_sample(n_sample=100):
 
-    # Definicion del algoritmo genetico a partir del cual se construira la generacion que se usara como muestra.
+def build_surface_sample(n_sample=100):
+    '''Constructing a random sample of surface expressions.'''
+
+    # Definition of the genetic algorithm from which the generation to be used as a sample will be constructed.
     est_surf=SymbolicRegressor(random_state=0,generations=1,population_size=n_sample)
 
-    # Construccion de la poblacion.
+    # Construction of the population.
     df_pts=build_pts_sample(default_n_pts,0,'x**2-y**2+y-1')
     xy_train=df_pts[:,[0,1]]
     z_train=df_pts[:,2]
@@ -67,40 +82,39 @@ def build_surface_sample(n_sample=100):
 
     return population 
 
-# FUNCION 3 (evaluar una superficie con un valor de accuracy concreto)
 def evaluate_surface(surf,accuracy):
-    # Construir conjunto de puntos.
+    '''Evaluate a surface with a specific accuracy value.'''
+    # Construct set of points.
     df_pts=build_pts_sample(int(default_n_pts*accuracy),0,'x**2-y**2+y-1')
     xy_test=df_pts[:,[0,1]]
     z_test=df_pts[:,2]
 
-    # Calcular el valor de las terceras coordenadas con las superficie seleccionada.
+    # Calculate the value of the third coordinates with the selected surface.
     z_pred=surf.execute(xy_test)
 
-    # Calcular score asociado al conjunto de puntos para la superficie seleccionada.
+    # Calculate MAE associated to the set of points for the selected surface.
     score=sum(abs(z_test-z_pred))/len(z_test)
 
-    # Calcular numero de evaluaciones hechas.
+    # Calculate the number of evaluations performed.
     n_eval=int(default_n_pts*accuracy)
-
 
     return score,n_eval
 
-# FUNCION 4 (evaluar una muestra de superficies con un valor de accuracy concreto)
 def evaluate_surface_sample(surf_sample,accuracy):
+    '''Evaluate a sample of surfaces with a given accuracy value.'''
     for i in range(len(surf_sample)):
         score,n_eval=evaluate_surface(surf_sample[i],accuracy)
         df.append([accuracy,i,score,n_eval])
 
 #==================================================================================================
-# FUNCIONES EXISTENTES
+# EXISTING FUNCTIONS
 #==================================================================================================
-# FUNCION 5
-# -Original: fit
-# -Script: genetic.py
-# -Clase: BaseSymbolic
+
 def fit(self, X, y, sample_weight=None):
-        """Fit the Genetic Program according to X, y.
+        """
+        This function replaces the existing fit function.
+        
+        Fit the Genetic Program according to X, y.
 
         Parameters
         ----------
@@ -424,30 +438,30 @@ def fit(self, X, y, sample_weight=None):
             else:
                 self._program = self._programs[-1][np.argmin(fitness)]
 
-        return self,population #MODIFICACION: devolver tambien la poblacion.
+        return self,population # MODIFICATION: return also the population.
 
 
 #==================================================================================================
-# PROGRAMA PRINCIPAL
+# MAIN PROGRAM
 #==================================================================================================
-# Usar la funcion fit modificada (para poder acceder a la poblacion)
+# Use the modified fit function (to be able to access the population).
 from gplearn.genetic import BaseSymbolic
 BaseSymbolic.fit=fit
 
-# parametro por defecto
+# Default parameter.
 default_n_pts=50
 
 #--------------------------------------------------------------------------------------------------
-# Para el analisis de motivacion.
+# For motivation analysis.
 #--------------------------------------------------------------------------------------------------
 
-# Lista de accuracys.
+# List of accuracies.
 list_acc=[1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1]
 
-# Construir muestra de superficies.
+# Build sample surfaces.
 surf_sample=build_surface_sample(100)
 
-# Construir base de datos con informacion de scores y numero de evaluaciones gastadas por evaluacion.
+# Build a database with information on scores and number of evaluations spent per evaluation.
 df=[]
 for accuracy in tqdm(list_acc):
     evaluate_surface_sample(surf_sample,accuracy)
@@ -455,9 +469,9 @@ df_motivation=pd.DataFrame(df,columns=['accuracy','n_surf','score','n_eval'])
 df_motivation.to_csv('results/data/SymbolicRegressor/UnderstandingAccuracy/df_UnderstandingAccuracy.csv')
 
 #--------------------------------------------------------------------------------------------------
-# Para la definicion de los valores (tiempo) sobre los cuales se aplicara la biseccion.
+# For the definition of the values (time) on which the bisection will be applied.
 #--------------------------------------------------------------------------------------------------
-# Guardar base de datos.
+# Save database.
 df_bisection=pd.DataFrame(df,columns=['accuracy','n_surf','score','cost_per_eval'])
 df_bisection=df_bisection[['accuracy','cost_per_eval']]
 df_bisection=df_bisection.groupby('accuracy').mean()
