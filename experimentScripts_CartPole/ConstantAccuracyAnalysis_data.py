@@ -71,7 +71,7 @@ def evaluate(model,eval_env,eval_seed,n_eval_episodes):
     Parameters
     ==========
     model: Policy to be evaluated.
-    val_env : Validation environment.
+    eval_env : Validation environment.
     init_obs : Initial state of the first episode of the validation environment.
     seed (int): Seed of the validation environment.
     n_eval_episodes (int): Number of episodes (evaluations) in which the model will be evaluated.
@@ -92,8 +92,8 @@ def evaluate(model,eval_env,eval_seed,n_eval_episodes):
         episode_rewards = 0
         done = False # Parameter that indicates after each action if the episode continues (False) or is finished (True).
         while not done:
-            action, _states = model.predict(obs, deterministic=True) # Se predice la accion que se debe tomar con el modelo.         
-            obs, reward, done, info = eval_env.step(action) # The action to be taken with the policy is predicted.
+            action, _states = model.predict(obs, deterministic=True) # The action to be taken with the model is predicted.         
+            obs, reward, done, info = eval_env.step(action) # Action is applied in the environment.
             episode_rewards+=reward # The reward is saved.
 
         # Save total episode reward.
@@ -134,7 +134,7 @@ def callback_in_each_iteration(self, num_timesteps: int, total_timesteps: int) -
     # Resume time.
     sw.resume()
 
-    # This line is used by the function we are replacing: do not change this line.
+    # This line is used by the function we are replacing. Do not change this line.
     self._current_progress_remaining = 1.0 - float(num_timesteps) / float(total_timesteps) 
 
 def _setup_learn(
@@ -202,7 +202,7 @@ def _setup_learn(
 # To use the modified callback function.
 import stable_baselines3.common.base_class
 stable_baselines3.common.base_class.BaseAlgorithm._update_current_progress_remaining = callback_in_each_iteration
-# To use the modified funcion _setup_learn function.
+# To use the modified _setup_learn function function.
 from stable_baselines3.common.base_class import *
 BaseAlgorithm._setup_learn=_setup_learn
     
@@ -247,7 +247,7 @@ def parallel_processing(accuracy):
         model.learn(total_timesteps=max_train_steps)
 
     df_train_acc=pd.DataFrame(df_train_acc,columns=['steps','info_steps','seed','n_eval','max_step_per_eval','time','info_time','mean_reward'])
-    df_train_acc.to_csv('results/data/CartPole/ConstantAccuracyAnalysis/df_train_acc'+str(accuracy)+'_.csv')
+    df_train_acc.to_csv('results/data/CartPole/ConstantAccuracyAnalysis/df_train_acc'+str(accuracy)+'.csv')
 
 # Parallel processing.
 pool=mp.Pool(mp.cpu_count())

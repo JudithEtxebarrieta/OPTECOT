@@ -25,6 +25,29 @@ from itertools import combinations
 #==================================================================================================
 # FUNCTIONS
 #==================================================================================================
+def from_argsort_to_ranking(list):
+    '''Obtain ranking from a list get after applying "np.argsort" on an original list.'''
+    new_list=[0]*len(list)
+    i=0
+    for j in list:
+        new_list[j]=i
+        i+=1
+    return new_list
+
+def custom_sort(list,argsort):
+    '''Sort list according to the order for each position defined in argsort.'''
+    new_list=[]
+    for index in argsort:
+        new_list.append(list[index])
+    return new_list
+
+def remove_element_in_idx(list_elements,list_idx):
+    '''Delete elements at certain positions in a list.'''
+    new_list=[]
+    for i in range(len(list_elements)):
+        if i not in list_idx:
+            new_list.append(list_elements[i])
+    return new_list
 
 def bootstrap_mean_and_confidence_interval(data,bootstrap_iterations=1000):
     '''
@@ -45,22 +68,6 @@ def bootstrap_mean_and_confidence_interval(data,bootstrap_iterations=1000):
         mean_list.append(np.mean(sample))
     return np.mean(data),np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
 
-def from_argsort_to_ranking(list):
-    '''Obtain ranking from a list get after applying "np.argsort" on an original list.'''
-    new_list=[0]*len(list)
-    i=0
-    for j in list:
-        new_list[j]=i
-        i+=1
-    return new_list
-
-def custom_sort(list,argsort):
-    '''Sort list according to the order for each position defined in argsort.'''
-    new_list=[]
-    for index in argsort:
-        new_list.append(list[index])
-    return new_list
-
 def inverse_normalized_tau_kendall(x,y):
     '''Calculation of the normalized inverse tau kendall distance between two rankings.'''
     # Number of pairs with reverse order.
@@ -79,14 +86,6 @@ def inverse_normalized_tau_kendall(x,y):
     tau_kendall=pairs_reverse_order/total_pairs
 
     return 1-tau_kendall
-
-def remove_element_in_idx(list_elements,list_idx):
-    '''Delete elements at certain positions in a list.'''
-    new_list=[]
-    for i in range(len(list_elements)):
-        if i not in list_idx:
-            new_list.append(list_elements[i])
-    return new_list
 
 def from_data_to_figures(df):
     '''Construct the desired graphs from the database.'''
@@ -145,6 +144,8 @@ def from_data_to_figures(df):
     #----------------------------------------------------------------------------------------------
     # GRAPH 3: comparison of rankings associated with the 100 solutions with each accuracy.
     #----------------------------------------------------------------------------------------------
+    ax=plt.subplot(223)
+
     def ranking_matrix_sorted_by_max_acc(ranking_matrix):
         '''Reorder ranking matrix according to the order established by the original ranking.'''
 
@@ -158,15 +159,11 @@ def from_data_to_figures(df):
 
         return sorted_ranking_list
 
-    ax=plt.subplot(223)
-
     ranking_list=[]
-
     for accuracy in list_acc:
         df_acc=df[df['accuracy']==accuracy]
         ranking=from_argsort_to_ranking(list(df_acc['reward'].argsort()))
         ranking_list.append(ranking)
-    
     ranking_matrix=np.matrix(ranking_matrix_sorted_by_max_acc(ranking_list))
 
     color = sns.cubehelix_palette(start=2, rot=0, dark=0, light=.95, reverse=True, as_cmap=True)
@@ -185,7 +182,6 @@ def from_data_to_figures(df):
     ax.set_xlabel('Solution')
     ax.set_xticks(range(0,ranking_matrix.shape[1],10))
     ax.set_xticklabels(range(1,ranking_matrix.shape[1]+1,10),rotation=0)
-
     ax.set_ylabel('Accuracy')
     ax.set_title('Comparing rankings depending on accuracy')
     ax.set_yticks(np.arange(0.5,len(list_acc)+0.5,1))
@@ -243,7 +239,7 @@ def from_data_to_figures(df):
 #==================================================================================================
 # MAIN PROGRAM
 #==================================================================================================
-# read database.
+# Read database.
 df=pd.read_csv('results/data/CartPole/UnderstandingAccuracy.csv',index_col=0)
 
 # Build the graph.

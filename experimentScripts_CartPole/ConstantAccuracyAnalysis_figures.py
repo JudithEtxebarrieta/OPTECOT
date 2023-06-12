@@ -58,7 +58,7 @@ def train_data_to_figure_data(df_train_acc,list_train_steps):
     all_q05_reawrds=[]
     all_q95_rewards=[]
 
-    # Fitting lists.
+    # Fill in lists.
     for train_steps in list_train_steps:
         # Row indexes with a number of training steps less than train_steps.
         ind_train=df_train_acc["info_steps"] <= train_steps
@@ -136,7 +136,7 @@ ax.bar(train_steps_sort,max_rewards_sort,acc_sort,label=acc_sort_str,color=color
 plt.axhline(y=score_limit,color='black', linestyle='--')
 ax.set_xlabel("Train steps")
 ax.set_ylabel("Maximum reward")
-ax.set_title('Best results for each model')
+ax.set_title('Best results for each accuracy')
 
 #--------------------------------------------------------------------------------------------------
 # GRAPH 2 (general results)
@@ -145,7 +145,7 @@ ax=plt.subplot(122)
 
 # Draw a curve for each accuracy value.
 for accuracy in grid_acc:
-    # read database.
+    # Read database.
     df_train_acc=pd.read_csv("results/data/CartPole/ConstantAccuracyAnalysis/df_train_acc"+str(accuracy)+".csv", index_col=0)
 
     # Extract relevant information from the database.
@@ -159,8 +159,8 @@ for accuracy in grid_acc:
 plt.axhline(y=score_limit,color='black', linestyle='--')
 ax.set_xlabel("Train steps")
 ax.set_ylabel("Mean reward")
-ax.set_title('Models evaluations (train 30 seeds, test 100 episodes)')
-ax.legend(title="Train time-step \n accuracy",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
+ax.set_title('Solution quality curves (30 seeds for each accuracy)')
+ax.legend(title="Time-step \n accuracy",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
 
 plt.savefig('results/figures/CartPole/ConstantAccuracyAnalysis.png')
 plt.show()

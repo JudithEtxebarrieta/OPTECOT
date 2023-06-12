@@ -33,9 +33,9 @@ def build_policy_sample(n_sample=100):
     return policy_sample
 
 def evaluate_policy(policy,accuracy):
-    ''' Evaluate policy on 10 episodes of a defined environment with a given accuracy.'''
+    ''' Evaluate a policy on 10 episodes of a defined environment with a given accuracy.'''
 
-    # Initialize the training environment with the specified accuracy.
+    # Initialize the evaluation environment with the specified accuracy.
     env = gym.make('CartPole-v1')
     env.env.tau = env.env.tau / accuracy
     env.env.spec.max_episode_steps = int(env.env.spec.max_episode_steps*accuracy)
@@ -64,7 +64,7 @@ def evaluate_policy(policy,accuracy):
     return np.mean(all_episode_reward),np.mean(all_episode_steps)
 
 def evaluate_policy_sample(policy_sample,accuracy):
-    '''Evaluate set of policies on 10 episodes of a defined environment with a specific accuracy.'''
+    '''Evaluate a set of policies on 10 episodes of a defined environment with a specific accuracy.'''
 
     for i in tqdm(range(len(policy_sample))):
         reward,steps=evaluate_policy(policy_sample[i],accuracy)
