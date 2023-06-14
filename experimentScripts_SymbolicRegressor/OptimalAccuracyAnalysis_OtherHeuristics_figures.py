@@ -1,6 +1,6 @@
 '''
 This script is used to graphically represent the numerical results obtained in 
-"OptimalAccuracyAnalysis_data.py".
+"OptimalAccuracyAnalysis_OtherHeuristics_data.py".
 '''
 
 #==================================================================================================
@@ -63,7 +63,7 @@ def train_data_to_figure_data(df_train,type_eval):
     all_q05=[]
     all_q95=[]
 
-    # Fill in lists.
+    # Fill in list.
     for train_n_eval in list_train_n_eval:
 
         # Row indexes with a number of training evaluations less than train_n_eval.
@@ -101,7 +101,7 @@ def draw_accuracy_behaviour(df_train,type_n_eval,curve):
     all_q05=[]
     all_q95=[]
 
-    # Fill in lists.
+    # Fill in list.
     for train_n_eval in list_train_n_eval:
 
         # Row indexes with the number of training evaluations closest to train_n_eval.
@@ -111,7 +111,7 @@ def draw_accuracy_behaviour(df_train,type_n_eval,curve):
         # Group the previous rows by seeds and keep the accuracy values.
         list_acc=list(df_train[ind_down].loc[ind_per_seed]['acc'])
 
-        # Calculate the mean and confidence interval of the accuracy.
+        # Calculate the mean and the confidence interval of the accuracy.
         mean,q05,q95=bootstrap_mean_and_confidence_interval(list_acc)
 
         # Save data.
@@ -123,27 +123,100 @@ def draw_accuracy_behaviour(df_train,type_n_eval,curve):
     ax.fill_between(list_train_n_eval,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
     plt.plot(list_train_n_eval, all_mean, linewidth=2,color=colors[curve])
 
+def draw_heuristic1_acc_split_functions(list_params):
+    '''Graphical representation of the functions that define the accuracy split in heuristic 1.'''
+
+    def acc_split(corr,acc_rest,param):
+        if param=='logistic':
+            split=(1/(1+np.exp(12*(corr-0.5))))*acc_rest
+        else:
+            if corr<=param[0]:
+                split=acc_rest
+            else:
+                split=-acc_rest*(((corr-param[0])/(1-param[0]))**(1/param[1]))+acc_rest
+        return split
+
+    acc_rest=1
+    all_x=np.arange(-1,1.1,0.1)
+    curve=1
+    for params in list_params:
+        if params!='logistic':
+            params=params.translate({ord('('):'',ord(')'):''})
+            params=tuple(float(i) for i in params.split(','))        
+        all_y=[]
+        for x in all_x:
+            all_y.append(acc_split(x,acc_rest,params))
+
+        ax=plt.subplot2grid((3, 6), (2,curve-1), colspan=1)
+        plt.plot(all_x, all_y, linewidth=2,color=colors[curve])
+        ax.set_xlabel("Spearman correlation")
+        ax.set_ylabel("Accuracy ascent")
+        ax.set_title('Heuristic 1 f'+str(curve))
+        ax.set_yticks([0,1])
+        ax.set_yticklabels([0,"1-accuracy"],rotation=90)
+
+        curve+=1
+
+def draw_heuristic13_14_threshold_shape(df_train,type_n_eval,curve):
+    '''Drawing threshold behavior of the bisection method for heuristics 13 and 14.'''
+
+    # Initialize lists for the graph.
+    all_mean=[]
+    all_q05=[]
+    all_q95=[]
+
+    # Fill in list.
+    for train_n_eval in list_train_n_eval:
+
+        # Row indexes with the number of training evaluations closest to train_n_eval.
+        ind_down=df_train[type_n_eval] <= train_n_eval
+        ind_per_seed=df_train[ind_down].groupby('train_seed')[type_n_eval].idxmax()
+
+        # Group the previous rows by seeds and keep the threshold values.
+        list_threshold=list(df_train[ind_down].loc[ind_per_seed]['threshold'])
+
+        # Calculate the mean and confidence interval of the threshold.
+        mean,q05,q95=bootstrap_mean_and_confidence_interval(list_threshold)
+
+        # Save data.
+        all_mean.append(mean)
+        all_q05.append(q05)
+        all_q95.append(q95)
+    
+    # Draw graph.
+    ax.fill_between(list_train_n_eval,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
+    plt.plot(list_train_n_eval, all_mean, linewidth=2,color=colors[curve])
 
 def draw_and_save_figures_per_heuristic(heuristic):
-    '''
-    Function to draw and save the graphs (with solution quality curves and accuracy behavior) 
-    according to the selected heuristic.
-    '''
+    '''Draw and save graphs according to selected heuristic.'''
 
     global ax
 
     # Initialize graph.
-    plt.figure(figsize=[20,5])
-    plt.subplots_adjust(left=0.08,bottom=0.11,right=0.76,top=0.88,wspace=0.4,hspace=0.76)
+    if heuristic==1:
+        plt.figure(figsize=[20,9])
+        plt.subplots_adjust(left=0.08,bottom=0.11,right=0.82,top=0.88,wspace=0.98,hspace=0.76)
+    if heuristic in [2,3,4,5,6,7,8,9,10,11,12]:
+        plt.figure(figsize=[20,5])
+        plt.subplots_adjust(left=0.08,bottom=0.11,right=0.76,top=0.88,wspace=0.4,hspace=0.76)
+    if heuristic in [13,14]:
+        plt.figure(figsize=[22,5])
+        plt.subplots_adjust(left=0.04,bottom=0.11,right=0.87,top=0.88,wspace=0.37,hspace=0.76)
 
     #----------------------------------------------------------------------------------------------
     # GRAPH 1: Solution quality during training using the total number of evaluations.
     #----------------------------------------------------------------------------------------------
-    ax=plt.subplot(132)
 
-    # read databases.
-    df_max_acc=pd.read_csv("results/data/SymbolicRegressor/ConstantAccuracyAnalysis/df_train_acc1.0.csv", index_col=0) # Accuracy constant 1 (default situation).
-    df_optimal_acc=pd.read_csv('results/data/SymbolicRegressor/OptimalAccuracyAnalysis/df_train_OptimalAccuracy_heuristic'+str(heuristic)+'.csv', index_col=0) # Optimal accuracy (heuristic application).
+    if heuristic==1:
+        ax=plt.subplot2grid((3, 6), (0,2), colspan=2,rowspan=2)
+    if heuristic in [2,3,4,5,6,7,8,9,10,11,12]:
+        ax=plt.subplot(132)
+    if heuristic in [13,14]:
+        ax=plt.subplot(143)
+
+    # Reading of databases to be used.
+    df_max_acc=pd.read_csv("results/data/SymbolicRegressor/ConstantAccuracyAnalysis/df_train_acc1.0.csv", index_col=0) # Default (accuracy 1).
+    df_optimal_acc=pd.read_csv('results/data/SymbolicRegressor/OptimalAccuracyAnalysis_OtherHeuristics/df_train_OptimalAccuracy_heuristic'+str(heuristic)+'.csv', index_col=0) # Heuristic.
 
     # Initialize number of curves.
     curve=0
@@ -160,19 +233,30 @@ def draw_and_save_figures_per_heuristic(heuristic):
         df=df_optimal_acc[df_optimal_acc['heuristic_param']==param]
         all_mean,all_q05,all_q95,list_train_n_eval=train_data_to_figure_data(df,'n_eval')
         ax.fill_between(list_train_n_eval,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
-        plt.plot(list_train_n_eval, all_mean, linewidth=2,label='Optimal h'+str(heuristic)+' ('+str(param)+')',color=colors[curve])
+        if heuristic==1:
+            plt.plot(list_train_n_eval, all_mean, linewidth=2,label='Optimal h'+str(heuristic)+' f'+str(list_params.index(param)+1),color=colors[curve])
+        else:
+            plt.plot(list_train_n_eval, all_mean, linewidth=2,label='Optimal h'+str(heuristic)+' ('+str(param)+')',color=colors[curve])
         curve+=1
 
     ax.set_xlabel("Train total evaluations")
     ax.set_ylabel("Mean score (MAE)")
-    ax.set_title('Comparison between optimal and constant accuracy')
     ax.set_xscale('log')
+    if heuristic in [7,8,9,10,11,12,13,14]:
+        ax.set_title('Comparison between optimal and constant accuracy')
+    else:
+        ax.set_title('Comparison between ascendant and constant accuracy')
 
     #----------------------------------------------------------------------------------------------
     # GRAPH 2: Solution quality during training without considering the number of extra 
     # evaluations needed to readjust the accuracy.
     #----------------------------------------------------------------------------------------------
-    ax=plt.subplot(133)
+    if heuristic==1:
+        ax=plt.subplot2grid((3, 6), (0,4), colspan=2,rowspan=2)
+    if heuristic in [2,3,4,5,6,7,8,9,10,11,12]:
+        ax=plt.subplot(133)
+    if heuristic in [13,14]:
+        ax=plt.subplot(144)
 
     # Initialize number of curves.
     curve=0
@@ -189,24 +273,35 @@ def draw_and_save_figures_per_heuristic(heuristic):
         df=df_optimal_acc[df_optimal_acc['heuristic_param']==param]
         all_mean,all_q05,all_q95,list_train_n_eval=train_data_to_figure_data(df,'n_eval_proc')
         ax.fill_between(list_train_n_eval,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
-        plt.plot(list_train_n_eval, all_mean, linewidth=2,label='Optimal h'+str(heuristic)+' ('+str(param)+')',color=colors[curve])
+        if heuristic==1:
+            plt.plot(list_train_n_eval, all_mean, linewidth=2,label='Optimal h'+str(heuristic)+' f'+str(list_params.index(param)+1),color=colors[curve])
+        else:
+            plt.plot(list_train_n_eval, all_mean, linewidth=2,label='Optimal h'+str(heuristic)+' ('+str(param)+')',color=colors[curve])
         curve+=1
 
     ax.set_xlabel("Train evaluations (without extra)")
     ax.set_ylabel("Mean score (MAE)")
-    ax.set_title('Comparison between optimal and constant accuracy')
     ax.legend(title="Train set point size accuracy",bbox_to_anchor=(1.4, 0, 0, 1), loc='center')
     ax.set_xscale('log')
+    if heuristic in [7,8,9,10,11,12,13,14]:
+        ax.set_title('Comparison between optimal and constant accuracy')
+    else:
+        ax.set_title('Comparison between ascendant and constant accuracy')
 
     #----------------------------------------------------------------------------------------------
     # GRAPH 3: Graphical representation of the accuracy behavior.
     #----------------------------------------------------------------------------------------------
-    ax=plt.subplot(131)
+    if heuristic==1:
+        ax=plt.subplot2grid((3, 6), (0,0), colspan=2,rowspan=2)
+    if heuristic in [2,3,4,5,6,7,8,9,10,11,12]:
+        ax=plt.subplot(131)
+    if heuristic in [13,14]:
+        ax=plt.subplot(142)
 
     # Initialize number of curves.
     curve=1
 
-    # Draw curve.
+    # Draw curves.
     for param in list_params:
         df=df_optimal_acc[df_optimal_acc['heuristic_param']==param]
         draw_accuracy_behaviour(df,'n_eval',curve)
@@ -214,72 +309,34 @@ def draw_and_save_figures_per_heuristic(heuristic):
     ax.set_xlabel("Train evaluations")
     ax.set_ylabel("Accuracy value")
     ax.set_xticks(range(200000,800000,200000))
-    ax.set_title('Behavior of optimal accuracy')
-
-    # Save graph.
-    plt.savefig('results/figures/SymbolicRegressor/OptimalAccuracyAnalysis/OptimalAccuracy_h'+str(heuristic)+'.png')
-    plt.show()
-    plt.close()
-
-
-def draw_comparative_figure(heuristic_param_list):
-    '''Draw comparative graph (comparison between heuristics I and II).'''
-    global ax
-
-    # Initialize graph.
-    plt.figure(figsize=[15,5])
-    plt.subplots_adjust(left=0.12,bottom=0.11,right=0.73,top=0.88,wspace=0.4,hspace=0.76)
+    if heuristic in [7,8,9,10,11,12,13,14]:
+        ax.set_title('Behavior of optimal accuracy')
+    else:
+        ax.set_title('Ascendant behavior of accuracy')
 
     #----------------------------------------------------------------------------------------------
-    # GRAPH 1: Solution quality during training using the total number of evaluations.
-    #----------------------------------------------------------------------------------------------
-    ax=plt.subplot(122)
+    # GRAPH 4: Graphical representation of the correlation threshold behavior.
+    #----------------------------------------------------------------------------------------------                                                                                                                                                                                                                                                                                                           
+    if heuristic==1:
+        # Draw functions considered to define the rise of the accuracy.
+        draw_heuristic1_acc_split_functions(list_params)
 
-    # Constant use of accuracy (default situation).
-    df_max_acc=pd.read_csv("results/data/SymbolicRegressor/ConstantAccuracyAnalysis/df_train_acc1.0.csv", index_col=0)
-    curve=0
-    all_mean,all_q05,all_q95,list_train_n_eval=train_data_to_figure_data(df_max_acc,'n_eval')
-    ax.fill_between(list_train_n_eval,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
-    plt.plot(list_train_n_eval, all_mean, linewidth=2,label='Default',color=colors[curve])
-    curve+=1
+    if heuristic in[13,14]:
+        ax=plt.subplot(141)
 
-    # Optimal use of accuracy (heuristic application).
-    for heuristic_param in heuristic_param_list:
-        heuristic=heuristic_param[0]
-        param=heuristic_param[1]
-        df=pd.read_csv('results/data/SymbolicRegressor/OptimalAccuracyAnalysis/df_train_OptimalAccuracy_heuristic'+str(heuristic)+'.csv', index_col=0)
-        all_mean,all_q05,all_q95,list_train_n_eval=train_data_to_figure_data(df[df['heuristic_param']==param],'n_eval')
-        ax.fill_between(list_train_n_eval,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
-        plt.plot(list_train_n_eval, all_mean, linewidth=2,label='Optimal h'+str(heuristic)+' ('+str(param)+')',color=colors[curve])
-        curve+=1
-    
-    ax.set_xlabel("Train evaluations")
-    ax.set_ylabel("Mean score (MAE)")
-    ax.set_title('Comparison of heuristics and default case')
-    ax.legend(title="Train set point size accuracy",bbox_to_anchor=(1.4, 0, 0, 1), loc='center')
-    ax.set_xscale('log')
+        # Initialize number of curves.
+        curve=1
 
-    #----------------------------------------------------------------------------------------------
-    # GRAPH 3: Graphical representation of the accuracy behavior.
-    #----------------------------------------------------------------------------------------------
-    ax=plt.subplot(121)
+        # Draw curves.
+        for param in list_params:
+            df=df_optimal_acc[df_optimal_acc['heuristic_param']==param]
+            draw_heuristic13_14_threshold_shape(df,'n_eval',curve)
+            curve+=1
+        ax.set_xlabel("Train evaluations")
+        ax.set_ylabel("Threshold value")
+        ax.set_title('Behavior of bisection method threshold')
 
-    # Initialize number of curves.
-    curve=1
-
-    # Draw curves.
-    for heuristic_param in heuristic_param_list:
-        heuristic=heuristic_param[0]
-        param=heuristic_param[1]
-        df=pd.read_csv('results/data/SymbolicRegressor/OptimalAccuracyAnalysis/df_train_OptimalAccuracy_heuristic'+str(heuristic)+'.csv', index_col=0)
-        draw_accuracy_behaviour(df[df['heuristic_param']==param],'n_eval',curve)
-        curve+=1
-    ax.set_xlabel("Train evaluations")
-    ax.set_ylabel("Accuracy value")
-    ax.set_xticks(range(200000,800000,200000))
-    ax.set_title('Behavior of optimal accuracy')
-
-    plt.savefig('results/figures/SymbolicRegressor/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_comparison.png')
+    plt.savefig('results/figures/SymbolicRegressor/OptimalAccuracyAnalysis_OtherHeuristics/OptimalAccuracy_h'+str(heuristic)+'.png')
     plt.show()
     plt.close()
 
@@ -288,29 +345,11 @@ def draw_comparative_figure(heuristic_param_list):
 #==================================================================================================
 # List of colors.
 colors=px.colors.qualitative.D3
-    
-# Define number of evaluations to be drawn.
-df_max_acc=pd.read_csv('results/data/SymbolicRegressor/ConstantAccuracyAnalysis/df_train_acc1.0.csv', index_col=0)
-df_hI=pd.read_csv('results/data/SymbolicRegressor/OptimalAccuracyAnalysis/df_train_OptimalAccuracy_heuristicI.csv', index_col=0)
-df_hII=pd.read_csv('results/data/SymbolicRegressor/OptimalAccuracyAnalysis/df_train_OptimalAccuracy_heuristicII.csv', index_col=0)
-min_time_acc_max=max(df_max_acc.groupby('train_seed')['n_eval'].min())
-min_time_hI=max(df_hI.groupby('train_seed')['n_eval_proc'].min())
-min_time_hII=max(df_hII.groupby('train_seed')['n_eval_proc'].min())
-max_time_acc_max=min(df_max_acc.groupby('train_seed')['n_eval'].max())
-max_time_hI=min(df_hI.groupby('train_seed')['n_eval_proc'].max())
-max_time_hII=min(df_hII.groupby('train_seed')['n_eval_proc'].max())
 
-df_cost_per_acc=pd.read_csv('results/data/SymbolicRegressor/UnderstandingAccuracy/df_Bisection.csv',index_col=0)
-time_split=list(df_cost_per_acc['cost_per_eval'])[0]*1000
-
-list_train_n_eval=np.arange(max(min_time_acc_max,min_time_hI,min_time_hII),min(max_time_acc_max,max_time_hI,max_time_hII)+time_split,time_split)
-
-
-# Independent graphs per heuristic.
-list_heuristics=['I','II']
+# Draw and save graphs.
+list_heuristics=[1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 for heuristic in list_heuristics:
+    # Define the number of evaluations to be drawn.
+    list_train_n_eval=range(50000,1000000,10000)
+    # Call function.
     draw_and_save_figures_per_heuristic(heuristic)
-
-# Build comparative graph.
-heuristic_param_list=[['I',0.95],['II',"[5, 3]"]]
-draw_comparative_figure(heuristic_param_list)

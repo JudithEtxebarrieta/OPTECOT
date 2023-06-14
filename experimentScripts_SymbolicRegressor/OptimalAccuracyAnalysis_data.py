@@ -366,7 +366,7 @@ def update_accuracy_heuristicII(acc,lower_time,upper_time,X,y,list_accuracies,li
     heuristic_accepted=False
 
     # If the last optimal accuracy is higher than 0.9, the maximum accuracy will be considered as optimal from now on.
-    if len(list_accuracies)>=param[1]+1:
+    if len(list_accuracies)>=param[1]:
         if stop_heuristic==True:
             n_evaluations+=int(default_train_n_pts)*len(list_surf_gen)
             variance=np.var(fitness)
