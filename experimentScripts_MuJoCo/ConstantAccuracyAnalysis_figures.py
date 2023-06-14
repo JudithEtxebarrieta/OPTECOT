@@ -81,7 +81,7 @@ def train_data_to_figure_data(df_train_acc,list_train_steps):
     return all_mean,all_q05,all_q95
  
 #==================================================================================================
-# MIN PROGRAM
+# MAIN PROGRAM
 #==================================================================================================
 
 # Initialize graph.
@@ -141,7 +141,7 @@ ax.bar(train_stepss_sort,max_scores_sort,acc_sort,label=acc_sort_str,color=color
 ax.tick_params(axis='x', labelrotation = 45)
 ax.set_xlabel("Train steps")
 ax.set_ylabel("Reward")
-ax.set_title('Best results for each model')
+ax.set_title('Best results for each accuracy')
 plt.axhline(y=score_limit,color='black', linestyle='--')
 
 
@@ -166,8 +166,8 @@ for accuracy in list_acc:
 # Save graph.
 ax.set_xlabel("Train steps")
 ax.set_ylabel("Reward")
-ax.set_title('Model evaluation \n (train 100 seeds, test 10 episodes)')
-ax.legend(title="Train time-step \n accuracy",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
+ax.set_title('Solution quality curves (100 seeds for each accuracy)')
+ax.legend(title="Time-step \n accuracy",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
 plt.axhline(y=score_limit,color='black', linestyle='--')
 
 plt.savefig('results/figures/MuJoCo/ConstantAccuracyAnalysis.png')

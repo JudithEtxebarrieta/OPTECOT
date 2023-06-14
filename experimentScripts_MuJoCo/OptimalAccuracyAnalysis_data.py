@@ -1,21 +1,11 @@
 '''
 In this script, the proposed heuristics are applied to the MuJoCo's Swimmer environment. The CMA-ES 
-algorithm is run on this environment using 100 different seeds. A database is built with the 
-relevant information obtained during the execution of each seed. The code is written to execute 
-two heuristics. The first one considers the constant frequency t^{freq} defined in the paper for the 
-readjustment. The second one instead, matches the same heuristic of the paper (the update frequency
-is determined by the change of variance).
+algorithm is run on this environment using 100 different seeds for each heuristic. A database is built
+with the relevant information obtained during the execution process. 
 
-The following databases are stored:
-
-1) df_OptimalAccuracyAnalysis_hI_CInone.csv: Data associated with the execution of the first heuristic.
-
-2) df_OptimalAccuracyAnalysis_hII_CIbootstrap.csv: Data associated with the execution of the second 
-heuristic, calculating the confidence intervals of the variances using the bootstrap method.
-
-3) df_OptimalAccuracyAnalysis_hII_CImean_sd.csv: Data associated with the execution of the second 
-heuristic, calculating the confidence intervals using the deviating mean of the previous variances.
-
+The general descriptions of the heuristics are:
+HEURISTIC I: The accuracy is updated using the constant frequency calculated in experimentScripts_general/sample_size_bisection_method.py.
+HEURISTIC II: The accuracy is updated when it is detected that the variance of the scores of the last population is significantly different from the previous ones.
 '''
 
 #==================================================================================================
@@ -87,7 +77,6 @@ def learn(ctxt=None, gymEnvName=None, action_space=None, max_episode_length=None
     global_heuristic_param=heuristic_param
     optimal_acc=1
     
-
     # Initialization of counters.
     global n_steps_proc,n_steps_acc,n_episodes,n_generations
     n_steps_proc=0 # Counter indicating the number of steps consumed so far for the procedure.
@@ -100,7 +89,7 @@ def learn(ctxt=None, gymEnvName=None, action_space=None, max_episode_length=None
     popsize= 20 # Population size in CMA-ES.
     batch_size_ep=1 # Number of episodes to be considered in evaluating each policy for a population.
 
-    # set seed.
+    # Set seed.
     set_seed(seed)
 
     with TFTrainer(ctxt) as trainer:
@@ -135,7 +124,6 @@ def learn(ctxt=None, gymEnvName=None, action_space=None, max_episode_length=None
 #--------------------------------------------------------------------------------------------------
 # Auxiliary functions to define the appropriate accuracy during the execution process.
 #--------------------------------------------------------------------------------------------------
-
 def spearman_corr(x,y):
     '''Calculation of Spearman's correlation between two sequences.'''
     return sc.stats.spearmanr(x,y)[0]
@@ -192,7 +180,6 @@ def generation_reward_list(df_sample_policy_info,accuracy,count_time_acc=True):
 #--------------------------------------------------------------------------------------------------
 # Functions associated with the heuristics to be applied to adjust the accuracy.
 #--------------------------------------------------------------------------------------------------
-
 def possible_accuracy_values_bisection():
     '''Calculating the possible midpoints that can be evaluated in the bisection method.'''
 
@@ -255,10 +242,10 @@ def bisection_method(lower_time,upper_time,df_sample_policy_info,interpolation_p
     return np.interp(prev_m,interpolation_pts[0],interpolation_pts[1])
 
 
-def execute_heuristic(gen,acc,df_sample_policy_info,list_variances,heuristic,param):
+def execute_heuristic(gen,acc,df_sample_policy_info,list_accuracies,list_variances,heuristic,param):
     '''Running heuristics during the training process.'''
 
-    global last_time_heuristic_accepted,unused_bisection_executions
+    global last_time_heuristic_accepted,unused_bisection_executions, stop_heuristic
     global n_steps_proc
     global n_steps_acc
     global max_steps
@@ -274,7 +261,7 @@ def execute_heuristic(gen,acc,df_sample_policy_info,list_variances,heuristic,par
     lower_time=min(interpolation_time)
     upper_time=max(interpolation_time)
 
-    # HEURISTIC I of Symbolic Regressor: Bisection with constant frequency (the quality threshold is the parameter).
+    # HEURISTIC I: The accuracy is updated using a constant frequency.
     if heuristic=='I': 
         if gen==0:
             acc=bisection_method(lower_time,upper_time,df_sample_policy_info,[interpolation_time,interpolation_acc],threshold=param)
@@ -284,8 +271,10 @@ def execute_heuristic(gen,acc,df_sample_policy_info,list_variances,heuristic,par
                 acc=bisection_method(lower_time,upper_time,df_sample_policy_info,[interpolation_time,interpolation_acc],threshold=param)
                 heuristic_accepted=True
 
-    # HEURISTIC II of Symbolic Regressor: Bisection with automatic setting for accuracy update frequency (parameter dependent) 
-    # and bisection method quality threshold set to 0.95.    
+    # HEURISTIC II: The accuracy is updated when it is detected that the variance of the scores of the
+    # last population is significantly different from the previous ones. In addition, when it is observed 
+    # that in the last populations the optimum accuracy considered is higher than 0.9, the accuracy will 
+    # no longer be adjusted and the maximum accuracy will be considered for the following populations.    
     if heuristic=='II': 
         if gen==0: 
             acc=bisection_method(lower_time,upper_time,df_sample_policy_info,[interpolation_time,interpolation_acc])
@@ -293,21 +282,18 @@ def execute_heuristic(gen,acc,df_sample_policy_info,list_variances,heuristic,par
             heuristic_accepted=True
             
         else:
-            if len(list_variances)>=param+1:
+            if len(list_accuracies)>=param[1]:
+                if stop_heuristic==False:
+                    prev_acc=list_accuracies[(-1-param[1]):-1]
+                    prev_acc_high=np.array(prev_acc)>0.9
+                    if sum(prev_acc_high)==param[1]:
+                        stop_heuristic=True
+                        acc=1
+
+            if len(list_variances)>=param[0]+1 and stop_heuristic==False:
                 # Calculate the confidence interval.
-                global CI
-                def bootstrap_confidence_interval(data,bootstrap_iterations=1000):
-                    mean_list=[]
-                    for i in range(bootstrap_iterations):
-                        sample = np.random.choice(data, len(data), replace=True) 
-                        mean_list.append(np.mean(sample))
-                    return np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
-                
-                if CI=='bootstrap':
-                    variance_q05,variance_q95=bootstrap_confidence_interval(list_variances[(-2-param):-2])
-                if CI=='mean_sd':
-                    variance_q05=np.mean(list_variances[(-2-param):-2])-2*np.std(list_variances[(-2-param):-2])
-                    variance_q95=np.mean(list_variances[(-2-param):-2])+2*np.std(list_variances[(-2-param):-2])
+                variance_q05=np.mean(list_variances[(-2-param[0]):-2])-2*np.std(list_variances[(-2-param[0]):-2])
+                variance_q95=np.mean(list_variances[(-2-param[0]):-2])+2*np.std(list_variances[(-2-param[0]):-2])
 
                 last_variance=list_variances[-1]
 
@@ -324,11 +310,6 @@ def execute_heuristic(gen,acc,df_sample_policy_info,list_variances,heuristic,par
                             acc=bisection_method(lower_time,upper_time,df_sample_policy_info,[interpolation_time,interpolation_acc])
                             unused_bisection_executions-=1
                             heuristic_accepted=True
-
-            else:
-                if (n_steps_proc+n_steps_acc)-last_time_heuristic_accepted>=heuristic_freq:
-                    acc=bisection_method(lower_time,upper_time,df_sample_policy_info,[interpolation_time,interpolation_acc])
-                    heuristic_accepted=True
 
 
     return acc
@@ -441,7 +422,7 @@ def train(self, trainer):
     last_return = None
 
     global n_generations,df,global_heuristic,global_heuristic_param,optimal_acc,batch_size_ep
-    
+    global stop_heuristic
     global n_steps_proc,n_steps_acc,train_env,last_time_heuristic_accepted,unused_bisection_executions
     while n_steps_proc+n_steps_acc<max_steps:# MODIFICATION: Change stopping criterion.
         # MODIFICATION: To obtain individuals from the population.
@@ -479,39 +460,27 @@ def train(self, trainer):
                 list_variances=list(df_seed[5])
 
                 # Calculate the confidence interval.
-                global CI
-                def bootstrap_confidence_interval(data,bootstrap_iterations=1000):
-                    mean_list=[]
-                    for i in range(bootstrap_iterations):
-                        sample = np.random.choice(data, len(data), replace=True) 
-                        mean_list.append(np.mean(sample))
-                    return np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
-
-                if CI=='bootstrap':
-                    variance_q05,variance_q95=bootstrap_confidence_interval(list_variances[(-2-global_heuristic_param):-2])
-                if CI=='mean_sd':
-                    variance_q05=np.mean(list_variances[(-2-global_heuristic_param):-2])-2*np.std(list_variances[(-2-global_heuristic_param):-2])
-                    variance_q95=np.mean(list_variances[(-2-global_heuristic_param):-2])+2*np.std(list_variances[(-2-global_heuristic_param):-2])
+                variance_q05=np.mean(list_variances[(-2-global_heuristic_param[0]):-2])-2*np.std(list_variances[(-2-global_heuristic_param[0]):-2])
+                variance_q95=np.mean(list_variances[(-2-global_heuristic_param[0]):-2])+2*np.std(list_variances[(-2-global_heuristic_param[0]):-2])
                 
                 last_variance=list_variances[-1]
 
-                if (len(list_variances)>=global_heuristic_param+1) and (last_variance<variance_q05 or last_variance>variance_q95):
+                if (len(list_variances)>=global_heuristic_param[0]+1) and (last_variance<variance_q05 or last_variance>variance_q95):
                     if (n_steps_proc+n_steps_acc)-last_time_heuristic_accepted>=heuristic_freq: 
                         obtain_population()
                     elif unused_bisection_executions>0:
                         obtain_population()
-                elif len(list_variances)<global_heuristic_param+1 and (n_steps_proc+n_steps_acc)-last_time_heuristic_accepted>=heuristic_freq: 
-                    obtain_population()
 
         # MODIFICATION: apply the heuristic.
         df_policy_train_bisection_info=pd.DataFrame(df_policy_train_bisection_info,columns=['n_sample','accuracy','reward'])
 
         if n_generations==0:
-            optimal_acc=execute_heuristic(n_generations,optimal_acc,df_policy_train_bisection_info,[],global_heuristic,global_heuristic_param)
+            optimal_acc=execute_heuristic(n_generations,optimal_acc,df_policy_train_bisection_info,[],[],global_heuristic,global_heuristic_param)
+            stop_heuristic=False
         else:
             df_seed=pd.DataFrame(df)
             df_seed=df_seed[df_seed[1]==seed]
-            optimal_acc=execute_heuristic(n_generations,optimal_acc,df_policy_train_bisection_info,list(df_seed[5]),global_heuristic,global_heuristic_param)
+            optimal_acc=execute_heuristic(n_generations,optimal_acc,df_policy_train_bisection_info,list(df_seed[4]),list(df_seed[5]),global_heuristic,global_heuristic_param)
         
         train_env = GymEnv(gymEnvName, max_episode_length=int(max_episode_length*optimal_acc))
         train_env._env.unwrapped.model.opt.timestep=default_frametime/optimal_acc
@@ -584,7 +553,7 @@ test_env_seed=1 # Seed for the validation environment.
 test_n_eval_episodes=10 # Number of episodes to be evaluated in the validation.
 
 # Argument list for parallel processing.
-list_arg=[['II',5,'mean_sd'],['I',0.8,'none'],['I',0.95,'none'],['II',5,'bootstrap'],['II',10,'bootstrap']]
+list_arg=[['II',[5,3]]]#[['II',[5,3]],['II',[10,3]],['I',0.8],['I',0.95]]
 df_sample_freq=pd.read_csv('results/data/general/sample_size_freq.csv',index_col=0)
 sample_size=int(df_sample_freq[df_sample_freq['env_name']=='MuJoCo']['sample_size'])
 heuristic_freq=float(df_sample_freq[df_sample_freq['env_name']=='MuJoCo']['frequency_time'])
@@ -594,8 +563,6 @@ def parallel_processing(arg):
 
     heuristic=arg[0]
     heuristic_param=arg[1]
-    global CI
-    CI=arg[2]
 
     global df
     df=[]
@@ -607,7 +574,7 @@ def parallel_processing(arg):
 
     # Save database.
     df=pd.DataFrame(df,columns=['heuristic_param','seed','n_gen','reward','accuracy','variance','update','n_steps_proc','n_steps_acc','n_steps'])
-    df.to_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_param'+str(heuristic_param)+'_CI'+str(CI)+'.csv')
+    df.to_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_param'+str(heuristic_param)+'.csv')
 
 # Parallel processing.
 phisical_cpu=ps.cpu_count(logical=False)
@@ -616,16 +583,15 @@ pool.map(parallel_processing,list_arg)
 pool.close()
 
 # Join databases.
-def join_df(heuristic,list_param,CI):
-    df=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_param'+str(list_param[0])+'_CI'+str(CI)+'.csv', index_col=0)
+def join_df(heuristic,list_param):
+    df=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_param'+str(param)+'.csv', index_col=0)
     for param in list_param[1:]:
-        df_new=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_param'+str(list_param[0])+'_CI'+str(CI)+'.csv', index_col=0)
+        df_new=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_param'+str(param)+'.csv', index_col=0)
         df=pd.concat([df,df_new],ignore_index=True)
 
-    df.to_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_CI'+str(CI)+'.csv')
+    df.to_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'.csv')
 
-join_df('I',[0.8,0.95],'none')
-join_df('II',[5,10],'bootstrap')
-join_df('II',[5],'mean_sd')
+# join_df('I',[0.8,0.95])
+# join_df('II',['[5, 3]','[10, 3]'])
 
 

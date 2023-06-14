@@ -1,16 +1,6 @@
 '''
 This script is used to graphically represent the numerical results obtained in 
-"OptimalAccuracyAnalysis_data.py". A total of 3 graphs are drawn:
-
-1) OptimalAccuracyAnalysis_hI.png: Results of applying heuristic I (readjusting the 
-accuracy using the constant frequency t^{freq}).
-2) OptimalAccuracyAnalysis_hII.png: Results of applying heuristic II (readjusting the
-accuracy by monitoring the variance).
-3) OptimalAccuracyAnalysis_comparison.png: Comparison of the best results obtained 
-in the previous cases.
-
-Note: The graphs obtained by this script for heuristic II (the one applied in the paper) are 
-associated with the calculation of the confidence interval of variances using the bootstrap method.
+"OptimalAccuracyAnalysis_data.py".
 '''
 #==================================================================================================
 # LIBRARIES
@@ -128,7 +118,7 @@ def draw_accuracy_behaviour(df_train,type_time,curve):
     plt.plot(list_train_time, all_mean, linewidth=2,color=colors[curve])
 
 
-def draw_and_save_figures_per_heuristic(heuristic,CI):
+def draw_and_save_figures_per_heuristic(heuristic):
 
     '''Draw and save graphs associated with the selected heuristic.'''
 
@@ -144,7 +134,7 @@ def draw_and_save_figures_per_heuristic(heuristic,CI):
     ax=plt.subplot(132)
 
     # Reading of databases to be used.
-    df_optimal_acc=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_CI'+str(CI)+'.csv', index_col=0)
+    df_optimal_acc=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'.csv', index_col=0)
 
     # Initialize number of curves.
     curve=0
@@ -152,10 +142,10 @@ def draw_and_save_figures_per_heuristic(heuristic,CI):
     # Constant use of accuracy (default situation).
     all_mean,all_q05,all_q95,list_train_time=train_data_to_figure_data(df_max_acc,'n_steps','train_seed')
     ax.fill_between(list_train_time,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
-    plt.plot(list_train_time, all_mean, linewidth=2,label='1',color=colors[curve])
+    plt.plot(list_train_time, all_mean, linewidth=2,label='Default',color=colors[curve])
     curve+=1
 
-    # Optimal uso os accuracy (heuristic application).
+    # Optimal use of accuracy (heuristic application).
     list_params=list(set(df_optimal_acc['heuristic_param']))
     for param in list_params:
         df=df_optimal_acc[df_optimal_acc['heuristic_param']==param]
@@ -181,10 +171,10 @@ def draw_and_save_figures_per_heuristic(heuristic,CI):
     # Constant use of accuracy (default situation).
     all_mean,all_q05,all_q95,list_train_time=train_data_to_figure_data(df_max_acc,'n_steps','train_seed')
     ax.fill_between(list_train_time,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
-    plt.plot(list_train_time, all_mean, linewidth=2,label='1',color=colors[curve])
+    plt.plot(list_train_time, all_mean, linewidth=2,label='Default',color=colors[curve])
     curve+=1
 
-    # Optimal uso os accuracy (heuristic application).
+    # Optimal use of accuracy (heuristic application).
     list_params=list(set(df_optimal_acc['heuristic_param']))
     for param in list_params:
         df=df_optimal_acc[df_optimal_acc['heuristic_param']==param]
@@ -197,7 +187,7 @@ def draw_and_save_figures_per_heuristic(heuristic,CI):
     ax.set_ylabel("Reward")
     ax.set_xticks(range(100000,900000,200000))
     ax.set_title('Comparison between optimal and constant accuracy')
-    ax.legend(title="Train time-step \n accuracy",bbox_to_anchor=(1.4, 0, 0, 1), loc='center')
+    ax.legend(title="Time-step accuracy",bbox_to_anchor=(1.4, 0, 0, 1), loc='center')
 
     #----------------------------------------------------------------------------------------------
     # GRAPH 3: Graphical representation of the accuracy behavior.
@@ -217,7 +207,7 @@ def draw_and_save_figures_per_heuristic(heuristic,CI):
     ax.set_xticks(range(100000,900000,200000))
     ax.set_title('Behavior of optimal accuracy')
 
-    plt.savefig('results/figures/MuJoCo/OptimalAccuracyAnalysis_h'+str(heuristic)+'.png')
+    plt.savefig('results/figures/MuJoCo/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_h'+str(heuristic)+'.png')
     plt.show()
     plt.close()
 
@@ -239,15 +229,14 @@ def draw_comparative_figure(heuristic_param_list):
     curve=0
     all_mean,all_q05,all_q95,list_train_time=train_data_to_figure_data(df_max_acc,'n_steps','train_seed')
     ax.fill_between(list_train_time,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
-    plt.plot(list_train_time, all_mean, linewidth=2,label='1',color=colors[curve])
+    plt.plot(list_train_time, all_mean, linewidth=2,label='Default',color=colors[curve])
     curve+=1
 
-    # Optimal uso os accuracy (heuristic application).
+    # Optimal use of accuracy (heuristic application).
     for heuristic_param in heuristic_param_list:
         heuristic=heuristic_param[0]
         param=heuristic_param[1]
-        CI=heuristic_param[2]
-        df=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_CI'+str(CI)+'.csv', index_col=0)
+        df=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'.csv', index_col=0)
         all_mean,all_q05,all_q95,list_train_time=train_data_to_figure_data(df[df['heuristic_param']==param],'n_steps')
         ax.fill_between(list_train_time,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
         plt.plot(list_train_time, all_mean, linewidth=2,label='Optimal h'+str(heuristic)+' ('+str(param)+')',color=colors[curve])
@@ -257,7 +246,7 @@ def draw_comparative_figure(heuristic_param_list):
     ax.set_ylabel("Reward")
     ax.set_xticks(range(100000,900000,200000))
     ax.set_title('Comparison of heuristics and default case')
-    ax.legend(title="Train time-step \n accuracy",bbox_to_anchor=(1.4, 0, 0, 1), loc='center')
+    ax.legend(title="Time-step accuracy",bbox_to_anchor=(1.4, 0, 0, 1), loc='center')
 
     #----------------------------------------------------------------------------------------------
     # GRAPH 2: Graphical representation of the accuracy behavior.
@@ -271,8 +260,7 @@ def draw_comparative_figure(heuristic_param_list):
     for heuristic_param in heuristic_param_list:
         heuristic=heuristic_param[0]
         param=heuristic_param[1]
-        CI=heuristic_param[2]
-        df=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_CI'+str(CI)+'.csv', index_col=0)
+        df=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'.csv', index_col=0)
         draw_accuracy_behaviour(df[df['heuristic_param']==param],'n_steps',curve)
         curve+=1
     ax.set_xlabel("Train steps")
@@ -280,7 +268,7 @@ def draw_comparative_figure(heuristic_param_list):
     ax.set_xticks(range(100000,900000,200000))
     ax.set_title('Behavior of accuracy')
 
-    plt.savefig('results/figures/MuJoCo/OptimalAccuracyAnalysis_comparison.png')
+    plt.savefig('results/figures/MuJoCo/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_comparison.png')
     plt.show()
     plt.close()
 
@@ -292,23 +280,25 @@ colors=px.colors.qualitative.D3
 
 # Define training times to be drawn.
 df_max_acc=pd.read_csv('results/data/MuJoCo/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis_acc1.0.csv', index_col=0)
-df_hI=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_hI_CInone.csv', index_col=0)
-df_hII=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_hII_CIbootstrap.csv', index_col=0)
+# df_hI=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_hI.csv', index_col=0)
+df_hII=pd.read_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_hII.csv', index_col=0)
 min_time_acc_max=max(df_max_acc.groupby('train_seed')['n_steps'].min())
-min_time_hI=max(df_hI.groupby('seed')['n_steps'].min())
+# min_time_hI=max(df_hI.groupby('seed')['n_steps'].min())
 min_time_hII=max(df_hII.groupby('seed')['n_steps'].min())
 max_time_acc_max=min(df_max_acc.groupby('train_seed')['n_steps'].max())
-max_time_hI=min(df_hI.groupby('seed')['n_steps_proc'].max())
+# max_time_hI=min(df_hI.groupby('seed')['n_steps_proc'].max())
 max_time_hII=min(df_hII.groupby('seed')['n_steps_proc'].max())
 
 df_cost_per_acc=pd.read_csv('results/data/MuJoCo/UnderstandingAccuracy/df_Bisection.csv',index_col=0)
 time_split=list(df_cost_per_acc['cost_per_eval'])[0]*20
 
-list_train_time=np.arange(max(min_time_acc_max,min_time_hI,min_time_hII),min(max_time_acc_max,max_time_hI,max_time_hII)+time_split,time_split)
+# list_train_time=np.arange(max(min_time_acc_max,min_time_hI,min_time_hII),min(max_time_acc_max,max_time_hI,max_time_hII)+time_split,time_split)
+list_train_time=np.arange(max(min_time_acc_max,min_time_hII),min(max_time_acc_max,max_time_hII)+time_split,time_split)
+
 
 # Call the functions that draw the graphs.
-list_heuristics=[['I','none'],['II','bootstrap']]
-heuristic_param_list=[['I',0.95,'none'],['II',5,'bootstrap']]
+list_heuristics=['II']#['I','II']
+heuristic_param_list=[['II',5]]#[['I',0.95],['II',5]]
 for heuristic in list_heuristics:
-    draw_and_save_figures_per_heuristic(heuristic[0],heuristic[1])
-draw_comparative_figure(heuristic_param_list)
+    draw_and_save_figures_per_heuristic(heuristic)
+# draw_comparative_figure(heuristic_param_list)
