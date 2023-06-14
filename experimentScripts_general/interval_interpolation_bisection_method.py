@@ -1,16 +1,24 @@
-
+'''
+This script graphically represents two interpolations between the evaluation times and their 
+accuracy values: one is polynomial and the other is linear. The polynomial experiments are 
+stored in a database.
+'''
 
 #==================================================================================================
-# LIBRERIAS
+# LIBRARIES
 #==================================================================================================
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
 #==================================================================================================
-# FUNCIONES
+# FUNCTIONS
 #==================================================================================================
 def polinomial_interpolation(x,y,var_name='m'):
+    '''
+    Obtain the polynomial expression that interpolates a set of points (the degree 
+    of the polynomial is equivalent to the cardinal of the set of points).
+    '''
     vandermonde=np.vander(x,increasing=True)
     coef=np.dot(np.linalg.inv(vandermonde),y)
     expression=''
@@ -23,6 +31,7 @@ def polinomial_interpolation(x,y,var_name='m'):
     return  expression
 
 def draw_expression(expression,x,y,env_name):
+    '''Graph the polynomial that interpolates a set of points.'''
     expression_x=np.arange(min(x),max(x)+(max(x)-min(x))/100,(max(x)-min(x))/100)
     expression_y=[]
     for m in expression_x:
@@ -40,7 +49,7 @@ def draw_expression(expression,x,y,env_name):
     plt.show()
 
 def draw_linear_interpolation(x,y,env_name):
-
+    '''Graph the polygonal line that interpolates a set of points.'''
     plt.figure(figsize=[6,6])
     ax=plt.subplot(111)
     plt.plot(x,y,color='blue',label='Interpolation')
@@ -54,12 +63,12 @@ def draw_linear_interpolation(x,y,env_name):
 
 
 #==================================================================================================
-# PROGRAMA PRINCIPAL
+# MAIN PROGRAM
 #==================================================================================================
 list_env_names=['SymbolicRegressor','WindFLO','MuJoCo','Turbines']
 df=[]
 
-# Interpolacion polinomial.
+# Polynomial interpolation.
 for env_name in list_env_names:
     df_acc_eval_cost=pd.read_csv('results/data/'+str(env_name)+'/UnderstandingAccuracy/df_Bisection.csv')
     expression=polinomial_interpolation(df_acc_eval_cost['cost_per_eval'],df_acc_eval_cost['accuracy'])
@@ -70,7 +79,7 @@ for env_name in list_env_names:
 df=pd.DataFrame(df,columns=['env_name','interpolation_expression','inverse_expression','lower_time','upper_time'])
 df.to_csv('results/data/general/bisection_interval_PolinomialInterpolation.csv')
 
-# Interpolacion lineal.
+# Linear interpolation.
 for env_name in list_env_names:
     df_acc_eval_cost=pd.read_csv('results/data/'+str(env_name)+'/UnderstandingAccuracy/df_Bisection.csv')
     draw_linear_interpolation(df_acc_eval_cost['cost_per_eval'],df_acc_eval_cost['accuracy'],env_name)
