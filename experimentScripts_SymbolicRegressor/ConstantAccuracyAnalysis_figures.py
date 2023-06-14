@@ -170,7 +170,7 @@ plt.axhline(y=score_limit,color='black', linestyle='--')
 ax.set_xlabel("Train evaluations")
 ax.set_ylabel("Mean score (MAE)")
 ax.set_title('Solution quality curves (100 seeds for each accuracy)')
-ax.legend(title="Train set point \n size accuracy",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
+ax.legend(title="Point set size \n accuracy",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
 plt.xscale('log')
 plt.yscale('log')
 

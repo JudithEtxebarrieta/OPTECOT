@@ -281,7 +281,7 @@ def draw_and_save_figures_per_heuristic(heuristic):
 
     ax.set_xlabel("Train evaluations (without extra)")
     ax.set_ylabel("Mean score (MAE)")
-    ax.legend(title="Train set point size accuracy",bbox_to_anchor=(1.4, 0, 0, 1), loc='center')
+    ax.legend(title="Point set size accuracy",bbox_to_anchor=(1.4, 0, 0, 1), loc='center')
     ax.set_xscale('log')
     if heuristic in [7,8,9,10,11,12,13,14]:
         ax.set_title('Comparison between optimal and constant accuracy')
