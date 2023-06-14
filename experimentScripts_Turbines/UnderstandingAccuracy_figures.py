@@ -227,7 +227,7 @@ def from_data_to_figuresI(df):
     plt.xticks(rotation = 45)
     ax4.set_title('Extra evaluations in the same time required by maximum N')
 
-    plt.savefig('results/figures/Turbines/UnderstandingAccuracyI.png')
+    plt.savefig('results/figures/Turbines/UnderstandingAccuracyAnalysis/UnderstandingAccuracyI.png')
     plt.show()
 
 
@@ -302,7 +302,7 @@ def from_data_to_figuresII(df,blade_number):
 
 
     # Save graph.
-    plt.savefig('results/figures/Turbines/UnderstandingAccuracyII_nullsolutions_bladenumber'+str(blade_number)+'.png')
+    plt.savefig('results/figures/Turbines/UnderstandingAccuracyAnalysis/UnderstandingAccuracyII_nullsolutions_bladenumber'+str(blade_number)+'.png')
     plt.show()
     plt.close()
 
@@ -422,7 +422,7 @@ def from_data_to_figures_bladenumber(df,blade_number):
     ax.set_yticklabels(list_acc,rotation=0)
 
     # Save graph.
-    plt.savefig('results/figures/Turbines/UnderstandingAccuracy_bladenumber'+str(blade_number)+'.png')
+    plt.savefig('results/figures/Turbines/UnderstandingAccuracyAnalysis/UnderstandingAccuracy_bladenumber'+str(blade_number)+'.png')
     plt.show()
     plt.close()
 

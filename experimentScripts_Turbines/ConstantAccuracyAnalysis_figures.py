@@ -146,7 +146,7 @@ ax=plt.subplot(121)
 ax.bar(train_times_sort,max_scores_sort,acc_sort,label=acc_sort_str,color=colors)
 ax.set_xlabel("Train time")
 ax.set_ylabel("Score")
-ax.set_title('Best results for each model')
+ax.set_title('Best results for each accuracy')
 plt.axhline(y=score_limit,color='black', linestyle='--')
 
 
@@ -173,7 +173,7 @@ for accuracy in list_acc:
 
 ax.set_xlabel("Train time")
 ax.set_ylabel("Score")
-ax.set_title('Model evaluation \n (train 100 seeds, test N=100)')
+ax.set_title('Solution quality curves (100 seeds for each accuracy)')
 ax.legend(title="N parameter accuracy",bbox_to_anchor=(1.2, 0, 0, 1), loc='center')
 plt.axhline(y=score_limit,color='black', linestyle='--')
 ax.set_xscale('log')

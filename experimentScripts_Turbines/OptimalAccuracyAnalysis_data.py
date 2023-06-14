@@ -1,9 +1,12 @@
 
 '''
-In this script, the proposed heuristic is applied to the Turbines environment. The CMA-ES 
-algorithm is run on this environment using 100 different seeds. A database is built with the 
-relevant information obtained during the execution of each seed. 
+In this script, the proposed heuristics are applied to the Turbines environment. The CMA-ES 
+algorithm is run on this environment using 100 different seeds for each heuristic. A database is built
+with the relevant information obtained during the execution process. 
 
+The general descriptions of the heuristics are:
+HEURISTIC I: The accuracy is updated using the constant frequency calculated in experimentScripts_general/sample_size_bisection_method.py.
+HEURISTIC II: The accuracy is updated when it is detected that the variance of the scores of the last population is significantly different from the previous ones.
 '''
 
 #==================================================================================================
@@ -36,7 +39,6 @@ import MathTools as mt
 
 def spearman_corr(x,y):
     '''Calculation of Spearman's correlation between two lists.'''
-
     return sc.stats.spearmanr(x,y)[0]
 
 def from_scores_to_ranking(list_scores):
@@ -101,40 +103,39 @@ def generation_score_list(population,accuracy,count_time_acc=True,count_time_gen
 def bisection_method(lower_time,upper_time,population,train_seed,sample_size,interpolation_pts,threshold=0.95):
     '''Adapted implementation of bisection method.'''
 
-    # Inicializar limite inferior y superior.
+    # Initialize lower and upper limit.
     time0=lower_time
     time1=upper_time   
 
-    # Punto intermedio.
+    # Midpoint.
     prev_m=time0
     m=(time0+time1)/2
 
-    # Funcion para calcular la correlacion entre los rankings de las sample_size superficies aleatorias
-    # usando el accuracy actual y el maximo.
+    # Function to calculate the correlation between the rankings of the sample_size random surfaces using the current and maximum accuracy..
     def similarity_between_current_best_acc(acc,population,train_seed,first_iteration):
         global time_acc
 
-        # Seleccionar de forma aleatoria sample_size superficies que forman la generacion.
+        # Randomly select sample_size surfaces forming the generation.
         random.seed(train_seed)
         ind_sol=random.sample(range(len(population)),sample_size)
         list_solutions=list(np.array(population)[ind_sol])
 
-        # Guardar los scores asociados a cada solucion seleccionada.
+        # Save the scores associated with each selected solution.
         t=time.time()
-        best_scores=generation_score_list(list_solutions,1,count_time_acc=first_iteration)# Con el maximo accuracy. 
-        new_scores=generation_score_list(list_solutions,acc)# Accuracy nuevo. 
+        best_scores=generation_score_list(list_solutions,1,count_time_acc=first_iteration)# Maximum accuracy. 
+        new_scores=generation_score_list(list_solutions,acc)# new accuracy. 
         last_time_acc_increase=time.time()-t
 
-        # Obtener vectores de rankings asociados.
-        new_ranking=from_scores_to_ranking(new_scores)# Accuracy nuevo. 
-        best_ranking=from_scores_to_ranking(best_scores)# Maximo accuracy. 
+        # Obtain associated rankings.
+        new_ranking=from_scores_to_ranking(new_scores)# New accuracy. 
+        best_ranking=from_scores_to_ranking(best_scores)# Maximum accuracy. 
                 
-        # Comparar ambos rankings.
+        # Compare two rankings.
         metric_value=spearman_corr(new_ranking,best_ranking)
 
         return metric_value,last_time_acc_increase
 
-    # Reajustar limites del intervalo hasta que este tenga un rango lo suficientemente pequeno.
+    # Reset interval limits until the interval has a sufficiently small range.
     first_iteration=True
     stop_threshold=(time1-time0)*0.1
     while time1-time0>stop_threshold:
@@ -150,7 +151,7 @@ def bisection_method(lower_time,upper_time,population,train_seed,sample_size,int
         first_iteration=False
     return np.interp(prev_m,interpolation_pts[0],interpolation_pts[1]),last_time_acc_increase
 
-def execute_heuristic(gen,acc,population,train_seed,list_variances,param):
+def execute_heuristic(gen,acc,population,train_seed,list_accuracies,list_variances,heuristic,param):
     '''
     Running heuristics during the training process.
 
@@ -173,7 +174,7 @@ def execute_heuristic(gen,acc,population,train_seed,list_variances,param):
     global time_acc,time_best_acc 
     global max_time
     global last_time_heuristic_accepted
-    global unused_bisection_executions
+    global unused_bisection_executions,stop_heuristic
 
     time_best_acc=0
 
@@ -187,46 +188,49 @@ def execute_heuristic(gen,acc,population,train_seed,list_variances,param):
     lower_time=min(interpolation_time)
     upper_time=max(interpolation_time)
 
-   
-    # HEURISTICO II of Symbolic Regressor: Bisection with automatic setting for accuracy update frequency 
-    # (parameter dependent) and threshold of bisection method set to 0.95.
-    if gen==0: 
-        acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc])
-        unused_bisection_executions=0
-    else:
-        if len(list_variances)>=param+1:
-            # Calculate the confidence interval.
-            global CI
-            def bootstrap_confidence_interval(data,bootstrap_iterations=1000):
-                mean_list=[]
-                for i in range(bootstrap_iterations):
-                    sample = np.random.choice(data, len(data), replace=True) 
-                    mean_list.append(np.mean(sample))
-                return np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
-
-            if CI=='bootstrap':
-                variance_q05,variance_q95=bootstrap_confidence_interval(list_variances[(-2-param):-2])
-            if CI=='mean_sd':
-                variance_q05=np.mean(list_variances[(-2-param):-2])-2*np.std(list_variances[(-2-param):-2])
-                variance_q95=np.mean(list_variances[(-2-param):-2])+2*np.std(list_variances[(-2-param):-2])
-
-            last_variance=list_variances[-1]
-            
-            # Calculate the minimum accuracy with which the maximum quality is obtained.
-            if last_variance<variance_q05 or last_variance>variance_q95:
-
-                if (time_proc+time_acc)-last_time_heuristic_accepted>=heuristic_freq:   
-                    unused_bisection_executions+=int((time_proc+time_acc-last_time_heuristic_accepted)/heuristic_freq)-1
-
-                    acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc])
-                else:
-                    if unused_bisection_executions>0:
-                        acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc])
-                        unused_bisection_executions-=1
+    # HEURISTIC I: The accuracy is updated using a constant frequency.
+    if heuristic=='I': 
+        if gen==0:
+            acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc],threshold=param)            
         else:
             if (time_acc+time_proc)-last_time_heuristic_accepted>=heuristic_freq:
-                acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc])
-                        
+                acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc],threshold=param)
+
+    # HEURISTIC II: The accuracy is updated when it is detected that the variance of the scores of the last 
+    # population is significantly different from the previous ones.
+    if heuristic=='II': 
+        if gen==0: 
+            acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc])
+            unused_bisection_executions=0
+        else:
+
+            # If the lasts optimal accuracies are higher than 0.9, the maximum accuracy will be considered as optimal from now on.
+            if len(list_accuracies)>=param[1]+1:    
+                if stop_heuristic==False:
+                    prev_acc=list_accuracies[(-1-param[1]):-1]
+                    prev_acc_high=np.array(prev_acc)>0.9
+                    if sum(prev_acc_high)==param[1]:
+                        stop_heuristic=True
+                        acc=1
+            
+            if len(list_variances)>=param[0]+1 and stop_heuristic==False:
+                # Calcular el intervalo de confianza.
+                variance_q05=np.mean(list_variances[(-2-param[0]):-2])-2*np.std(list_variances[(-2-param[0]):-2])
+                variance_q95=np.mean(list_variances[(-2-param[0]):-2])+2*np.std(list_variances[(-2-param[0]):-2])
+                last_variance=list_variances[-1]
+                
+                # Calcular el minimo accuracy con el que se obtiene la maxima calidad.
+                if last_variance<variance_q05 or last_variance>variance_q95:
+
+                    if (time_proc+time_acc)-last_time_heuristic_accepted>=heuristic_freq:   
+                        unused_bisection_executions+=int((time_proc+time_acc-last_time_heuristic_accepted)/heuristic_freq)-1
+
+                        acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc])
+                    else:
+                        if unused_bisection_executions>0:
+                            acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc])
+                            unused_bisection_executions-=1
+   
     return acc,time_best_acc
     
 #--------------------------------------------------------------------------------------------------
@@ -309,10 +313,10 @@ def fitness_function(turb_params,N=100):
 
     return -scores[1]
 
-def learn(seed,heuristic_param,accuracy=1,popsize=20):
+def learn(seed,heuristic,heuristic_param,accuracy=1,popsize=20):
     '''Run the CMA-ES algorithm with specific seed and using heuristic with the parameter value heuristic_param.'''
 
-    global time_best_acc, last_time_heuristic_accepted
+    global time_best_acc, last_time_heuristic_accepted,stop_heuristic
     
     # Initialize CMA-ES.
     np.random.seed(seed)
@@ -324,6 +328,7 @@ def learn(seed,heuristic_param,accuracy=1,popsize=20):
     time_acc=0
 
     # Evaluate population designs until the maximum time is exhausted.
+    stop_heuristic=False
     n_gen=0
     while time_proc+time_acc<max_time:
 
@@ -335,11 +340,11 @@ def learn(seed,heuristic_param,accuracy=1,popsize=20):
 
         # Apply the heuristic.
         if n_gen==0:
-            accuracy,time_best_acc=execute_heuristic(n_gen,accuracy,list_turb_params,seed,[],heuristic_param)
+            accuracy,time_best_acc=execute_heuristic(n_gen,accuracy,list_turb_params,seed,[],[],heuristic,heuristic_param)
         else:
             df_seed=pd.DataFrame(df)
             df_seed=df_seed[df_seed[1]==seed]
-            accuracy,time_best_acc=execute_heuristic(n_gen,accuracy,list_turb_params,seed,list(df_seed[6]),heuristic_param)
+            accuracy,time_best_acc=execute_heuristic(n_gen,accuracy,list_turb_params,seed,list(df_seed[5]),list(df_seed[6]),heuristic,heuristic_param)
 
 
         # Obtain scores per evaluation and update time counters.
@@ -363,27 +368,35 @@ def learn(seed,heuristic_param,accuracy=1,popsize=20):
 #==================================================================================================
 # MAIN PROGRAM
 #==================================================================================================
-# List of seeds.
-list_seeds=range(2,102,1) 
+# Grids.
+list_seeds=range(2,102,1) # List of seeds.
+list_h=[['II',[5,3]]]#[['II',[10,3]],['I',0.8],['I',0.95]] # List of heuristics (with their corresponding parameters).
 
-# Lista de task que se desean ejecutar en el cluster
-list_tasks=list_seeds
-
-# Parametros.
+# Parameters.
 default_N=100
-sample_size_freq='BisectionOnly'
-max_time=60*60 # 1h por semilla.
+max_time=60*60 # 1h per seed.
 heuristic_param=5
 
-# Confidence interval calculation.
-CI_types=['bootstrap','mean_sd']
-
 # Save database with information of interest associated with the training.
-for CI in CI_types:
-    df=[]
+for h in list_h:
+    heuristic=h[0]
+    heuristic_param=h[1]
 
+    df=[]
     for seed in tqdm(list_seeds):
-        learn(seed,heuristic_param)
+        learn(seed,heuristic,heuristic_param)
 
     df=pd.DataFrame(df,columns=['heuristic_param','seed','n_gen','score','readjustement','accuracy','variance','elapsed_time_proc','elapsed_time_acc','elapsed_time'])
-    df.to_csv('results/data/Turbines/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_CI'+str(CI)+'.csv')
+    df.to_csv('results/data/Turbines/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_param'+str(heuristic_param)+'.csv')
+
+# Join databases.
+def join_df(heuristic,list_param):
+    df=pd.read_csv('results/data/Turbines/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_param'+str(param)+'.csv', index_col=0)
+    for param in list_param[1:]:
+        df_new=pd.read_csv('results/data/Turbines/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_param'+str(param)+'.csv', index_col=0)
+        df=pd.concat([df,df_new],ignore_index=True)
+
+    df.to_csv('results/data/Turbines/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'.csv')
+
+# join_df('I',[0.8,0.95])
+# join_df('II',['[5, 3]','[10, 3]'])

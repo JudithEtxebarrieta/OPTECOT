@@ -101,7 +101,7 @@ def draw_accuracy_behaviour(df_train,type_time,curve):
     ax.fill_between(list_train_time,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
     plt.plot(list_train_time, all_mean, linewidth=2,color=colors[curve])
 
-def draw_and_save_figures_per_heuristic(heuristic_CI):
+def draw_and_save_figures_per_heuristic(heuristic):
 
     '''Draw and save graphs associated with the selected heuristic.'''
 
@@ -117,7 +117,7 @@ def draw_and_save_figures_per_heuristic(heuristic_CI):
     ax=plt.subplot(132)
 
     # Reading of databases to be used.
-    df_optimal_acc=pd.read_csv('results/data/Turbines/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_CI'+str(heuristic_CI)+'.csv', index_col=0) # Accuracy ascendente.
+    df_optimal_acc=pd.read_csv('results/data/Turbines/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_'+str(heuristic)+'.csv', index_col=0) # Accuracy ascendente.
 
     # Initialize number of curves.
     curve=0
@@ -125,7 +125,7 @@ def draw_and_save_figures_per_heuristic(heuristic_CI):
     # Constant use of accuracy (default situation).
     all_mean,all_q05,all_q95,list_train_time=train_data_to_figure_data(df_max_acc,'elapsed_time')
     ax.fill_between(list_train_time,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
-    plt.plot(list_train_time, all_mean, linewidth=2,label='1',color=colors[curve])
+    plt.plot(list_train_time, all_mean, linewidth=2,label='Default',color=colors[curve])
     curve+=1
 
     # Optimal use of accuracy (heuristic application).
@@ -155,7 +155,7 @@ def draw_and_save_figures_per_heuristic(heuristic_CI):
     # Constant use of accuracy (default situation).
     all_mean,all_q05,all_q95,list_train_time=train_data_to_figure_data(df_max_acc,'elapsed_time')
     ax.fill_between(list_train_time,all_q05,all_q95, alpha=.5, linewidth=0,color=colors[curve])
-    plt.plot(list_train_time, all_mean, linewidth=2,label='1',color=colors[curve])
+    plt.plot(list_train_time, all_mean, linewidth=2,label='Default',color=colors[curve])
     curve+=1
 
     # Optimal use of accuracy (heuristic application).
@@ -194,7 +194,7 @@ def draw_and_save_figures_per_heuristic(heuristic_CI):
     ax.set_xscale('log')
 
 
-    plt.savefig('results/figures/Turbines/OptimalAccuracyAnalysis_CI'+str(heuristic_CI)+'.png')
+    plt.savefig('results/figures/Turbines/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_h'+str(heuristic)+'.png')
     plt.show()
     plt.close()
 
@@ -204,12 +204,12 @@ def draw_and_save_figures_per_heuristic(heuristic_CI):
 # List of scores.
 colors=px.colors.qualitative.D3
 
-CI_type=['bootstrap','mean_sd']
+list_heuristics=['I','II']
 
-for CI in CI_type:
+for heuristic in list_heuristics:
     # Define training times to be drawn.
     df_max_acc=pd.read_csv('results/data/Turbines/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis_acc1.0.csv', index_col=0)
-    df_h=pd.read_csv('results/data/Turbines/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_CI'+str(CI)+'.csv', index_col=0)
+    df_h=pd.read_csv('results/data/Turbines/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'.csv', index_col=0)
     min_time_acc_max=max(df_max_acc.groupby('seed')['elapsed_time'].min())
     min_time_h=max(df_h.groupby('seed')['elapsed_time'].min())
     max_time_acc_max=min(df_max_acc.groupby('seed')['elapsed_time'].max())
@@ -221,4 +221,4 @@ for CI in CI_type:
     list_train_time=np.arange(max(min_time_acc_max,min_time_h),3600+10,10)
 
     # Draw graph.
-    draw_and_save_figures_per_heuristic(CI)
+    draw_and_save_figures_per_heuristic(heuristic)

@@ -1,7 +1,7 @@
 '''This script is used to save the images of the design of different turbines.'''
 
 #==================================================================================================
-# LIBRERIES
+# LIBRARIES
 #==================================================================================================
 import numpy as np
 import matplotlib as mpl
@@ -31,8 +31,9 @@ import MathTools as mt
 # FUNCTIONS
 #==================================================================================================
 def build_constargs_dict(N):
+	'''Build a dictionary with all the constant parameters needed to make an evaluation.'''
 
-	# Definir parametros constantes.
+	# Define constant parameters.
 	omega = 2100# Rotational speed.
 	rcas = 0.4# Casing radius.
 	airfoils = ["NACA0015", "NACA0018", "NACA0021"]# Set of possible airfoils.
@@ -43,7 +44,7 @@ def build_constargs_dict(N):
 	Nmin = 1000#Max threshold rotational speeds
 	Nmax = 3200#Min threshold rotational speeds
 
-	# Construir el diccionario que necesita la funcion fitness.
+	# Build the dictionary needed by the fitness function.
 	constargs = {"N": N,
 		     "omega": omega,
 		     "rcas": rcas,
@@ -59,10 +60,10 @@ def build_constargs_dict(N):
 	return constargs
 
 def build_turbine(turb_params,N=50):
-	# Construir diccionario de parametros constantes.
+	'''Create instant turbine.'''
+
 	constargs=build_constargs_dict(N)
 
-	# Crear turbina instantanea.
 	os.chdir('OptimizationAlgorithms_KONFLOT')
 	turb = turbine_classes.instantiate_turbine(constargs, turb_params)	
 	os.chdir('../')
@@ -88,10 +89,10 @@ turb3=build_turbine([7,0.7,0.7,0.7,1,13.5])
 
 # Images of defined turbines.
 fig,ax=turbine_classes.plot_turbine(turb1)
-fig.savefig('results/figures/Turbines/ExampleTurb1.png')
+fig.savefig('results/figures/Turbines/DrawingTurbines/ExampleTurb1.png')
 
 fig,ax=turbine_classes.plot_turbine(turb2)
-fig.savefig('results/figures/Turbines/ExampleTurb2.png')
+fig.savefig('results/figures/Turbines/DrawingTurbines/ExampleTurb2.png')
 
 fig,ax=turbine_classes.plot_turbine(turb3)
-fig.savefig('results/figures/Turbines/ExampleTurb3.png')
+fig.savefig('results/figures/Turbines/DrawingTurbines/ExampleTurb3.png')
