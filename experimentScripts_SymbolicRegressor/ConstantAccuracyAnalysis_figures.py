@@ -154,7 +154,7 @@ ax=plt.subplot(122)
 curve=0
 for accuracy in list_acc:
 
-    # read database.
+    # Read database.
     df_train_acc=pd.read_csv("results/data/SymbolicRegressor/ConstantAccuracyAnalysis/df_train_acc"+str(accuracy)+".csv", index_col=0)
 
     # Extract relevant information from the database.

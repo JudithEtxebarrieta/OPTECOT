@@ -141,7 +141,7 @@ def draw_and_save_figures_per_heuristic(heuristic):
     #----------------------------------------------------------------------------------------------
     ax=plt.subplot(132)
 
-    # read databases.
+    # Read databases.
     df_max_acc=pd.read_csv("results/data/SymbolicRegressor/ConstantAccuracyAnalysis/df_train_acc1.0.csv", index_col=0) # Accuracy constant 1 (default situation).
     df_optimal_acc=pd.read_csv('results/data/SymbolicRegressor/OptimalAccuracyAnalysis/df_train_OptimalAccuracy_heuristic'+str(heuristic)+'.csv', index_col=0) # Optimal accuracy (heuristic application).
 
