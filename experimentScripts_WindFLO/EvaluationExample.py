@@ -1,9 +1,10 @@
-# Mediante este script se evalua una posible solucion aleatoria para la distribucion de los 
-# molinos en el entorno del ejemplo "example1". Se obtienen el score, el tiempo de evaluacion y
-# la representacion grafica de la solucion.
-
+'''
+This script evaluates a possible random solution for the distribution of the mills in the environment 
+of the example "WindFLO/Examples/Example1/example1.py". The score, the evaluation time and the graphical 
+representation of the solution are obtained.
+'''
 #==================================================================================================
-# LIBRERIAS
+# LIBRARIES
 #==================================================================================================
 import os
 import sys
@@ -15,34 +16,33 @@ from numpy import linalg
 import cma
 from tqdm import tqdm as tqdm
 
-
 sys.path.append('WindFLO/API')
 from WindFLO import WindFLO
 
 #==================================================================================================
-# FUNCIONES
+# FUNCTIONS
 #==================================================================================================
-# FUNCION 1 (Inicializar las caracteristicas del terreno y las turbinas sobre los cuales se aplicara la optimizacion)
 def get_windFLO_with_accuracy(accuracy=1):
+    '''Initialize the characteristics of the terrain and turbines on which the optimization will be applied.'''
 
-    # Configuracion y parametros de WindFLO.
+    # Configuration and parameters.
     windFLO = WindFLO(
-    inputFile = 'WindFLO/Examples/Example1/WindFLO.dat', # Archivo input para leer.
-    libDir = 'WindFLO/release/', # Ruta a la libreria compartida libWindFLO.so.
-    turbineFile = 'WindFLO/Examples/Example1/V90-3MW.dat',# Parametros de las turbinas.
-    terrainfile = 'WindFLO/Examples/Example1/terrain.dat', # Archivo del terreno.
-    nTurbines = 25, # Numero de turbinas.
+    inputFile = 'WindFLO/Examples/Example1/WindFLO.dat', # Input file to read.
+    libDir = 'WindFLO/release/', # Path to the shared library libWindFLO.so.
+    turbineFile = 'WindFLO/Examples/Example1/V90-3MW.dat',# Turbine parameters.
+    terrainfile = 'WindFLO/Examples/Example1/terrain.dat', # File associated with the terrain.
+    nTurbines = 25, # Number of turbines.
 
-    monteCarloPts = round(1000*accuracy)# Parametro del cual se modificara su precision.
+    monteCarloPts = round(1000*accuracy)# Parameter whose accuracy will be modified.
     )
 
-    # Cambiar el modelo de terreno predeterminado de RBF a IDW.
+    # Change the default terrain model from RBF to IDW.
     windFLO.terrainmodel = 'IDW'
 
     return windFLO
 
-# FUNCION 2 (Evaluar el desempeño del diseño del parque eolico)
 def EvaluateFarm(x, windFLO):
+    '''Evaluating the performance of a single solution.'''
     
     k = 0
     for i in range(0, windFLO.nTurbines):
@@ -51,59 +51,59 @@ def EvaluateFarm(x, windFLO):
             windFLO.turbines[i].position[j] = x[k]
             k = k + 1
 
-    # Run WindFLO analysis
+    # Run WindFLO analysis.
     windFLO.run(clean = True) 
 
     return windFLO.farmPower
 
-# FUNCION 3 (Generar solucion aleatoria)
 def generate_random_solution(seed,windFLO):
+    '''Generate random solution.'''
 
-    # Funcion para tranformar solucion al
+    # Function to transform solution from scaled values to real values.
     def transform_to_problem_dim(x):
         lbound = np.zeros(windFLO.nTurbines*2)    
         ubound = np.ones(windFLO.nTurbines*2)*2000
         return lbound + x*(ubound - lbound)
 
-    # Generar solucion aleatoria.
+    # Random solution.
     np.random.seed(seed)
     solution=transform_to_problem_dim(np.random.random(windFLO.nTurbines*2))
     return solution
 
-# FUNCION 4 (Representar de forma grafica el resultado)
 def plot_WindFLO(windFLO,path,file_name):
+    '''Graphically represent the solution.'''
 
-    # Resultado en 2D.
+    # Results in 2D.
     fig = plt.figure(figsize=(8,5), edgecolor = 'gray', linewidth = 2)
     ax = windFLO.plotWindFLO2D(fig, plotVariable = 'P', scale = 1.0e-3, title = 'P [kW]')
     windFLO.annotatePlot(ax)
     plt.savefig(path+'/'+file_name+"_2D.pdf")
 
-    # Resultado en 3D.
+    # Results in 3D.
     fig = plt.figure(figsize=(8,5), edgecolor = 'gray', linewidth = 2)
     ax = windFLO.plotWindFLO3D(fig)
     windFLO.annotatePlot(ax)
     plt.savefig(path+'/'+file_name+"_3D.pdf")
 
 #==================================================================================================
-# PROGRAMA PRINCIPAL
+# MAIN PROGRAM
 #==================================================================================================
 
-# Inicializar el entorno.
+# Initialize environment.
 windFLO=get_windFLO_with_accuracy()
 
-# Seleccionar una posible solucion de forma aleatoria.
+# Select a possible solution randomly.
 solution=generate_random_solution(0,windFLO)
 
-# Evaluar soluciones.
+# Evaluate solution.
 t=time.time()
 score=EvaluateFarm(solution, windFLO)
 elapsed=time.time()-t
 
 print('Score: '+str(score)+' Time: '+str(elapsed))
 
-# Dibujar solucion.
-plot_WindFLO(windFLO,'results/figures/WindFLO','EvaluationExample')
+# Draw solution..
+plot_WindFLO(windFLO,'results/figures/WindFLO/EvaluationExample','EvaluationExample')
 
-# Eliminar ficheros auxiliares.
+# Delete auxiliary files.
 os.remove(os.path.sep.join(sys.path[0].split(os.path.sep)[:-1])+'/terrain.dat')
