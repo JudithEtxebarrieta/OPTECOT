@@ -129,7 +129,7 @@ def spearman_corr(x,y):
     return sc.stats.spearmanr(x,y)[0]
 
 def from_rewards_to_ranking(list_rewards):
-    '''Convert rewards list to ranking list.'''
+    '''Convert reward list to ranking list.'''
     list_pos_ranking=np.argsort(np.array(list_rewards))
     ranking=[0]*len(list_pos_ranking)
     i=0

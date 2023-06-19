@@ -147,6 +147,8 @@ def from_data_to_figures(df):
     #----------------------------------------------------------------------------------------------
     # GRAPH 3: Comparison of rankings associated with the 100 solutions with each accuracy.
     #----------------------------------------------------------------------------------------------
+    ax=plt.subplot(223)
+    
     def ranking_matrix_sorted_by_max_acc(ranking_matrix):
         '''Reorder ranking matrix according to the order established by the original ranking.'''
 
@@ -160,15 +162,11 @@ def from_data_to_figures(df):
 
         return sorted_ranking_list
 
-    ax=plt.subplot(223)
-
     ranking_list=[]
-
     for accuracy in list_acc:
         df_acc=df[df['accuracy']==accuracy]
         ranking=from_argsort_to_ranking(list(df_acc['reward'].argsort()))
         ranking_list.append(ranking)
-    
     ranking_matrix=np.matrix(ranking_matrix_sorted_by_max_acc(ranking_list))
 
     color = sns.cubehelix_palette(start=2, rot=0, dark=0, light=.95, reverse=True, as_cmap=True)
@@ -187,14 +185,13 @@ def from_data_to_figures(df):
     ax.set_xlabel('Solution')
     ax.set_xticks(range(0,ranking_matrix.shape[1],10))
     ax.set_xticklabels(range(1,ranking_matrix.shape[1]+1,10),rotation=0)
-
     ax.set_ylabel('Accuracy')
     ax.set_title('Comparing rankings depending on accuracy')
     ax.set_yticks(np.arange(0.5,len(list_acc)+0.5,1))
     ax.set_yticklabels(list_acc,rotation=0)
 
     #----------------------------------------------------------------------------------------------
-    # GRAFICA 4: Solution quality loss.
+    # GRAPH 4: Solution quality loss.
     #----------------------------------------------------------------------------------------------
     ax=plt.subplot2grid((4, 4), (2,2), colspan=2,rowspan=2)
 
