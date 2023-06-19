@@ -164,6 +164,7 @@ for accuracy in list_acc:
     # Extract relevant information from the database.
     all_mean_scores,all_q05_scores,all_q95_scores =train_data_to_figure_data(df_train_acc,list_train_times)
 
+    # Set maximum quality.
     if accuracy==max(list_acc):
         score_limit=all_mean_scores[-1]
 

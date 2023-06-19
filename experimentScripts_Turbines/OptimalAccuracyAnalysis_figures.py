@@ -117,7 +117,7 @@ def draw_and_save_figures_per_heuristic(heuristic):
     ax=plt.subplot(132)
 
     # Reading of databases to be used.
-    df_optimal_acc=pd.read_csv('results/data/Turbines/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_'+str(heuristic)+'.csv', index_col=0) # Accuracy ascendente.
+    df_optimal_acc=pd.read_csv('results/data/Turbines/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'.csv', index_col=0) # Accuracy ascendente.
 
     # Initialize number of curves.
     curve=0
@@ -204,7 +204,7 @@ def draw_and_save_figures_per_heuristic(heuristic):
 # List of scores.
 colors=px.colors.qualitative.D3
 
-list_heuristics=['I','II']
+list_heuristics=['II']
 
 for heuristic in list_heuristics:
     # Define training times to be drawn.
