@@ -47,11 +47,14 @@ bash others/setup.sh
 
 ## Brief description of OPTECOT and its application
 ### How OPTECOT works?
-
+<figure>
 <img src="others/readme_images/diagram_proposal_text.png" width="100%">
-<figcaption align='left'> 
+<caption align='left'> 
 Figure 1.- Summary of the problem definition and the proposed procedure for its resolution.
-</figcaption>
+</caption>
+</figure>
+
+<figure>
 
   | Notation              | Meaning |
   | ----------------- | ----- |
@@ -62,9 +65,10 @@ Figure 1.- Summary of the problem definition and the proposed procedure for its 
   | $t_c$           | Evaluation time of $f_c$    |
   | $r_c$             | Ranking of population after evaluating it with $f_c$    |
   | $F_c(P)$           | Fidelity of $f_c$ to order P   |
-<figcaption align='left'> 
+<caption align='left'> 
 Table 1.- Glossary of Figure 1.
-</figcaption>
+</caption>
+</figure>
 
 
 **The problem it faces.** OPTECOT is designed to reduce the computational cost of _Rank-Based Evolutionary Algorithms (RBEA) when the cost per evaluation of the objective function is very high_. These algorithms update a set of solutions (population) iteratively, selecting those with the best associated objective values to generate the next set of candidate solutions (see the middle box of Figure 1). This approach allows for improving the solution as the execution progresses. However, to reach a near-optimal solution, a large number of solutions must be evaluated, either due to the size of the population or the number of iterations required. In this context, if the cost per evaluation is high, the algorithm can provide a quality solution as long as we are willing to assume a high computational cost.
@@ -77,21 +81,27 @@ Table 1.- Glossary of Figure 1.
 ### What problems does OPTECOT solve?
 Heuristics is designed to be applied to **population-based optimization algorithms**. In addition, it is necessary to have a **parameter** that is part of the definition of the objective function and whose modification allows us to control the computational cost of an evaluation. Although OPTECOT has only been tested in four environments in this work (the selected parameter and algorithms can be consulted in Table 2), it applies to any other environment that meets these two requirements.
 
+<figure>
 | Environment| Solution ($x$) | Objective function ($f$) | Parameter | Algorithm|
 | ----- | ----- |----- |-----|-----|
 | Symbolic Regressor | Surface | Mean absolute error | Size of training point set | Genetic Programming |
 | WindFLO | Wind farm layout | Produced energy | monteCarloPts| CMA-ES|
 | Swimmer | Policy | Episode reward | Time-step| CMA-ES|
 | Turbines | Design of floating wind turbine | Performance score in five sea states| N (number of subdivisions on the surface of each blade) | CMA-ES|
-<figcaption align='left'> 
+<caption align='left'> 
 Table 2.- Brief description of each environment.
-</figcaption>
+</caption>
+</figure>
 
 ### Is OPTECOT effective?
+<figure>
 <img src="others/readme_images/OptimalAccuracyAnalysis.png" width="100%"> 
-<figcaption align='left'> 
+<caption align='left'> 
 Figure 2.- Solution quality curves during the execution of the optimization algorithms (first row)  together with optimal cost behaviour (second row).
-</figcaption>
+</caption>
+</figure>
+
+<figure>
 
 | Environment              | Mean of quality improvement percentage| Mean of time-saving percentage
 | ----- | ----- |----- |
@@ -99,9 +109,10 @@ Figure 2.- Solution quality curves during the execution of the optimization algo
 | WindFLO |  101.32 |<font color="green">46.25<font>|
 | Swimmer |  <font color="green"> 176.64 <font> |50.58|
 | Turbines |  100.52|53.47|
-<figcaption align='left'> 
+<caption align='left'> 
 Table 3.-  Numerical results.
-</figcaption>
+</caption>
+</figure>
 
 
 **Solution quality improvement and time-saving.** After applying the heuristic to the selected environments, it has been observed that the solution quality exceeds the original one in most of the algorithm execution process (see the graphs in the first row of Figure 2). In the best case, it is obtained that on average the quality obtained by OPTECOT in a given execution time is 176.64% of the quality obtained at the same time using the original objective function (all numerical results can be consulted in Table 3). As a result, the runtimes required to achieve the original qualities have been reduced significantly. In the best situation, it has been possible to use on average only 46.25% of the time needed by the original objective function to reach its same solution quality.
