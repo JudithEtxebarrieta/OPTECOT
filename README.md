@@ -6,7 +6,7 @@
 
 ## Repository content
 
-This repository contains supplementary material for the paper _Optimal Evaluation Cost Tracking during the execution of an optimization algorithm_. Our main objective in this work is to reduce the cost of solving a computationally expensive black-box optimization problem using population-based algorithms while avoiding loss of solution quality. For this purpose, we have defined an Optimal Evaluation Cost Tracking heuristic (OPTECOT) capable of selecting the optimal evaluation cost during the algorithm execution process. The effectiveness of the proposal has been demonstrated in four different environments: **Symbolic Regressor**, **WindFLO**, **Swimmer** (from MuJoCo) and **Turbines**. In addition, future work has been motivated by using the environment **CartPole**. 
+This repository contains supplementary material for the paper _Optimal Evaluation Cost Tracking to maximice optimization problem solution quality in a given runtime_. Our main objective in this work is to reduce the cost of solving a computationally expensive black-box optimization problem using population-based algorithms while avoiding loss of solution quality. For this purpose, we have defined an Optimal Evaluation Cost Tracking heuristic (OPTECOT) capable of selecting the optimal evaluation cost during the algorithm execution process. The effectiveness of the proposal has been demonstrated in four different environments: **Symbolic Regressor**, **WindFLO**, **Swimmer** (from MuJoCo) and **Turbines**. In addition, future work has been motivated by using the environment **CartPole**. 
 
 <table width='80%' align='center'>
   <tr>
@@ -124,11 +124,11 @@ Table 3.-  Numerical results.
 
 [1] T. Stephens, H. van Kemenade, J. McDermott, T. Gates, A. Rai, B. Price, N. de Vos, S. Niculae, S. Ao, and I. Bell, “Gplearn - Genetic Programming in Python, with a scikit-learn inspired API.” Available: https://github.com/trevorstephens/gplearn
 
-[2] S. Reddy, “WindFLO - A Framework for Fast Wind Farm Layout Optimization,” Mar. 2023. Available: https://github.com/sohailrreddy/WindFLO
+[2] S. Reddy, “WindFLO - A Framework for Fast Wind Farm Layout Optimization”, Mar. 2023. Available: https://github.com/sohailrreddy/WindFLO
 
 [3] Farama-Foundation, “Gymnasium,” Farama Foundation, Apr. 2023. Available: https://github.com/Farama-Foundation/Gymnasium
 
-[4] A. Raffin, T. Lips, A. KG, and P. Daniel, “Stable Baselines3 RL tutorial,” Apr. 2023. Available: https://github.com/araffin/rl-tutorial-jnrr19/blob/47cca257ce9814ee4be7a645e5411275284f1727/1_getting_started.ipynb
+[4] A. Raffin, T. Lips, A. KG, and P. Daniel, “Stable Baselines3 RL tutorial”, Apr. 2023. Available: https://github.com/araffin/rl-tutorial-jnrr19/blob/47cca257ce9814ee4be7a645e5411275284f1727/1_getting_started.ipynb
 
 
 
