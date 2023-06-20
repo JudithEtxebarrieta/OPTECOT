@@ -90,9 +90,12 @@ turb3=build_turbine([7,0.7,0.7,0.7,1,13.5])
 # Images of defined turbines.
 fig,ax=turbine_classes.plot_turbine(turb1)
 fig.savefig('results/figures/Turbines/DrawingTurbines/ExampleTurb1.png')
+fig.savefig('results/figures/Turbines/DrawingTurbines/ExampleTurb1.pdf')
 
 fig,ax=turbine_classes.plot_turbine(turb2)
 fig.savefig('results/figures/Turbines/DrawingTurbines/ExampleTurb2.png')
+fig.savefig('results/figures/Turbines/DrawingTurbines/ExampleTurb2.pdf')
 
 fig,ax=turbine_classes.plot_turbine(turb3)
 fig.savefig('results/figures/Turbines/DrawingTurbines/ExampleTurb3.png')
+fig.savefig('results/figures/Turbines/DrawingTurbines/ExampleTurb3.pdf')
