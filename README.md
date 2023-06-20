@@ -8,7 +8,6 @@
 
 This repository contains supplementary material for the paper _Optimal Evaluation Cost Tracking during the execution of an optimization algorithm_. Our main objective in this work is to reduce the cost of solving a computationally expensive black-box optimization problem using population-based algorithms while avoiding loss of solution quality. For this purpose, we have defined an Optimal Evaluation Cost Tracking heuristic (OPTECOT) capable of selecting the optimal evaluation cost during the algorithm execution process. The effectiveness of the proposal has been demonstrated in four different environments: **Symbolic Regressor**, **WindFLO**, **Swimmer** (from MuJoCo) and **Turbines**. In addition, future work has been motivated by using the environment **CartPole**. 
 
-
 <table width='80%' align='center'>
   <tr>
     <td align='center'><img src="others/readme_images/SR.png" height="190"></td>
@@ -50,7 +49,9 @@ bash others/setup.sh
 ### How OPTECOT works?
 
 <img src="others/readme_images/diagram_proposal_text.png" width="100%">
-<figcaption align='left'> Figure 1.- Summary of the problem definition and the proposed procedure for its resolution.</figcaption>
+<figcaption align='left'> 
+Figure 1.- Summary of the problem definition and the proposed procedure for its resolution.
+</figcaption>
 
   | Notation              | Meaning |
   | ----------------- | ----- |
@@ -61,7 +62,10 @@ bash others/setup.sh
   | $t_c$           | Evaluation time of $f_c$    |
   | $r_c$             | Ranking of population after evaluating it with $f_c$    |
   | $F_c(P)$           | Fidelity of $f_c$ to order P   |
-<figcaption align='left'> Table 1.- Glossary of Figure 1.</figcaption>
+<figcaption align='left'> 
+Table 1.- Glossary of Figure 1.
+</figcaption>
+
 
 **The problem it faces.** OPTECOT is designed to reduce the computational cost of _Rank-Based Evolutionary Algorithms (RBEA) when the cost per evaluation of the objective function is very high_. These algorithms update a set of solutions (population) iteratively, selecting those with the best associated objective values to generate the next set of candidate solutions (see the middle box of Figure 1). This approach allows for improving the solution as the execution progresses. However, to reach a near-optimal solution, a large number of solutions must be evaluated, either due to the size of the population or the number of iterations required. In this context, if the cost per evaluation is high, the algorithm can provide a quality solution as long as we are willing to assume a high computational cost.
 
@@ -79,19 +83,25 @@ Heuristics is designed to be applied to **population-based optimization algorith
 | WindFLO | Wind farm layout | Produced energy | monteCarloPts| CMA-ES|
 | Swimmer | Policy | Episode reward | Time-step| CMA-ES|
 | Turbines | Design of floating wind turbine | Performance score in five sea states| N (number of subdivisions on the surface of each blade) | CMA-ES|
-<figcaption align='left'> Table 2.- Brief description of each environment.</figcaption>
+<figcaption align='left'> 
+Table 2.- Brief description of each environment.
+</figcaption>
 
 ### Is OPTECOT effective?
 <img src="others/readme_images/OptimalAccuracyAnalysis.png" width="100%"> 
-<figcaption align='left'> Figure 2.- Solution quality curves during the execution of the optimization algorithms (first row)  together with optimal cost behaviour (second row).</figcaption>
+<figcaption align='left'> 
+Figure 2.- Solution quality curves during the execution of the optimization algorithms (first row)  together with optimal cost behaviour (second row).
+</figcaption>
 
-| Environment              | Mean of quality improvement percentage| Mean of time saving percentage
+| Environment              | Mean of quality improvement percentage| Mean of time-saving percentage
 | ----- | ----- |----- |
 | Symbolic Regressor | 109.58  |80.43|
 | WindFLO |  101.32 |<font color="green">46.25<font>|
 | Swimmer |  <font color="green"> 176.64 <font> |50.58|
 | Turbines |  100.52|53.47|
-<figcaption align='left'> Table 3.-  Numerical results.</figcaption>
+<figcaption align='left'> 
+Table 3.-  Numerical results.
+</figcaption>
 
 
 **Solution quality improvement and time-saving.** After applying the heuristic to the selected environments, it has been observed that the solution quality exceeds the original one in most of the algorithm execution process (see the graphs in the first row of Figure 2). In the best case, it is obtained that on average the quality obtained by OPTECOT in a given execution time is 176.64% of the quality obtained at the same time using the original objective function (all numerical results can be consulted in Table 3). As a result, the runtimes required to achieve the original qualities have been reduced significantly. In the best situation, it has been possible to use on average only 46.25% of the time needed by the original objective function to reach its same solution quality.
