@@ -48,26 +48,32 @@ bash others/setup.sh
 
 ## Brief description of OPTECOT and its application
 ### How OPTECOT works?
-
  <table width='100%' align='center'>
   <tr>
-    <td width='70%'><img src="others/readme_images/diagram_proposal_text.png" width="100%"> </td>
-<td>
-
-| Notation              | Meaning |
-| ----------------- | ----- |
-| $P_0, P_1, P$ | Populations  |
-| $f$ | Objective function   |
-| $f_c$      | Approximation of cost $c$   |
-| $f_{c^*}$        | Optimal approximation   |
-| $t_c$           | Evaluation time of $f_c$    |
-| $r_c$             | Ranking of population after evaluating it with $f_c$    |
-| $F_c(P)$           | Fidelity of $f_c$ to order P   |
-
-<td>
+    <td width='100%'><img src="others/readme_images/diagram_proposal_text.png" width="100%"> </td>
   </tr>
     <tr>
     <td align='center'>Summary of the problem definition and the proposed procedure for its resolution</td>
+  </tr>
+
+ </table>
+
+ <table width='100%' align='center'>
+  <td>
+
+  | Notation              | Meaning |
+  | ----------------- | ----- |
+  | $P_0, P_1, P$ | Populations  |
+  | $f$ | Objective function   |
+  | $f_c$      | Approximation of cost $c$   |
+  | $f_{c^*}$        | Optimal approximation   |
+  | $t_c$           | Evaluation time of $f_c$    |
+  | $r_c$             | Ranking of population after evaluating it with $f_c$    |
+  | $F_c(P)$           | Fidelity of $f_c$ to order P   |
+
+  <td>
+  </tr>
+    <tr>
     <td align='center'>Glossary</td>
   </tr>
 
