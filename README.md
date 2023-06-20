@@ -82,6 +82,7 @@ Table 1.- Glossary of Figure 1.
 Heuristics is designed to be applied to **population-based optimization algorithms**. In addition, it is necessary to have a **parameter** that is part of the definition of the objective function and whose modification allows us to control the computational cost of an evaluation. Although OPTECOT has only been tested in four environments in this work (the selected parameter and algorithms can be consulted in Table 2), it applies to any other environment that meets these two requirements.
 
 <figure>
+
 | Environment| Solution ($x$) | Objective function ($f$) | Parameter | Algorithm|
 | ----- | ----- |----- |-----|-----|
 | Symbolic Regressor | Surface | Mean absolute error | Size of training point set | Genetic Programming |
