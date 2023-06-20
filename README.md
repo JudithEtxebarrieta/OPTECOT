@@ -49,7 +49,6 @@ bash others/setup.sh
 ## Brief description of OPTECOT and its application
 ### How OPTECOT works?
 
- </table>
  <table width='100%' align='center'>
   <tr>
     <td width='70%'><img src="others/readme_images/diagram_proposal_text.png" width="100%"> </td>
@@ -97,10 +96,10 @@ Heuristics is designed to be applied to **population-based optimization algorith
 
 
 ### Is OPTECOT effective?
- </table>
- <table width='100%' align='center'>
+ 
+<table width='100%' align='center'>
   <tr>
-    <td><img src="others/readme_images/OptimalAccuracyAnalysis.png" width="100%"> </td>
+    <td width='80%' ><img src="others/readme_images/OptimalAccuracyAnalysis.png" width="100%"> </td>
 <td width='20%'>
 
 | Environment              | Mean of quality improvement percentage| Mean of time saving percentage
