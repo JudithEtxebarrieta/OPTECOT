@@ -59,7 +59,7 @@ bash others/setup.sh
  </table>
 
  <table width='100%' align='center'>
-  <td>
+  <td align='center'>
 
   | Notation              | Meaning |
   | ----------------- | ----- |
@@ -73,7 +73,6 @@ bash others/setup.sh
 
   <td>
   </tr>
-    <tr>
     <td align='center'>Glossary</td>
   </tr>
 
@@ -102,11 +101,17 @@ Heuristics is designed to be applied to **population-based optimization algorith
 
 
 ### Is OPTECOT effective?
- 
 <table width='100%' align='center'>
   <tr>
     <td width='80%' ><img src="others/readme_images/OptimalAccuracyAnalysis.png" width="100%"> </td>
-<td width='20%'>
+  </tr>
+    <td align='center'>Solution quality curves during the execution of the optimization algorithms (first row)  together with optimal cost behaviour (second row)</td>
+  </tr>
+ </table>
+ 
+<table width='100%' align='center'>
+  <tr align='center'>
+<td>
 
 | Environment              | Mean of quality improvement percentage| Mean of time saving percentage
 | ----- | ----- |----- |
@@ -117,8 +122,6 @@ Heuristics is designed to be applied to **population-based optimization algorith
 
 <td>
   </tr>
-    <tr>
-    <td align='center'>Solution quality curves during the execution of the optimization algorithms (first row)  together with optimal cost behaviour (second row)</td>
     <td align='center'>Numerical results</td>
   </tr>
 
