@@ -190,8 +190,8 @@ def draw_heuristic_effectiveness():
     ax.set_title(r'\textbf{Swimmer}',fontsize=15)
     ax.set_ylabel(r"\textbf{QI}",fontsize=15)
     plt.yticks(fontsize=15)
-    ax.set_ylim([50,600])
-    ax.set_yticks([100,325,550])
+    ax.set_ylim([50,510])
+    ax.set_yticks([100,280,460])
 
     #----------------------------------------------------------------------------------------------
     # GRAPH 2: Difference between the mean quality curves associated with heuristic application 
@@ -224,7 +224,7 @@ def draw_heuristic_effectiveness():
             ind=aux_list.index(True)
             list_time_y.append((list_train_time[ind]/list_train_time[counter])*100)
         else:
-            list_time_y.append(0)
+            list_time_y.append(100)
         counter+=1
     print('Time below 100:',sum(np.array(list_time_y)<=100)/len(list_time_y))
     print('Best time:',min(list_time_y),np.mean(list_time_y),np.std(list_time_y))

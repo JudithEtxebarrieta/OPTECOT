@@ -4,7 +4,7 @@ algorithm is run on this environment using 100 different seeds for each heuristi
 with the relevant information obtained during the execution process. 
 
 The general descriptions of the heuristics are:
-HEURISTIC I: The accuracy is updated using the constant frequency calculated in experimentScripts_general/sample_size_bisection_method.py.
+HEURISTIC I: The accuracy is updated using the constant frequency calculated in experimentScripts_general/SampleSize_Frequency_bisection_method.py.
 HEURISTIC II: The accuracy is updated when it is detected that the variance of the scores of the last population is significantly different from the previous ones.
 '''
 
@@ -256,10 +256,12 @@ def execute_heuristic(gen,acc,df_sample_policy_info,list_accuracies,list_varianc
     
     # For interpolation in the bisection method.
     df_interpolation=pd.read_csv('results/data/MuJoCo/UnderstandingAccuracy/df_Bisection.csv')
+    df_bisection=pd.read_csv('results/data/general/ExtraCost_SavePopEvalCost/ExtraCost_SavePopEvalCost_MuJoCo.csv',float_precision='round_trip')
     interpolation_acc=list(df_interpolation['accuracy'])
     interpolation_time=list(df_interpolation['cost_per_eval'])
     lower_time=min(interpolation_time)
     upper_time=max(interpolation_time)
+    interruption_threshold=float(max(df_bisection['opt_acc']))
 
     # HEURISTIC I: The accuracy is updated using a constant frequency.
     if heuristic=='I': 
@@ -273,7 +275,7 @@ def execute_heuristic(gen,acc,df_sample_policy_info,list_accuracies,list_varianc
 
     # HEURISTIC II: The accuracy is updated when it is detected that the variance of the scores of the
     # last population is significantly different from the previous ones. In addition, when it is observed 
-    # that in the last populations the optimum accuracy considered is higher than 0.9, the accuracy will 
+    # that in the last populations the optimum accuracy considered is equal to de maximum possible, the accuracy will 
     # no longer be adjusted and the maximum accuracy will be considered for the following populations.    
     if heuristic=='II': 
         if gen==0: 
@@ -284,16 +286,16 @@ def execute_heuristic(gen,acc,df_sample_policy_info,list_accuracies,list_varianc
         else:
             if len(list_accuracies)>=param[1]:
                 if stop_heuristic==False:
-                    prev_acc=list_accuracies[(-1-param[1]):-1]
-                    prev_acc_high=np.array(prev_acc)>0.9
+                    prev_acc=list_accuracies[-param[1]:]
+                    prev_acc_high=np.array(prev_acc)==interruption_threshold
                     if sum(prev_acc_high)==param[1]:
                         stop_heuristic=True
                         acc=1
 
             if len(list_variances)>=param[0]+1 and stop_heuristic==False:
                 # Calculate the confidence interval.
-                variance_q05=np.mean(list_variances[(-2-param[0]):-2])-2*np.std(list_variances[(-2-param[0]):-2])
-                variance_q95=np.mean(list_variances[(-2-param[0]):-2])+2*np.std(list_variances[(-2-param[0]):-2])
+                variance_q05=np.mean(list_variances[(-1-param[0]):-1])-2*np.std(list_variances[(-1-param[0]):-1])
+                variance_q95=np.mean(list_variances[(-1-param[0]):-1])+2*np.std(list_variances[(-1-param[0]):-1])
 
                 last_variance=list_variances[-1]
 
@@ -460,8 +462,8 @@ def train(self, trainer):
                 list_variances=list(df_seed[5])
 
                 # Calculate the confidence interval.
-                variance_q05=np.mean(list_variances[(-2-global_heuristic_param[0]):-2])-2*np.std(list_variances[(-2-global_heuristic_param[0]):-2])
-                variance_q95=np.mean(list_variances[(-2-global_heuristic_param[0]):-2])+2*np.std(list_variances[(-2-global_heuristic_param[0]):-2])
+                variance_q05=np.mean(list_variances[(-1-global_heuristic_param[0]):-1])-2*np.std(list_variances[(-1-global_heuristic_param[0]):-1])
+                variance_q95=np.mean(list_variances[(-1-global_heuristic_param[0]):-1])+2*np.std(list_variances[(-1-global_heuristic_param[0]):-1])
                 
                 last_variance=list_variances[-1]
 
@@ -553,8 +555,8 @@ test_env_seed=1 # Seed for the validation environment.
 test_n_eval_episodes=10 # Number of episodes to be evaluated in the validation.
 
 # Argument list for parallel processing.
-list_arg=[['II',[5,3]]]#[['II',[5,3]],['II',[10,3]],['I',0.8],['I',0.95]]
-df_sample_freq=pd.read_csv('results/data/general/sample_size_freq.csv',index_col=0)
+list_arg=[['II',[5,3]],['II',[10,3]],['I',0.8],['I',0.95]]
+df_sample_freq=pd.read_csv('results/data/general/SampleSize_Frequency_bisection_method.csv',index_col=0)
 sample_size=int(df_sample_freq[df_sample_freq['env_name']=='MuJoCo']['sample_size'])
 heuristic_freq=float(df_sample_freq[df_sample_freq['env_name']=='MuJoCo']['frequency_time'])
 
@@ -591,7 +593,7 @@ def join_df(heuristic,list_param):
 
     df.to_csv('results/data/MuJoCo/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'.csv')
 
-# join_df('I',[0.8,0.95])
-# join_df('II',['[5, 3]','[10, 3]'])
+join_df('I',[0.8,0.95])
+join_df('II',['[5, 3]','[10, 3]'])
 
 
