@@ -1,12 +1,10 @@
-# OPTECOT - _Optimal Evaluation Cost Tracking_ to maximice optimization problem solution quality in a given runtime 
-
+# OPTECOT - Optimal Evaluation Cost Tracking
  Judith Echevarrieta (jechevarrieta@bcamath.org),
  Etor Arza (earza@bcamath.org),
  Aritz Pérez (aperez@bcamath.org)
 
 ## Repository content
-
-This repository contains supplementary material for the paper _Optimal Evaluation Cost Tracking to maximice optimization problem solution quality in a given runtime_. Our main objective in this work is to reduce the cost of solving a computationally expensive black-box optimization problem using population-based algorithms while avoiding loss of solution quality. For this purpose, we have defined an Optimal Evaluation Cost Tracking heuristic (OPTECOT) capable of selecting the optimal evaluation cost during the algorithm execution process. The effectiveness of the proposal has been demonstrated in four different environments: **Symbolic Regressor**, **WindFLO**, **Swimmer** (from MuJoCo) and **Turbines**. In addition, future work has been motivated by using the environment **CartPole**. 
+This repository contains supplementary material for the paper _Speeding-up Evolutionary Algorithms to solve Black-Box Optimization Problems_. Our main objective in this work is to reduce the cost of solving a computationally expensive black-box optimization problem using population-based algorithms while avoiding loss of solution quality. For this purpose, we have defined an Optimal Evaluation Cost Tracking (OPTECOT) procedure capable of selecting the optimal evaluation cost during the algorithm execution process. The effectiveness of the proposal has been demonstrated in four different environments: **Symbolic Regressor**, **WindFLO**, **Swimmer** (from MuJoCo) and **Turbines**. In addition, future work has been motivated by using the environment **CartPole**. 
 
 <table width='80%' align='center'>
   <tr>
@@ -58,13 +56,13 @@ Figure 1.- Summary of the problem definition and the proposed procedure for its 
 
   | Notation              | Meaning |
   | ----------------- | ----- |
-  | $P_0, P_1, P$ | Populations  |
+  | $P_0, P_1, P$ | Populations (set of candidate solutions)|
   | $f$ | Objective function   |
   | $f_c$      | Approximation of cost $c$   |
   | $f_{c^*}$        | Optimal approximation   |
   | $t_c$           | Evaluation time of $f_c$    |
   | $r_c$             | Ranking of population after evaluating it with $f_c$    |
-  | $F_c(P)$           | Fidelity of $f_c$ to order P   |
+  | $A_c(P)$           | Accuracy of $f_c$ to order P   |
 <caption align='left'> 
 Table 1.- Glossary of Figure 1.
 </caption>
@@ -73,9 +71,9 @@ Table 1.- Glossary of Figure 1.
 
 **The problem it faces.** OPTECOT is designed to reduce the computational cost of _Rank-Based Evolutionary Algorithms (RBEA) when the cost per evaluation of the objective function is very high_. These algorithms update a set of solutions (population) iteratively, selecting those with the best associated objective values to generate the next set of candidate solutions (see the middle box of Figure 1). This approach allows for improving the solution as the execution progresses. However, to reach a near-optimal solution, a large number of solutions must be evaluated, either due to the size of the population or the number of iterations required. In this context, if the cost per evaluation is high, the algorithm can provide a quality solution as long as we are willing to assume a high computational cost.
 
-**The tool used for resolution.** For the cost reduction of the original objective function, the use of _approximate objective functions of different costs_ is proposed. These approximations are obtained by modifying the accuracy of a parameter that participates in the definition of the objective function and allows us to control its cost. The lower cost approximations save time in the evaluation, however, they are also less reliable in terms of the ranking of the set of solutions they provide concerning the original one. This fidelity is important since a ranking of the population very different from the original one modifies the selection of the next population, which can lead to a decrease in the solution quality.
+**The tool used for resolution.** For the cost reduction of the original objective function, the use of _approximate objective functions of different costs_ is proposed. These approximations are obtained by modifying the accuracy of a parameter that participates in the definition of the objective function and allows us to control its cost. The lower cost approximations save time in the evaluation, however, they are also less accurate in terms of the ranking of the set of solutions they provide concerning the original one. This accuracy is important since a ranking of the population very different from the original one modifies the selection of the next population, which can lead to a decrease in the solution quality.
 
-**Optimal use of the tool.** _OPTECOT selects during the algorithm execution process the optimal evaluation cost_, understanding as optimal the one that looks for a balance between evaluation time saving and ranking fidelity. The approximate function selected as optimal by the heuristic is the one with the minimum cost with which the solutions can still rank acceptably (see the last box of Figure 1).
+**Optimal use of the tool.** _OPTECOT selects during the algorithm execution process the optimal evaluation cost_, understanding as optimal the one that looks for a balance between evaluation time saving and ranking accuracy. The approximate function selected as optimal by the heuristic is the one with the minimum cost with which the solutions can still rank accurately (see the last box of Figure 1).
 
 
 ### What problems does OPTECOT solve?
@@ -102,21 +100,7 @@ Figure 2.- Solution quality curves during the execution of the optimization algo
 </caption>
 </figure>
 
-<figure>
-
-| Environment              | Mean of quality improvement percentage| Mean of time-saving percentage
-| ----- | ----- |----- |
-| Symbolic Regressor | 109.58  |80.43|
-| WindFLO |  101.32 |<font color="green">46.25<font>|
-| Swimmer |  <font color="green"> 176.64 <font> |50.58|
-| Turbines |  100.52|53.47|
-<caption align='left'> 
-Table 3.-  Numerical results.
-</caption>
-</figure>
-
-
-**Solution quality improvement and time-saving.** After applying the heuristic to the selected environments, it has been observed that the solution quality exceeds the original one in most of the algorithm execution process (see the graphs in the first row of Figure 2). In the best case, it is obtained that on average the quality obtained by OPTECOT in a given execution time is 176.64% of the quality obtained at the same time using the original objective function (all numerical results can be consulted in Table 3). As a result, the runtimes required to achieve the original qualities have been reduced significantly. In the best situation, it has been possible to use on average only 46.25% of the time needed by the original objective function to reach its same solution quality.
+**Solution quality improvement and time-saving.** After applying the heuristic to the selected environments, it has been observed that the solution quality exceeds the original one in most of the algorithm execution process (see the graphs in the first row of Figure 2, except in the last part of the turbines, the orange curves are above the blue ones). As a result, the runtimes required to achieve the original qualities have been reduced significantly. In the best situation, it has been possible to use on average only 45.65% of the time needed by the original objective function to reach its same solution quality.
 
 **Optimal evaluation cost behaviour.** By tracking the optimal evaluation cost during the algorithm execution, OPTECOT allows to decrease or increase the cost of the objective function when needed (see the graphs in the second row of Figure 2). This leads to time savings in cases where the optimal cost is lower and maintains the quality of the solution when the optimal cost is higher.
 
@@ -128,7 +112,12 @@ Table 3.-  Numerical results.
 
 [3] Farama-Foundation, “Gymnasium,” Farama Foundation, Apr. 2023. Available: https://github.com/Farama-Foundation/Gymnasium
 
-[4] A. Raffin, T. Lips, A. KG, and P. Daniel, “Stable Baselines3 RL tutorial”, Apr. 2023. Available: https://github.com/araffin/rl-tutorial-jnrr19/blob/47cca257ce9814ee4be7a645e5411275284f1727/1_getting_started.ipynb
+[4] A. Zarketa-Astigarraga, A. Martin-Mayor, A. Maeso, B. De Miguel, M. Martinez-Agirre, and M. Penalba, “A computationally Efficient Ga-Based Optimisation Tool for the Design of Power Take-Off Systems in Realistic Wave Climates: The Wells Turbine Case,” SSRN, Preprint,
+2023. Available: https://www.ssrn.com/abstract=4379648
+
+[5] A. Raffin, T. Lips, A. KG, and P. Daniel, “Stable Baselines3 RL tutorial”, Apr. 2023. Available: https://github.com/araffin/rl-tutorial-jnrr19/blob/47cca257ce9814ee4be7a645e5411275284f1727/1_getting_started.ipynb
+
+
 
 
 
