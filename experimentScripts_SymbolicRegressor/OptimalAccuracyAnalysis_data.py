@@ -4,7 +4,7 @@ execution process are implemented. The data obtained during the execution of eac
 heuristics are stored and saved.
 
 The general descriptions of the heuristics are:
-HEURISTIC I: The accuracy is updated using the constant frequency calculated in experimentScripts_general/sample_size_bisection_method.py.
+HEURISTIC I: The accuracy is updated using the constant frequency calculated in experimentScripts_general/SampleSize_Frequency_bisection_method.py.
 HEURISTIC II: The accuracy is updated when it is detected that the variance of the scores of the last population is significantly different from the previous ones.
 '''
 
@@ -360,20 +360,20 @@ def update_accuracy_heuristicII(acc,lower_time,upper_time,X,y,list_accuracies,li
     global n_evaluations
     global n_evaluations_acc
     global last_time_heuristic_accepted,heuristic_accepted
-    global unused_bisection_executions, stop_heuristic
+    global unused_bisection_executions, stop_heuristic,interruption_threshold
 
     threshold=None
     heuristic_accepted=False
 
-    # If the last optimal accuracy is higher than 0.9, the maximum accuracy will be considered as optimal from now on.
+    # If the last optimal accuracy is equal to the maximum possible optimal cost, the maximum accuracy will be considered as optimal from now on.
     if len(list_accuracies)>=param[1]:
         if stop_heuristic==True:
             n_evaluations+=int(default_train_n_pts)*len(list_surf_gen)
             variance=np.var(fitness)
     
         if stop_heuristic==False:
-            prev_acc=list_accuracies[(-1-param[1]):-1]
-            prev_acc_high=np.array(prev_acc)>0.9
+            prev_acc=list_accuracies[-param[1]:]
+            prev_acc_high=np.array(prev_acc)==interruption_threshold
             if sum(prev_acc_high)==param[1]:
                 stop_heuristic=True
 
@@ -385,8 +385,8 @@ def update_accuracy_heuristicII(acc,lower_time,upper_time,X,y,list_accuracies,li
     if len(list_variances)>=param[0]+1 and stop_heuristic==False:
 
         # Calculate the confidence interval.
-        variance_q05=np.mean(list_variances[(-2-param[0]):-2])-2*np.std(list_variances[(-2-param[0]):-2])
-        variance_q95=np.mean(list_variances[(-2-param[0]):-2])+2*np.std(list_variances[(-2-param[0]):-2])
+        variance_q05=np.mean(list_variances[(-1-param[0]):-1])-2*np.std(list_variances[(-1-param[0]):-1])
+        variance_q95=np.mean(list_variances[(-1-param[0]):-1])+2*np.std(list_variances[(-1-param[0]):-1])
         last_variance=list_variances[-1]
 
         if last_variance<variance_q05 or last_variance>variance_q95:
@@ -447,20 +447,24 @@ def execute_heuristic(heuristic,heuristic_param,train_seed,gen,population,acc,X,
     global acc_split
     global sample_size,heuristic_freq,last_time_heuristic_accepted
     global unused_bisection_executions, stop_heuristic
-    global heuristic_accepted
+    global heuristic_accepted,interruption_threshold
 
     threshold=None
     variance=None
 
-    # For the bisection method (sample size, frequency and interpolation).
-    df_sample_freq=pd.read_csv('results/data/general/sample_size_freq.csv',index_col=0)
-    df_interpolation=pd.read_csv('results/data/SymbolicRegressor/UnderstandingAccuracy/df_Bisection.csv')
+    # For the bisection method: sample size, frequency, interpolation and interruption threshold .
+    df_sample_freq=pd.read_csv('results/data/general/SampleSize_Frequency_bisection_method.csv',index_col=0)
     sample_size=int(df_sample_freq[df_sample_freq['env_name']=='SymbolicRegressor']['sample_size'])
     heuristic_freq=int(df_sample_freq[df_sample_freq['env_name']=='SymbolicRegressor']['frequency_time'])
+
+    df_interpolation=pd.read_csv('results/data/SymbolicRegressor/UnderstandingAccuracy/df_Bisection.csv')
     interpolation_acc=list(df_interpolation['accuracy'])
     interpolation_time=list(df_interpolation['cost_per_eval'])
     lower_time=min(interpolation_time)
     upper_time=max(interpolation_time)
+
+    df_bisection=pd.read_csv('results/data/general/ExtraCost_SavePopEvalCost/ExtraCost_SavePopEvalCost_SymbolicRegressor.csv',float_precision='round_trip')
+    interruption_threshold=float(max(df_bisection['opt_acc']))
 
  
     # Set accuracy of the initial generation.

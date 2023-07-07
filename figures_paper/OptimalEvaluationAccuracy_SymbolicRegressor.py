@@ -205,11 +205,11 @@ def draw_heuristic_effectiveness():
     ax=plt.subplot(4,1,(2,3))
 
     ax.grid(b=True,color='black',linestyle='--', linewidth=0.8,alpha=0.2,axis='both')
-    plt.gca().add_patch(Rectangle((400000, .200), 320000-400000, 0.180-0.200,facecolor='white',edgecolor='black'))
+    #plt.gca().add_patch(Rectangle((400000, .200), 320000-400000, 0.180-0.200,facecolor='white',edgecolor='black'))
     plt.plot(list_train_n_eval, all_mean_acc_max, linewidth=1,label=r'\textbf{Original}',color=colors[0])
     plt.plot(list_train_n_eval, all_mean_h, linewidth=1,label=r'\textbf{OPTECOT}',color=colors[1],linestyle = '--')
     ax.fill_between(list_train_n_eval, all_mean_acc_max, all_mean_h, where=np.array(all_mean_h)<np.array(all_mean_acc_max),facecolor='green', alpha=.2,interpolate=True,label=r'\textbf{Improvement}')
-    ax.fill_between(list_train_n_eval, all_mean_acc_max, all_mean_h, where=np.array(all_mean_h)>np.array(all_mean_acc_max),facecolor='red', alpha=.2,interpolate=True,label=r'\textbf{Worsening}')
+    ax.fill_between(list_train_n_eval, all_mean_acc_max, all_mean_h, where=np.array(all_mean_h)>np.array(all_mean_acc_max),facecolor='red', alpha=.2,interpolate=True)#,label=r'\textbf{Worsening}')
 
     ax.set_ylabel(r"\textbf{Solution quality}",fontsize=15)
     ax.legend(fontsize=11,title_fontsize=11,labelspacing=0.01,loc='lower right',handlelength=1)
@@ -233,7 +233,7 @@ def draw_heuristic_effectiveness():
             ind=aux_list.index(True)
             list_time_y.append((list_train_n_eval[ind]/list_train_n_eval[counter])*100)
         else:
-            list_time_y.append(0)
+            list_time_y.append(100)
         counter+=1
     print('Time below 100:',sum(np.array(list_time_y)<=100)/len(list_time_y))
     print('Best time:',min(list_time_y),np.mean(list_time_y),np.std(list_time_y))
@@ -252,34 +252,6 @@ def draw_heuristic_effectiveness():
 
     plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/HeuristicEffectiveness_SymbolicRegressor.pdf')
     plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/HeuristicEffectiveness_SymbolicRegressor.png')
-    plt.show()
-    plt.close()
-
-    #----------------------------------------------------------------------------------------------
-    # ZOOM OF GRAPH 2
-    #----------------------------------------------------------------------------------------------
-    plt.figure(figsize=[2,2])
-    plt.subplots_adjust(left=0.28,bottom=0.62,right=0.6,top=0.87,wspace=0.3,hspace=0.07)
-    ax=plt.subplot(111)
-
-    ax.grid(b=True,color='black',linestyle='--', linewidth=0.8,alpha=0.2,axis='both')
-    plt.plot(list_train_n_eval, all_mean_acc_max, linewidth=1,label='Original',color=colors[0])
-    plt.plot(list_train_n_eval, all_mean_h, linewidth=1,label='Heuristic',color=colors[1],linestyle = '--')
-    ax.fill_between(list_train_n_eval, all_mean_acc_max, all_mean_h, where=np.array(all_mean_h)<np.array(all_mean_acc_max),facecolor='green', alpha=.2,interpolate=True,label='Improvement')
-    ax.fill_between(list_train_n_eval, all_mean_acc_max, all_mean_h, where=np.array(all_mean_h)>np.array(all_mean_acc_max),facecolor='red', alpha=.2,interpolate=True,label='Worsening')
-    
-    ax.set_yticks(np.arange(0.18,0.21,0.01))
-    ax.set_xticks(np.arange(330000,390000,30000))
-    ax.ticklabel_format(style='sci', axis='x', useOffset=True, scilimits=(0,0))
-    plt.yticks(fontsize=11)
-    plt.xticks(fontsize=11)
-    ax.set_title('$Q^h$~$Q^o$~$t^h$~$t^o=20$')
-    ax.invert_yaxis()
-    ax.set_xlim([320000,400000])
-    ax.set_ylim([0.200,0.180])
-
-    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/HeuristicEffectiveness_SymbolicRegressor2.pdf')
-    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/HeuristicEffectiveness_SymbolicRegressor2.png')
     plt.show()
     plt.close()
 
@@ -307,3 +279,4 @@ list_train_n_eval=np.arange(max(min_time_acc_max,min_time_h),min(max_time_acc_ma
 # Build and save graph.
 draw_and_save_figures_per_heuristic()
 draw_heuristic_effectiveness()
+
