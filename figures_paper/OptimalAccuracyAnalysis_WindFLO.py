@@ -201,7 +201,7 @@ def draw_heuristic_effectiveness():
     ax.fill_between(list_train_time, all_mean_acc_max, all_mean_h, where=np.array(all_mean_h)<np.array(all_mean_acc_max),facecolor='red', alpha=.2,interpolate=True)#label='Worsening'
 
     ax.set_ylabel(r"\textbf{Solution quality}",fontsize=15)
-    ax.legend(fontsize=12,title_fontsize=12,labelspacing=0.01,handlelength=1)
+    ax.legend(fontsize=11,title_fontsize=11,labelspacing=0.01,handlelength=1)
     plt.yticks(fontsize=15)
 
     #----------------------------------------------------------------------------------------------
@@ -217,7 +217,7 @@ def draw_heuristic_effectiveness():
             ind=aux_list.index(True)
             list_time_y.append((list_train_time[ind]/list_train_time[counter])*100)
         else:
-            list_time_y.append(0)
+            list_time_y.append(100)
         counter+=1
     print('Time below 100:',sum(np.array(list_time_y)<=100)/len(list_time_y))
     print('Best time:',min(list_time_y),np.mean(list_time_y),np.std(list_time_y))
@@ -231,7 +231,7 @@ def draw_heuristic_effectiveness():
     plt.yticks(fontsize=15)
     plt.xticks(fontsize=15)
     ax.set_ylim([25,110])
-    ax.set_yticks([30,70,100])
+    ax.set_yticks([30,65,100])
 
     plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/HeuristicEffectiveness_WindFLO.pdf')
     plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/HeuristicEffectiveness_WindFLO.png')

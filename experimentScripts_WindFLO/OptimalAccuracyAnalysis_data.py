@@ -4,7 +4,7 @@ algorithm is run on this environment using 100 different seeds for each heuristi
 built with the relevant information obtained during the execution process. 
 
 The general descriptions of the heuristics are:
-HEURISTIC I: The accuracy is updated using the constant frequency calculated in experimentScripts_general/sample_size_bisection_method.py.
+HEURISTIC I: The accuracy is updated using the constant frequency calculated in experimentScripts_general/SampleSize_Frequency_bisection_method.py.
 HEURISTIC II: The accuracy is updated when it is detected that the variance of the scores of the last population is significantly different from the previous ones.
 '''
 
@@ -184,15 +184,19 @@ def execute_heuristic(gen,acc,population,train_seed,list_accuracies,list_varianc
 
     heuristic_accepted=False
 
-    # For the bisection method: sample size, frequency and interpolation.
-    df_sample_freq=pd.read_csv('results/data/general/sample_size_freq.csv',index_col=0)
-    df_interpolation=pd.read_csv('results/data/WindFLO/UnderstandingAccuracy/df_Bisection.csv')
+    # For the bisection method: sample size, frequency, interpolation and interruption threshold.
+    df_sample_freq=pd.read_csv('results/data/general/SampleSize_Frequency_bisection_method.csv',index_col=0)
     sample_size=int(df_sample_freq[df_sample_freq['env_name']=='WindFLO']['sample_size'])
     heuristic_freq=float(df_sample_freq[df_sample_freq['env_name']=='WindFLO']['frequency_time'])
+
+    df_interpolation=pd.read_csv('results/data/WindFLO/UnderstandingAccuracy/df_Bisection.csv')
     interpolation_acc=list(df_interpolation['accuracy'])
     interpolation_time=list(df_interpolation['cost_per_eval'])
     lower_time=min(interpolation_time)
     upper_time=max(interpolation_time)
+
+    df_bisection=pd.read_csv('results/data/general/ExtraCost_SavePopEvalCost/ExtraCost_SavePopEvalCost_WindFLO.csv',float_precision='round_trip')
+    interruption_threshold=float(max(df_bisection['opt_acc']))
 
    
     # HEURISTIC I: The accuracy is updated using a constant frequency.
@@ -230,8 +234,8 @@ def execute_heuristic(gen,acc,population,train_seed,list_accuracies,list_varianc
                     heuristic_accepted==False
 
                 if stop_heuristic==False:
-                    prev_acc=list_accuracies[(-1-param[1]):-1]
-                    prev_acc_high=np.array(prev_acc)>0.9
+                    prev_acc=list_accuracies[param[1]:]
+                    prev_acc_high=np.array(prev_acc)==interruption_threshold
                     if sum(prev_acc_high)==param[1]:
                         stop_heuristic=True
 
@@ -240,8 +244,8 @@ def execute_heuristic(gen,acc,population,train_seed,list_accuracies,list_varianc
 
             if len(list_variances)>=param[0]+1 and stop_heuristic==False:
                 # Calculate the confidence interval.
-                variance_q05=np.mean(list_variances[(-2-param[0]):-2])-2*np.std(list_variances[(-2-param[0]):-2])
-                variance_q95=np.mean(list_variances[(-2-param[0]):-2])+2*np.std(list_variances[(-2-param[0]):-2])
+                variance_q05=np.mean(list_variances[(-1-param[0]):-1])-2*np.std(list_variances[(-1-param[0]):-1])
+                variance_q95=np.mean(list_variances[(-1-param[0]):-1])+2*np.std(list_variances[(-1-param[0]):-1])
                 last_variance=list_variances[-1]
                 
                 # Calculate the minimum accuracy with which the maximum quality is obtained.
@@ -384,20 +388,20 @@ list_seeds=range(1,101,1)
 list_arg=[['I',0.8],['I',0.95],['II',[5,3]],['II',[10,3]]]
 
 # Build database for each heuristic.
-for arg in tqdm(list_arg):
-    df=[]
+# for arg in tqdm(list_arg):
+#     df=[]
 
-    heuristic=arg[0]
-    heuristic_param=arg[1]
+#     heuristic=arg[0]
+#     heuristic_param=arg[1]
 
-    for seed in tqdm(list_seeds):
-        learn(seed,heuristic,heuristic_param,maxfeval=500,popsize=50)
+#     for seed in tqdm(list_seeds):
+#         learn(seed,heuristic,heuristic_param,maxfeval=500,popsize=50)
     
-    df=pd.DataFrame(df,columns=['heuristic_param','seed','n_gen','score','accuracy','variance','update','elapsed_time_proc','elapsed_time_acc','elapsed_time'])
-    df.to_csv('results/data/WindFLO/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_param'+str(heuristic_param)+'.csv')
+#     df=pd.DataFrame(df,columns=['heuristic_param','seed','n_gen','score','accuracy','variance','update','elapsed_time_proc','elapsed_time_acc','elapsed_time'])
+#     df.to_csv('results/data/WindFLO/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'_param'+str(heuristic_param)+'.csv')
 
-# Delete auxiliary files.
-os.remove(os.path.sep.join(sys.path[0].split(os.path.sep)[:-1])+'/terrain.dat')
+# # Delete auxiliary files.
+# os.remove(os.path.sep.join(sys.path[0].split(os.path.sep)[:-1])+'/terrain.dat')
 
 # Join databases associated with the same heuristics considering different parameters.
 def concat_same_heuristic_df(list_arg):

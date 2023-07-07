@@ -269,7 +269,8 @@ max_time_hI=min(df_hI.groupby('seed')['elapsed_time_proc'].max())
 max_time_hII=min(df_hII.groupby('seed')['elapsed_time_proc'].max())
 
 df_cost_per_acc=pd.read_csv('results/data/WindFLO/UnderstandingAccuracy/df_Bisection.csv',index_col=0)
-time_split=list(df_cost_per_acc['cost_per_eval'])[0]*50
+df_popsize=pd.read_csv('results/data/general/SampleSize_Frequency_bisection_method.csv')
+time_split=list(df_cost_per_acc['cost_per_eval'])[0]*int(df_popsize[df_popsize['env_name']=='WindFLO']['popsize'])
 
 list_train_time=np.arange(max(min_time_acc_max,min_time_hI,min_time_hII),min(max_time_acc_max,max_time_hI,max_time_hII)+time_split,time_split)
 
