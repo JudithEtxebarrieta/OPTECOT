@@ -77,7 +77,7 @@ for env_name in list_env_names:
     df.append([env_name,expression,inverse_expression,min(df_acc_eval_cost['cost_per_eval']),max(df_acc_eval_cost['cost_per_eval'])])
 
 df=pd.DataFrame(df,columns=['env_name','interpolation_expression','inverse_expression','lower_time','upper_time'])
-df.to_csv('results/data/general/bisection_interval_PolinomialInterpolation.csv')
+df.to_csv('results/data/general/IntervalInterpolation_bisection_method.csv')
 
 # Linear interpolation.
 for env_name in list_env_names:
