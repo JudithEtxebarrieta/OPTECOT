@@ -85,8 +85,6 @@ def draw_accuracy_behaviour(df_train,type_time):
 
         # Group the previous rows by seeds and keep the accuracy values.
         list_acc=list(df_train[ind_down].loc[ind_per_seed]['accuracy'])
-        if train_time==max(list_train_time):
-            print(list_acc)
 
         # Calculate the mean and confidence interval of the accuracy.
         mean,q05,q95=bootstrap_mean_and_confidence_interval(list_acc)
@@ -132,6 +130,7 @@ def draw_and_save_figures_per_heuristic():
     all_mean,all_q05,all_q95,list_train_time=train_data_to_figure_data(df,'elapsed_time')
     ax.fill_between(list_train_time,all_q05,all_q95, alpha=.2, linewidth=0,color=colors[1])
     plt.plot(list_train_time, all_mean, linewidth=1,label=r'\textbf{OPTECOT}',color=colors[1],marker=list_markers[1],markevery=0.1)
+
 
     ax.set_ylabel(r"\textbf{Solution quality}",fontsize=23)
     ax.legend(fontsize=18,title_fontsize=18,labelspacing=0.1,handlelength=0.8,loc='lower right')
@@ -193,27 +192,25 @@ def draw_heuristic_effectiveness():
     ax.set_ylabel(r"\textbf{QI}",fontsize=15)
     plt.yticks(fontsize=15)
     ax.set_xscale('log')
-    # ax.set_ylim([])
-    # ax.set_yticks([])
+    ax.set_ylim([99.5,103.5])
+    ax.set_yticks([100,101,102,103])
 
     #----------------------------------------------------------------------------------------------
     # GRAPH 2: Difference between the mean quality curves associated with heuristic application 
     # and original situation.
     #----------------------------------------------------------------------------------------------
     ax=plt.subplot(4,1,(2,3))
-
+    plt.gca().add_patch(Rectangle((2000, .52), 3600-2000, 0.524-0.52,facecolor='white',edgecolor='black'))
     ax.grid(b=True,color='black',linestyle='--', linewidth=0.8,alpha=0.2,axis='both')
     plt.plot(list_train_time, all_mean_acc_max, linewidth=1,label=r'\textbf{Original}',color=colors[0])
     plt.plot(list_train_time, all_mean_h, linewidth=1,label=r'\textbf{OPTECOT}',color=colors[1],linestyle = '--')
     ax.fill_between(list_train_time, all_mean_acc_max, all_mean_h, where=np.array(all_mean_h)>np.array(all_mean_acc_max),facecolor='green', alpha=.2,interpolate=True,label=r'\textbf{Improvement}')
-    ax.fill_between(list_train_time, all_mean_acc_max, all_mean_h, where=np.array(all_mean_h)<np.array(all_mean_acc_max),facecolor='red', alpha=.2,interpolate=True)#label='Worsening'
+    ax.fill_between(list_train_time, all_mean_acc_max, all_mean_h, where=np.array(all_mean_h)<np.array(all_mean_acc_max),facecolor='red', alpha=.2,interpolate=True,label=r'\textbf{Worsening}')
 
     ax.set_ylabel(r"\textbf{Solution quality}",fontsize=15)
     ax.legend(fontsize=11,title_fontsize=11,labelspacing=0.01,handlelength=1)
     plt.yticks(fontsize=15)
     ax.set_xscale('log')
-    # ax.set_ylim([])
-    # ax.set_yticks([])
 
     #----------------------------------------------------------------------------------------------
     # GRAPH 3: Curve of time saving.
@@ -228,9 +225,9 @@ def draw_heuristic_effectiveness():
             ind=aux_list.index(True)
             list_time_y.append((list_train_time[ind]/list_train_time[counter])*100)
         else:
-            list_time_y.append(0)
+            list_time_y.append(100)
         counter+=1
-    print('Time below 100:',sum(np.array(list_time_y)<=100)/len(list_time_y))
+    print('Time below 100:',sum(np.array(list_time_y)<100)/len(list_time_y))
     print('Best time:',min(list_time_y),np.mean(list_time_y),np.std(list_time_y))
 
     ax.grid(b=True,color='black',linestyle='--', linewidth=0.8,alpha=0.2,axis='both')
@@ -242,11 +239,37 @@ def draw_heuristic_effectiveness():
     plt.yticks(fontsize=15)
     plt.xticks(fontsize=15)
     ax.set_xscale('log')
-    # ax.set_ylim([])
-    # ax.set_yticks([])
+    ax.set_ylim([45,130])
+    ax.set_yticks([50,75,100,125])
 
     plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/HeuristicEffectiveness_Turbines.pdf')
     plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/HeuristicEffectiveness_Turbines.png')
+    plt.show()
+    plt.close()
+
+    #----------------------------------------------------------------------------------------------
+    # ZOOM OF GRAPH 2
+    #----------------------------------------------------------------------------------------------
+    plt.figure(figsize=[2,1.5])
+    plt.subplots_adjust(left=0.28,bottom=0.62,right=0.6,top=0.87,wspace=0.3,hspace=0.07)
+    ax=plt.subplot(111)
+
+    ax.grid(b=True,color='black',linestyle='--', linewidth=0.8,alpha=0.2,axis='both')
+    plt.plot(list_train_time, all_mean_acc_max, linewidth=1,label='Original',color=colors[0])
+    plt.plot(list_train_time, all_mean_h, linewidth=1,label='Heuristic',color=colors[1],linestyle = '--')
+    ax.fill_between(list_train_time, all_mean_acc_max, all_mean_h, where=np.array(all_mean_h)>np.array(all_mean_acc_max),facecolor='green', alpha=.2,interpolate=True,label='Improvement')
+    ax.fill_between(list_train_time, all_mean_acc_max, all_mean_h, where=np.array(all_mean_h)<np.array(all_mean_acc_max),facecolor='red', alpha=.2,interpolate=True,label='Worsening')
+    
+    ax.set_xticks([2500])
+    ax.ticklabel_format(style='sci', axis='x', useOffset=True, scilimits=(0,0))
+    plt.yticks(fontsize=11)
+    plt.xticks(fontsize=11)
+    ax.invert_yaxis()
+    ax.set_xlim([2000,3600])
+    ax.set_ylim([0.52,0.524])
+
+    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/HeuristicEffectiveness_TurbinesZoom.pdf')
+    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/HeuristicEffectiveness_TurbinesZoom.png')
     plt.show()
     plt.close()
 

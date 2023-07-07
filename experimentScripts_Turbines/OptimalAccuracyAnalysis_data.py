@@ -5,7 +5,7 @@ algorithm is run on this environment using 100 different seeds for each heuristi
 with the relevant information obtained during the execution process. 
 
 The general descriptions of the heuristics are:
-HEURISTIC I: The accuracy is updated using the constant frequency calculated in experimentScripts_general/sample_size_bisection_method.py.
+HEURISTIC I: The accuracy is updated using the constant frequency calculated in experimentScripts_general/SampleSize_Frequency_bisection_method.py.
 HEURISTIC II: The accuracy is updated when it is detected that the variance of the scores of the last population is significantly different from the previous ones.
 '''
 
@@ -70,11 +70,11 @@ def generation_score_list(population,accuracy,count_time_acc=True,count_time_gen
     global time_acc,time_proc
 
     # Obtain scores and times per evaluation.
-    os.makedirs(sys.path[0]+'/PopulationScores'+str(task))
+    os.makedirs(sys.path[0]+'/PopulationScores')
 
     def parallel_f(turb_params,index):
         score=fitness_function(turb_params, N=int(default_N*accuracy))
-        np.save(sys.path[0]+'/PopulationScores'+str(task)+'/'+str(index),score)
+        np.save(sys.path[0]+'/PopulationScores/'+str(index),score)
 
     t=time.time()
     Parallel(n_jobs=4)(delayed(parallel_f)(population[i],i) for i in range(len(population)))
@@ -83,9 +83,9 @@ def generation_score_list(population,accuracy,count_time_acc=True,count_time_gen
     def obtain_score_list(popsize):
         list_scores=[]
         for i in range(popsize):
-            score=float(np.load(sys.path[0]+'/PopulationScores'+str(task)+'/'+str(i)+'.npy'))
+            score=float(np.load(sys.path[0]+'/PopulationScores/'+str(i)+'.npy'))
             list_scores.append(score) 
-        shutil.rmtree(sys.path[0]+'/PopulationScores'+str(task),ignore_errors=True)
+        shutil.rmtree(sys.path[0]+'/PopulationScores',ignore_errors=True)
         return list_scores
     list_scores=obtain_score_list(len(population))
 
@@ -178,15 +178,19 @@ def execute_heuristic(gen,acc,population,train_seed,list_accuracies,list_varianc
 
     time_best_acc=0
 
-    # For the bisection method: sample size, frequency and interpolation expression.
-    df_sample_freq=pd.read_csv('results/data/general/sample_size_freq.csv',index_col=0)
-    df_interpolation=pd.read_csv('results/data/Turbines/UnderstandingAccuracy/df_Bisection.csv')
+    # For the bisection method: sample size, frequency, interpolation and interruption threshold.
+    df_sample_freq=pd.read_csv('results/data/general/SampleSize_Frequency_bisection_method.csv',index_col=0)
     sample_size=int(df_sample_freq[df_sample_freq['env_name']=='Turbines']['sample_size'])
     heuristic_freq=float(df_sample_freq[df_sample_freq['env_name']=='Turbines']['frequency_time'])
+
+    df_interpolation=pd.read_csv('results/data/Turbines/UnderstandingAccuracy/df_Bisection.csv')
     interpolation_acc=list(df_interpolation['accuracy'])
     interpolation_time=list(df_interpolation['cost_per_eval'])
     lower_time=min(interpolation_time)
     upper_time=max(interpolation_time)
+
+    df_bisection=pd.read_csv('results/data/general/ExtraCost_SavePopEvalCost/ExtraCost_SavePopEvalCost_Turbines.csv',float_precision='round_trip')
+    interruption_threshold=float(max(df_bisection['opt_acc']))
 
     # HEURISTIC I: The accuracy is updated using a constant frequency.
     if heuristic=='I': 
@@ -204,19 +208,19 @@ def execute_heuristic(gen,acc,population,train_seed,list_accuracies,list_varianc
             unused_bisection_executions=0
         else:
 
-            # If the lasts optimal accuracies are higher than 0.9, the maximum accuracy will be considered as optimal from now on.
+            # If the last optimal accuracy is equal to the maximum possible optimal cost, the maximum accuracy will be considered as optimal from now on.
             if len(list_accuracies)>=param[1]+1:    
                 if stop_heuristic==False:
-                    prev_acc=list_accuracies[(-1-param[1]):-1]
-                    prev_acc_high=np.array(prev_acc)>0.9
+                    prev_acc=list_accuracies[-param[1]:]
+                    prev_acc_high=np.array(prev_acc)==interruption_threshold
                     if sum(prev_acc_high)==param[1]:
                         stop_heuristic=True
                         acc=1
             
             if len(list_variances)>=param[0]+1 and stop_heuristic==False:
                 # Calcular el intervalo de confianza.
-                variance_q05=np.mean(list_variances[(-2-param[0]):-2])-2*np.std(list_variances[(-2-param[0]):-2])
-                variance_q95=np.mean(list_variances[(-2-param[0]):-2])+2*np.std(list_variances[(-2-param[0]):-2])
+                variance_q05=np.mean(list_variances[(-1-param[0]):-1])-2*np.std(list_variances[(-1-param[0]):-1])
+                variance_q95=np.mean(list_variances[(-1-param[0]):-1])+2*np.std(list_variances[(-1-param[0]):-1])
                 last_variance=list_variances[-1]
                 
                 # Calcular el minimo accuracy con el que se obtiene la maxima calidad.
@@ -230,7 +234,6 @@ def execute_heuristic(gen,acc,population,train_seed,list_accuracies,list_varianc
                         if unused_bisection_executions>0:
                             acc,time_best_acc=bisection_method(lower_time,upper_time,population,train_seed,sample_size,[interpolation_time,interpolation_acc])
                             unused_bisection_executions-=1
-   
     return acc,time_best_acc
     
 #--------------------------------------------------------------------------------------------------
@@ -370,7 +373,7 @@ def learn(seed,heuristic,heuristic_param,accuracy=1,popsize=20):
 #==================================================================================================
 # Grids.
 list_seeds=range(2,102,1) # List of seeds.
-list_h=[['II',[5,3]]]#[['II',[10,3]],['I',0.8],['I',0.95]] # List of heuristics (with their corresponding parameters).
+list_h=[['II',[10,3]],['I',0.8],['I',0.95]] # List of heuristics (with their corresponding parameters).
 
 # Parameters.
 default_N=100
@@ -398,5 +401,5 @@ def join_df(heuristic,list_param):
 
     df.to_csv('results/data/Turbines/OptimalAccuracyAnalysis/df_OptimalAccuracyAnalysis_h'+str(heuristic)+'.csv')
 
-# join_df('I',[0.8,0.95])
-# join_df('II',['[5, 3]','[10, 3]'])
+join_df('I',[0.8,0.95])
+join_df('II',['[5, 3]','[10, 3]'])

@@ -216,9 +216,10 @@ for heuristic in list_heuristics:
     max_time_h=min(df_h.groupby('seed')['elapsed_time_proc'].max())
 
     df_cost_per_acc=pd.read_csv('results/data/Turbines/UnderstandingAccuracy/df_Bisection.csv',index_col=0)
-    time_split=list(df_cost_per_acc['cost_per_eval'])[0]*20
+    df_popsize=pd.read_csv('results/data/general/SampleSize_Frequency_bisection_method.csv')
+    time_split=list(df_cost_per_acc['cost_per_eval'])[0]*int(df_popsize[df_popsize['env_name']=='Turbines']['popsize'])
 
-    list_train_time=np.arange(max(min_time_acc_max,min_time_h),3600+10,10)
+    list_train_time=np.arange(max(min_time_acc_max,min_time_h),3600,time_split)
 
     # Draw graph.
     draw_and_save_figures_per_heuristic(heuristic)
