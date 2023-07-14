@@ -182,7 +182,7 @@ def draw_heuristic_effectiveness():
     ax=plt.subplot(411)
 
     quality_percentage=list((np.array(all_mean_h)/np.array(all_mean_acc_max))*100)
-    print('Quality above 100:',sum(np.array(quality_percentage)>=100)/len(quality_percentage))
+    print('Quality above 100:',sum(np.array(quality_percentage)>100)/len(quality_percentage))
     print('Best quality:',max(quality_percentage),np.mean(quality_percentage),np.std(quality_percentage))
 
     ax.grid(b=True,color='black',linestyle='--', linewidth=0.8,alpha=0.2,axis='both')
@@ -227,7 +227,7 @@ def draw_heuristic_effectiveness():
         else:
             list_time_y.append(100)
         counter+=1
-    print('Time below 100:',sum(np.array(list_time_y)<100)/len(list_time_y))
+    print('Time below 100:',(sum(np.array(list_time_y)<100)+1)/len(list_time_y))
     print('Best time:',min(list_time_y),np.mean(list_time_y),np.std(list_time_y))
 
     ax.grid(b=True,color='black',linestyle='--', linewidth=0.8,alpha=0.2,axis='both')

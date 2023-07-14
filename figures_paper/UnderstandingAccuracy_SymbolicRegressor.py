@@ -122,7 +122,7 @@ def from_data_to_figures_paper(df):
     plt.barh(convert_textbf(list_acc_str), list_extra_eval, align='center',color=color[1])
     plt.yticks([])
     ax.set_xticks(range(0,12,2))
-    plt.xlabel(r"\textbf{Evaluations}",fontsize=16)
+    plt.xlabel("$t_1/t_c$",fontsize=16)
     plt.xticks(fontsize=16)
     plt.yticks(fontsize=16)
     ax.grid(b=True, color=color[1],linestyle='-', linewidth=0.8,alpha=0.2,axis='x')
