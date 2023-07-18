@@ -233,7 +233,7 @@ def draw_heuristic_effectiveness():
             ind=aux_list.index(True)
             list_time_y.append((list_train_n_eval[ind]/list_train_n_eval[counter])*100)
         else:
-            list_time_y.append(100)
+            list_time_y.append((max(list_train_n_eval)/list_train_n_eval[counter])*100)
         counter+=1
     print('Time below 100:',sum(np.array(list_time_y)<=100)/len(list_time_y))
     print('Best time:',min(list_time_y),np.mean(list_time_y),np.std(list_time_y))
@@ -243,7 +243,7 @@ def draw_heuristic_effectiveness():
     plt.axhline(y=100,color='black', linestyle='--')
 
     ax.set_xscale('log')
-    ax.set_ylabel(r"\textbf{TS}",fontsize=15)
+    ax.set_ylabel(r"\textbf{TR}",fontsize=15)
     ax.set_xlabel("$t$",fontsize=15)
     plt.yticks(fontsize=15)
     plt.xticks(fontsize=15)
