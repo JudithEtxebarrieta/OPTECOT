@@ -110,13 +110,13 @@ def draw_and_save_figures_per_heuristic():
     plt.rc('font', family='serif')
     plt.rc('text', usetex=True)
     plt.rcParams['text.latex.preamble'] = r'\boldmath'
-    plt.figure(figsize=[6,10])
-    plt.subplots_adjust(left=0.21,bottom=0.09,right=0.9,top=0.94,wspace=0.24,hspace=0.17)
 
     #----------------------------------------------------------------------------------------------
     # GRAPH 1: best solution quality during execution process.
     #----------------------------------------------------------------------------------------------
-    ax=plt.subplot(211)
+    plt.figure(figsize=[7,6])
+    plt.subplots_adjust(left=0.18,bottom=0.11,right=0.85,top=0.88,wspace=0.3,hspace=0.2)
+    ax=plt.subplot(111)
     ax.grid(b=True,color='black',linestyle='--', linewidth=0.8,alpha=0.2,axis='both')
 
     # Constant use of accuracy (default situation).
@@ -132,17 +132,24 @@ def draw_and_save_figures_per_heuristic():
 
     ax.ticklabel_format(style='sci', axis='x', useOffset=True, scilimits=(0,0))
     ax.set_ylabel(r"\textbf{Solution Quality}",fontsize=23)
+    ax.set_xlabel("$t$",fontsize=23)
     ax.set_xticks(range(100000,1000000,250000))
     ax.legend(fontsize=18,title_fontsize=18,labelspacing=0.1,handlelength=0.8)
     ax.set_title(r'\textbf{Swimmer}',fontsize=23)
     plt.xticks(fontsize=23)
     plt.yticks(fontsize=23)
 
+    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_MuJoCo_Q.pdf')
+    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_MuJoCo_Q.png')
+    plt.show()
+    plt.close()
+
     #----------------------------------------------------------------------------------------------
     # GRAPH 2: Graphical representation of the accuracy behavior.
     #----------------------------------------------------------------------------------------------
-
-    ax=plt.subplot(212)
+    plt.figure(figsize=[4,3])
+    plt.subplots_adjust(left=0.31,bottom=0.26,right=0.85,top=0.88,wspace=0.3,hspace=0.2)
+    ax=plt.subplot(111)
     ax.grid(b=True,color='black',linestyle='--', linewidth=0.8,alpha=0.2,axis='both')
 
     # Draw curve.
@@ -153,12 +160,12 @@ def draw_and_save_figures_per_heuristic():
     ax.set_xlabel("$t$",fontsize=23)
     ax.set_ylabel("$c$",fontsize=23)
     ax.set_xticks(range(100000,1000000,250000))
-    ax.set_title('')
+    ax.set_title(r'\textbf{Swimmer}',fontsize=23)
     plt.xticks(fontsize=23)
     plt.yticks(fontsize=23)
 
-    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_MuJoCo.pdf')
-    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_MuJoCo.png')
+    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_MuJoCo_c.pdf')
+    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_MuJoCo_c.png')
     plt.show()
     plt.close()
 
@@ -223,8 +230,7 @@ def draw_heuristic_effectiveness():
         if True in aux_list:
             ind=aux_list.index(True)
             list_time_y.append((list_train_time[ind]/list_train_time[counter])*100)
-        else:
-            list_time_y.append((max(list_train_time)/list_train_time[counter])*100)
+
         counter+=1
     print('Time below 100:',sum(np.array(list_time_y)<=100)/len(list_time_y))
     print('Best time:',min(list_time_y),np.mean(list_time_y),np.std(list_time_y))

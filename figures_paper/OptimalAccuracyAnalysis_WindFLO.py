@@ -99,7 +99,7 @@ def draw_accuracy_behaviour(df_train,type_time):
     all_q95=[round(a_c(i,a_0,a_1),2)for i in all_q95]
     all_mean=[round(a_c(i,a_0,a_1),2)for i in all_mean]
     ax.fill_between(list_train_time,all_q05,all_q95, alpha=.2, linewidth=0,color=colors[1])
-    plt.plot(list_train_time, all_mean, linewidth=1,label='OPTECOT',color=colors[1],marker=list_markers[1],markevery=1)
+    plt.plot(list_train_time, all_mean, linewidth=1,label='OPTECOT',color=colors[1],marker=list_markers[1],markevery=2)
 
 def draw_and_save_figures_per_heuristic():
     '''Draw and save graphs associated with the selected heuristic.'''
@@ -110,13 +110,13 @@ def draw_and_save_figures_per_heuristic():
     plt.rc('font', family='serif')
     plt.rc('text', usetex=True)
     plt.rcParams['text.latex.preamble'] = r'\boldmath'
-    plt.figure(figsize=[6,10])
-    plt.subplots_adjust(left=0.21,bottom=0.09,right=0.9,top=0.94,wspace=0.24,hspace=0.17)
 
     #----------------------------------------------------------------------------------------------
     # GRAPH 1: best solution quality during execution process.
     #----------------------------------------------------------------------------------------------
-    ax=plt.subplot(211)
+    plt.figure(figsize=[7,6])
+    plt.subplots_adjust(left=0.18,bottom=0.11,right=0.85,top=0.88,wspace=0.3,hspace=0.2)
+    ax=plt.subplot(111)
     ax.grid(b=True,color='black',linestyle='--', linewidth=0.8,alpha=0.2,axis='both')
 
     # Constant use of accuracy (default situation).
@@ -131,15 +131,23 @@ def draw_and_save_figures_per_heuristic():
     plt.plot(list_train_time, all_mean, linewidth=1,label=r'\textbf{OPTECOT}',color=colors[1],marker=list_markers[1],markevery=1)
 
     ax.set_ylabel(r"\textbf{Solution quality}",fontsize=23)
+    ax.set_xlabel("$t$",fontsize=23)
     ax.legend(fontsize=18,title_fontsize=18,labelspacing=0.1,handlelength=0.8,loc='lower right')
     ax.set_title(r'\textbf{WindFLO}',fontsize=23)
     plt.xticks(fontsize=23)
     plt.yticks(fontsize=23)
 
+    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_WindFLO_Q.pdf')
+    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_WindFLO_Q.png')
+    plt.show()
+    plt.close()
+
     #----------------------------------------------------------------------------------------------
     # GRAPH 2: Graphical representation of the accuracy behavior.
     #----------------------------------------------------------------------------------------------
-    ax=plt.subplot(212)
+    plt.figure(figsize=[4,3])
+    plt.subplots_adjust(left=0.31,bottom=0.26,right=0.85,top=0.88,wspace=0.3,hspace=0.2)
+    ax=plt.subplot(111)
     ax.grid(b=True,color='black',linestyle='--', linewidth=0.8,alpha=0.2,axis='both')
 
     # Draw curve.
@@ -148,12 +156,13 @@ def draw_and_save_figures_per_heuristic():
 
     ax.set_xlabel("$t$",fontsize=23)
     ax.set_ylabel("$c$",fontsize=23)
-    ax.set_title('')
+    ax.set_title(r'\textbf{WindFLO}',fontsize=23)
     plt.xticks(fontsize=23)
     plt.yticks(fontsize=23)
+    ax.set_ylim([0,1])
 
-    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_WindFLO.pdf')
-    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_WindFLO.png')
+    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_WindFLO_c.pdf')
+    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_WindFLO_c.png')
     plt.show()
     plt.close()
 

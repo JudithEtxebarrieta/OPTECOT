@@ -112,13 +112,13 @@ def draw_and_save_figures_per_heuristic():
     plt.rc('font', family='serif')
     plt.rc('text', usetex=True)
     plt.rcParams['text.latex.preamble'] = r'\boldmath'
-    plt.figure(figsize=[6,10])
-    plt.subplots_adjust(left=0.21,bottom=0.09,right=0.9,top=0.94,wspace=0.24,hspace=0.17)
 
     #----------------------------------------------------------------------------------------------
     # GRAPH 1: Solution quality during training using the total number of evaluations.
     #----------------------------------------------------------------------------------------------
-    ax=plt.subplot(211)
+    plt.figure(figsize=[7,6])
+    plt.subplots_adjust(left=0.18,bottom=0.11,right=0.85,top=0.88,wspace=0.3,hspace=0.2)
+    ax=plt.subplot(111)
 
     ax.grid(b=True,color='black',linestyle='--', linewidth=0.8,alpha=0.2,axis='both')
 
@@ -134,6 +134,7 @@ def draw_and_save_figures_per_heuristic():
     plt.plot(list_train_n_eval, all_mean, linewidth=1,label=r'\textbf{OPTECOT}',color=colors[1],marker=list_markers[1],markevery=0.1)
 
     ax.set_ylabel(r"\textbf{Solution quality}",fontsize=23)
+    ax.set_xlabel("$t$",fontsize=23)
     ax.legend(fontsize=18,title_fontsize=18,labelspacing=0.1,handlelength=0.8)
     ax.set_title(r'\textbf{SR}',fontsize=23)
     plt.xticks(fontsize=23)
@@ -141,27 +142,35 @@ def draw_and_save_figures_per_heuristic():
     ax.invert_yaxis()
     ax.set_xscale('log')
 
+    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_SymbolicRegressor_Q.pdf')
+    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_SymbolicRegressor_Q.png')
+    plt.show()
+    plt.close()
+
     #----------------------------------------------------------------------------------------------
     # GRAPH 2: Graphical representation of the accuracy behavior.
     #----------------------------------------------------------------------------------------------
-    ax=plt.subplot(212)
+    plt.figure(figsize=[4,3])
+    plt.subplots_adjust(left=0.31,bottom=0.26,right=0.85,top=0.88,wspace=0.3,hspace=0.2)
+    ax=plt.subplot(111)
     ax.grid(b=True,color='black',linestyle='--', linewidth=0.8,alpha=0.2,axis='both')
 
     # Draw curves.
     df=df_optimal_acc[df_optimal_acc['heuristic_param']=='[5, 3]']
     draw_accuracy_behaviour(df,'n_eval')
 
+    ax.set_title(r'\textbf{SR}',fontsize=23)
     ax.set_xlabel("$t$",fontsize=23)
     ax.ticklabel_format(style='sci', axis='x', useOffset=True, scilimits=(3010,0))
     ax.set_ylabel("$c$",fontsize=23)
     ax.set_xticks(range(200000,1000000,250000))
     plt.xticks(fontsize=23)
     plt.yticks(fontsize=23)
-    ax.set_title('')
     ax.set_xscale('log')
+    ax.set_ylim([0,1])
 
-    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_SymbolicRegressor.pdf')
-    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_SymbolicRegressor.png')
+    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_SymbolicRegressor_c.pdf')
+    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_SymbolicRegressor_c.png')
     plt.show()
     plt.close()
 
