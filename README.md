@@ -1,10 +1,8 @@
 # OPTECOT - Optimal Evaluation Cost Tracking
- Judith Echevarrieta (jechevarrieta@bcamath.org),
- Etor Arza (earza@bcamath.org),
- Aritz Pérez (aperez@bcamath.org)
+ Judith Echevarrieta, Etor Arza and Aritz Pérez
 
 ## Repository content
-This repository contains supplementary material for the paper _Speeding-up Evolutionary Algorithms to solve Black-Box Optimization Problems_. In this work, we have presented OPTECOT (Optimal Evaluation Cost Tracking): a technique to reduce the cost of solving a computationally expensive black-box optimization problem using population-based algorithms, avoiding loss of solution quality. For this purpose, we use a set of approximate objective functions of different costs and accuracies, obtained by modifying a strategic parameter in the definition of the original function. The proposal allows the selection of the lowest cost approximation with the trade-off between cost and accuracy in real time during the algorithm execution. The effectiveness of the proposal has been demonstrated in four different environments: **Symbolic Regressor**, **WindFLO**, **Swimmer** (from MuJoCo) and **Turbines**. In addition, future work has been motivated by using the environment **CartPole**. 
+This repository contains supplementary material for the paper _Speeding-up Evolutionary Algorithms to solve Black-Box Optimization Problems_. In this work, we have presented OPTECOT (Optimal Evaluation Cost Tracking): a technique to reduce the cost of solving a computationally expensive black-box optimization problem using population-based algorithms, avoiding loss of solution quality. OPTECOT requires a set of approximate objective functions of different costs and accuracies, obtained by modifying a strategic parameter in the definition of the original function. The proposal allows the selection of the lowest cost approximation with the trade-off between cost and accuracy in real time during the algorithm execution. The effectiveness of the proposal has been demonstrated in four different environments: **Symbolic Regressor**, **WindFLO**, **Swimmer** (from MuJoCo) and **Turbines**. In addition, future work has been motivated by using the environment **CartPole**. 
 
 <table width='80%' align='center'>
   <tr>
@@ -30,18 +28,99 @@ This repository contains supplementary material for the paper _Speeding-up Evolu
 
  </table>
 
-### Experiment Scripts
-The script associated with the experiments performed in each environment are located in the folders with the name: **experimentScripts**_*Environment name*. The experiments shown in the paper correspond to Python files with names starting with: *UnderstandingAccuracy*, *ConstantAccuracyAnalysis* and *OptimalAccuracyAnalysis*. The rest are additional experiments.
-
-### Results
-The results are distributed in two different folders: **results** and **figures_paper**. In the first one, both numerical and graphical results of the above mentioned experiments are gathered. In the second one instead, some of the previously named scripts ending in *_figures.py* are modified to design the graphics that are introduced in the paper.
-
+## Reproducing the experiments
 ### Install dependencies
 The code in this repository has been executed using the Ubuntu 20.04 operating system. To run the Python scripts you must install the dependencies indicated in: **others/setup.sh**. Some dependencies may need to be modified or added to ensure functionality on other systems.
 
+Install requirements for Linux:
+```bash
+sudo apt update
+sudo apt install gcc
+sudo aptitude install g++ 
+sudo apt install gfortran
+sudo apt install make
+sudo apt install ffmpeg freeglut3-dev xvfb
+sudo apt-get install python3.8-venv # for Swimmer we create a virtual Python environment
 ```
-bash others/setup.sh
+
+Install Python requirements:
+```bash
+# CartPole
+pip install stable-baselines3[extra]
+pip install opencv-python==4.5.5.64
+pip install scipy
+pip install sklearn
+pip install tqdm
+pip install scikit-learn
+
+# Symbolic Regressor
+pip install gplearn
+pip install graphviz
+pip install plotly
+
+# WindFLO
+pip install f90nml
+pip install git+https://github.com/CMA-ES/pycma.git@master
+cd windflo/release/
+make OS=LINUX MAIN=main
+cd ../../
+
+# Turbines
+pip install openpyxl
+pip install termcolor
+
+# Swimmer (we use the Python virtual environment)
+source venv/bin/activate
+
+pip install -U pip
+pip install swig
+pip install -r others/requirements.txt
+pip install -r cleanrl/requirements/requirements-mujoco.txt
+pip install -r cleanrl/requirements/requirements-mujoco_py.txt
+
+cd ~/Downloads
+wget -nc -c  wget -c 	https://mujoco.org/download/mujoco210-linux-x86_64.tar.gz  -O mujoco210.tar.gz
+tar -x -k -f mujoco210.tar.gz
+mkdir -p ~/.mujoco
+rsync -vraR mujoco210 ~/.mujoco/
+
+pip3 install 'mujoco-py<2.2,>=2.1'
+pip install git+https://github.com/rlworkgroup/metaworld.git@master#egg=metaworld
+pip install TensorFlow==2.11
+pip install torch>=1.11
+pip install garage
+pip install pyglet
+pip install tensorflow-cpu
+
 ```
+
+### Experimental scripts, data and figures
+The script associated with the experiments performed in each environment are located in the folders with the name: **experimentScripts**_*Environment name*. The experiments shown in the paper correspond to Python files with names starting with: *UnderstandingAccuracy*, *ConstantAccuracyAnalysis* and *OptimalAccuracyAnalysis*. The rest are additional experiments.
+
+The results are distributed in two different folders: **results** and **figures_paper**. In the first one, both numerical and graphical results of the above mentioned experiments are gathered. In the second one instead, some of the previously named scripts ending in *_figures.py* are modified to design the graphics that are introduced in the paper.
+
+To reproduce the complete experimental procedure carried out in the paper for each environment, the following steps must be followed (the Turbines environment is chosen as an example):
+
+```bash
+# Obtain data about evaluation times and ranking preservation for each approximate function.
+python experimentScripts_Turbines/UnderstandingAccuracy_data.py
+
+# Generate figure of evaluation times, extra evaluation proportions and ranking preservations.
+python figures_paper/UnderstandingAccuracy_Turbines.py
+
+# Obtain data about the use of approximate objective functions with constant cost.
+python experimentScripts_Turbines/ConstantAccuracyAnalysis_data.py
+
+# Generate figure of the solution quality curves associated with the use of approximate objective functions with constant cost.
+python figures_paper/ConstantAccuracyAnalysis_Turbines.py
+
+# Obtain data about OPTECOT application.
+python experimentScripts_Turbines/OptimalAccuracyAnalysis_data.py
+
+# Generate figures of OPTECOT application (solution quality curves, optimal cost behavior, quality improvement curves and time saving curves).
+python figures_paper/OptimalAccuracyAnalysis_Turbines.py
+```
+
 
 ## Brief description of OPTECOT and its application
 ### How OPTECOT works?
