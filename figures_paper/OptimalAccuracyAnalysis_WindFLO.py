@@ -155,7 +155,7 @@ def draw_and_save_figures_per_heuristic():
     draw_accuracy_behaviour(df,'elapsed_time')
 
     ax.set_xlabel("$t$",fontsize=23)
-    ax.set_ylabel("$c$",fontsize=23)
+    ax.set_ylabel("$\widetilde{c}$",fontsize=23)
     ax.set_title(r'\textbf{WindFLO}',fontsize=23)
     plt.xticks(fontsize=23)
     plt.yticks(fontsize=23)

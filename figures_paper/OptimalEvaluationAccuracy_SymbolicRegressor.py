@@ -60,7 +60,7 @@ def train_data_to_figure_data(df_train,type_eval):
 
     return all_mean,all_q05,all_q95,list_train_n_eval
 
-def draw_accuracy_behaviour(df_train,type_n_eval):
+def draw_accuracy_behaviour(df_train,type_n_eval,markevery,linewidth):
     '''Construction of curves showing the behavior of the accuracy during training.'''
 
     # Define relationship between accuracy (term used in the code) and cost (term used in the paper).
@@ -98,7 +98,7 @@ def draw_accuracy_behaviour(df_train,type_n_eval):
     all_q95=[round(a_c(i,a_0,a_1),2)for i in all_q95]
     all_mean=[round(a_c(i,a_0,a_1),2)for i in all_mean]
     ax.fill_between(list_train_n_eval,all_q05,all_q95, alpha=.2, linewidth=0,color=colors[1])
-    plt.plot(list_train_n_eval, all_mean, linewidth=1,label='OPTECOT',color=colors[1],marker=list_markers[1],markevery=0.1)
+    plt.plot(list_train_n_eval, all_mean, linewidth=linewidth,label='OPTECOT',color=colors[1],marker=list_markers[1],markevery=markevery)
 
 def draw_and_save_figures_per_heuristic():
     '''
@@ -157,12 +157,13 @@ def draw_and_save_figures_per_heuristic():
 
     # Draw curves.
     df=df_optimal_acc[df_optimal_acc['heuristic_param']=='[5, 3]']
-    draw_accuracy_behaviour(df,'n_eval')
+    plt.gca().add_patch(Rectangle((410000, .43), 1000000-410000, 0.55-0.43,linewidth=0.5,facecolor='white',edgecolor='black'))
+    draw_accuracy_behaviour(df,'n_eval',0.1,1)
 
     ax.set_title(r'\textbf{SR}',fontsize=23)
     ax.set_xlabel("$t$",fontsize=23)
     ax.ticklabel_format(style='sci', axis='x', useOffset=True, scilimits=(3010,0))
-    ax.set_ylabel("$c$",fontsize=23)
+    ax.set_ylabel("$\widetilde{c}$",fontsize=23)
     ax.set_xticks(range(200000,1000000,250000))
     plt.xticks(fontsize=23)
     plt.yticks(fontsize=23)
@@ -171,6 +172,27 @@ def draw_and_save_figures_per_heuristic():
 
     plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_SymbolicRegressor_c.pdf')
     plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_SymbolicRegressor_c.png')
+    plt.show()
+    plt.close()
+
+    #ZOOM
+    plt.figure(figsize=[4,3])
+    plt.subplots_adjust(left=0.31,bottom=0.26,right=0.85,top=0.73,wspace=0.3,hspace=0.2)
+    ax=plt.subplot(111)
+    ax.grid(b=True,color='black',linestyle='--', linewidth=0.8,alpha=0.2,axis='both')
+
+    draw_accuracy_behaviour(df,'n_eval',0.6,2)
+    ax.ticklabel_format(style='sci', axis='x', useOffset=True, scilimits=(3010,0))
+    ax.set_title('',fontsize=23)
+    ax.set_xlabel("",fontsize=23)
+    ax.set_ylabel("",fontsize=23)
+    plt.xticks([],fontsize=23)
+    plt.yticks([],fontsize=23)
+    ax.set_xlim([410000,1000000])
+    ax.set_ylim([0.44,0.54])
+
+    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_SymbolicRegressor_c_zoom.pdf')
+    plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_SymbolicRegressor_c_zoom.png')
     plt.show()
     plt.close()
 

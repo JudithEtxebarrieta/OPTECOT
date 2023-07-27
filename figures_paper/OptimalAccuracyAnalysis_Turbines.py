@@ -161,7 +161,7 @@ def draw_and_save_figures_per_heuristic():
     ax.ticklabel_format(style='sci', axis='x', useOffset=True, scilimits=(0,0))
     ax.set_xticks(range(500,4000,1000))
     ax.set_xlabel("$t$",fontsize=23)
-    ax.set_ylabel("$c$",fontsize=23)
+    ax.set_ylabel("$\widetilde{c}$",fontsize=23)
     ax.set_title(r'\textbf{Turbines}',fontsize=23)
     plt.xticks(fontsize=23)
     plt.yticks(fontsize=23)
