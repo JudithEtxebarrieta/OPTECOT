@@ -40,11 +40,17 @@ sudo aptitude install g++
 sudo apt install gfortran
 sudo apt install make
 sudo apt install ffmpeg freeglut3-dev xvfb
-sudo apt-get install python3.8-venv # for Swimmer we create a virtual Python environment
+sudo apt install venv
 ```
 
 Install Python requirements:
 ```bash
+
+# Generate Python virtual environment
+python -m venv venv
+source venv/bin/activate
+pip install -U pip
+
 # CartPole
 pip install stable-baselines3[extra]
 pip install opencv-python==4.5.5.64
@@ -69,10 +75,7 @@ cd ../../
 pip install openpyxl
 pip install termcolor
 
-# Swimmer (we use the Python virtual environment)
-source venv/bin/activate
-
-pip install -U pip
+# Swimmer
 pip install swig
 pip install -r others/requirements.txt
 pip install -r cleanrl/requirements/requirements-mujoco.txt
@@ -84,7 +87,7 @@ tar -x -k -f mujoco210.tar.gz
 mkdir -p ~/.mujoco
 rsync -vraR mujoco210 ~/.mujoco/
 
-pip3 install 'mujoco-py<2.2,>=2.1'
+pip install 'mujoco-py<2.2,>=2.1'
 pip install git+https://github.com/rlworkgroup/metaworld.git@master#egg=metaworld
 pip install TensorFlow==2.11
 pip install torch>=1.11
@@ -105,25 +108,29 @@ To reproduce the complete experimental procedure carried out in the paper for ea
 # Obtain data about evaluation times and ranking preservation for each approximate function.
 python experimentScripts_Turbines/UnderstandingAccuracy_data.py
 
-# Generate figure of evaluation times, extra evaluation proportions and ranking preservations.
+# Generate figure of evaluation times, extra evaluation proportions and ranking preservations 
+# (Figure 3 in the paper).
 python figures_paper/UnderstandingAccuracy_Turbines.py
 
 # Obtain data about the use of approximate objective functions with constant cost.
 python experimentScripts_Turbines/ConstantAccuracyAnalysis_data.py
 
-# Generate figure of the solution quality curves associated with the use of approximate objective functions with constant cost.
+# Generate figure of the solution quality curves associated with the use of approximate objective 
+# functions with constant cost (Figure 4 in the paper).
 python figures_paper/ConstantAccuracyAnalysis_Turbines.py
 
 # Obtain data about OPTECOT application.
 python experimentScripts_Turbines/OptimalAccuracyAnalysis_data.py
 
-# Generate figures of OPTECOT application (solution quality curves, optimal cost behavior, quality improvement curves and time saving curves).
+# Generate figures of OPTECOT application: solution quality curves (Figure 5 in the paper), 
+# optimal cost behavior (Figure 7 in the paper), quality improvement curves and time saving 
+# curves (Figure 6 in the paper).
 python figures_paper/OptimalAccuracyAnalysis_Turbines.py
 ```
 
 
 ## Brief description of OPTECOT and its application
-### How OPTECOT works?
+### How does OPTECOT work?
 <figure>
 <img src="others/readme_images/diagram_proposal_text.png" width="100%">
 <caption align='left'> 
@@ -148,17 +155,17 @@ Table 1.- Glossary of Figure 1.
 </figure>
 
 
-**The problem it faces.** OPTECOT is designed to reduce the computational cost of _Rank-Based Evolutionary Algorithms (RBEA) when the cost per evaluation of the objective function is very high and the available computational resources are limited_. These algorithms update a set of solutions (population) iteratively, selecting those with the best associated objective values to generate the next set of candidate solutions (see the middle box of Figure 1). This approach allows for improving the solution as the execution progresses. However, to reach a near-optimal solution, a large number of solutions must be evaluated. In this context, if the cost per evaluation is high, the algorithm can provide a quality solution as long as we are willing to assume a high computational cost.
+**The problem.** OPTECOT is designed to reduce the computational cost of _Rank-Based Evolutionary Algorithms (RBEA) when the cost per evaluation of the objective function is very high and the available computational resources are limited_. These algorithms update a set of solutions (population) iteratively, selecting those with the best associated objective values to generate the next set of candidate solutions (see the middle box of Figure 1). This approach allows for improving the solution as the execution progresses. However, to reach a near-optimal solution, a large number of solutions must be evaluated. In this context, if the cost per evaluation is high, the algorithm can provide a quality solution as long as we are willing to assume a high computational cost.
 
-**The tool used for resolution.** For the cost reduction of the original objective function, the use of _approximate objective functions of different costs_ is proposed. These approximations are obtained by modifying the accuracy of a parameter that participates in the definition of the objective function and allows us to control its cost. The lower cost approximations save time in the evaluation, although they are less accurate in terms of the ranking of the set of solutions they provide concerning the original one. This accuracy is important since a ranking of the population very different from the original one modifies the selection of the next population, which can lead to a decrease in the solution quality.
+**The solution.** For the cost reduction of the original objective function, the use of _approximate objective functions of different costs_ is proposed. These approximations are obtained by modifying the accuracy of a parameter that participates in the definition of the objective function and allows us to control its cost. The lower cost approximations save time in the evaluation, although they are less accurate in terms of the ranking of the set of solutions they provide concerning the original one. This accuracy is important since a ranking of the population very different from the original one modifies the selection of the next population, which can lead to a decrease in the solution quality.
 
-**Optimal use of the tool.** _OPTECOT selects during the algorithm execution process the optimal evaluation cost_, understanding as optimal the one that looks for a balance between evaluation time saving and ranking accuracy. The approximate function selected as optimal is the one with the minimum cost with which the solutions can still rank accurately (see the last box of Figure 1).
+**Choosing the optimal cost in real time.** _OPTECOT selects during the algorithm execution process the optimal evaluation cost_, where the optimal cost is the one that looks for a balance between evaluation time saving and ranking accuracy. The approximate function selected as optimal is the minimum cost that can still rank the solutions accurately (see the last box of Figure 1).
 
 
 ### What problems does OPTECOT solve?
-The procedure is designed to be applied to **population-based optimization algorithms**. In addition, it is necessary to have a **parameter** that is part of the definition of the objective function and whose modification allows us to control the computational cost of an evaluation. Although OPTECOT has only been tested in four environments in this work (the selected parameter and algorithms can be consulted in Table 2), it applies to any other environment that meets these two requirements.
+The procedure is designed to be applied to **population-based optimization algorithms**. In addition, it is necessary to have a **parameter** that is part of the definition of the objective function and whose modification allows us to control the computational cost of an evaluation. We tested OPTECOT in the four environments shown below (the selected parameter and algorithms can be consulted in Table 2), and it is also applicable to any other environment that meets these two requirements.
 
-It is important to emphasize that OPTECOT has been designed to be applied in contexts where the available computational resources do not allow the optimization algorithm to converge. Otherwise, it is not recommended to apply OPTECOT, since there is enough time for the original version of the algorithm to converge.
+It is important to emphasize that OPTECOT has been designed to be applied when the available computational resources are not enough for the optimization algorithm to converge. Otherwise, it is not recommended to apply OPTECOT, since there is enough time for the original version of the algorithm to converge.
 <figure>
 
 | Environment| Solution ($x$) | Objective function ($f$) | Parameter | Algorithm|
@@ -180,7 +187,7 @@ Figure 2.- Solution quality curves during the execution of the optimization algo
 </caption>
 </figure>
 
-**Solution quality improvement and time-saving.** After applying the procedure to the selected environments, it has been observed that the solution quality exceeds the original one in most of the algorithm execution process (see the graphs in the first row of Figure 2, except in the last part of the turbines, the orange curves are above the blue ones). As a result, the runtimes required to achieve the original qualities have been reduced significantly. In the best situation, it has been possible to use on average only 45.65% of the time needed by the original objective function to reach its same solution quality.
+**Solution quality improvement and time-saving.** After applying the procedure to the selected environments, we observe that the solution quality exceeds the original one in most of the algorithm execution process (see the graphs in the first row of Figure 2, except in the last part of the turbines, the orange curves are above the blue ones). As a result, the runtimes required to achieve the original qualities have been reduced significantly. In the best case, it was possible to use on average only 45.65% of the time needed by the original objective function to reach its same solution quality.
 
 **Optimal evaluation cost behaviour.** By tracking the optimal evaluation cost during the algorithm execution, OPTECOT allows to decrease or increase the cost of the objective function when needed (see the graphs in the second row of Figure 2). This leads to time savings in cases where the optimal cost is lower and maintains the quality of the solution when the optimal cost is higher.
 
