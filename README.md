@@ -11,9 +11,9 @@ This repository contains supplementary material for the paper _Speeding-up Evolu
     <td align='center'><img src="others/readme_images/swimmer.gif" height="150"></td>
   </tr>
     <tr>
-    <td align='center'>Symbolic Regressor</td>
-    <td align='center'>WindFLO</td>
-    <td align='center'>Swimmer</td>
+    <td align='center'><a href="https://github.com/trevorstephens/gplearn">Symbolic Regressor</a></td>
+    <td align='center'><a href="https://github.com/sohailrreddy/WindFLO">WindFLO</a></td>
+    <td align='center'><a href="https://github.com/Farama-Foundation/Gymnasium">Swimmer</a></td>
   </tr>
  </table>
  <table width='80%' align='center'>
@@ -22,8 +22,8 @@ This repository contains supplementary material for the paper _Speeding-up Evolu
     <td><img src="others/readme_images/cartpole.gif" height="150"></td>
   </tr>
     <tr>
-    <td align='center'>Turbines</td>
-    <td align='center'>CartPole</td>
+    <td align='center'><a href="https://www.ssrn.com/abstract=4379648">Turbines</a> </td>
+    <td align='center'><a href="https://github.com/araffin/rl-tutorial-jnrr19/blob/47cca257ce9814ee4be7a645e5411275284f1727/1_getting_started.ipynb">CartPole</a> </td>
   </tr>
 
  </table>
@@ -170,10 +170,10 @@ It is important to emphasize that OPTECOT has been designed to be applied when t
 
 | Environment| Solution ($x$) | Objective function ($f$) | Parameter | Algorithm|
 | ----- | ----- |----- |-----|-----|
-| Symbolic Regressor | Surface | Mean absolute error | Size of training point set | Genetic Programming |
-| WindFLO | Wind farm layout | Produced energy | monteCarloPts| CMA-ES|
-| Swimmer | Policy | Episode reward | Time-step| CMA-ES|
-| Turbines | Design of floating wind turbine | Performance score in five sea states| N (number of subdivisions on the surface of each blade) | CMA-ES|
+|  <a href="https://github.com/trevorstephens/gplearn">Symbolic Regressor</a> | Surface | Mean absolute error | Size of training point set | Genetic Programming |
+| <a href="https://github.com/sohailrreddy/WindFLO">WindFLO</a> | Wind farm layout | Produced energy | monteCarloPts| CMA-ES|
+| <a href="https://github.com/Farama-Foundation/Gymnasium">Swimmer</a> | Policy | Episode reward | Time-step| CMA-ES|
+| <a href="https://www.ssrn.com/abstract=4379648">Turbines</a> | Design of floating wind turbine | Performance score in five sea states| N (number of subdivisions on the surface of each blade) | CMA-ES|
 <caption align='left'> 
 Table 2.- Brief description of each environment.
 </caption>
