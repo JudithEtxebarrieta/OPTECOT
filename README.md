@@ -51,14 +51,6 @@ python -m venv venv
 source venv/bin/activate
 pip install -U pip
 
-# CartPole
-pip install stable-baselines3[extra]
-pip install opencv-python==4.5.5.64
-pip install scipy
-pip install sklearn
-pip install tqdm
-pip install scikit-learn
-
 # Symbolic Regressor
 pip install gplearn
 pip install graphviz
@@ -70,10 +62,6 @@ pip install git+https://github.com/CMA-ES/pycma.git@master
 cd windflo/release/
 make OS=LINUX MAIN=main
 cd ../../
-
-# Turbines
-pip install openpyxl
-pip install termcolor
 
 # Swimmer
 pip install swig
@@ -94,6 +82,18 @@ pip install torch>=1.11
 pip install garage
 pip install pyglet
 pip install tensorflow-cpu
+
+# Turbines
+pip install openpyxl
+pip install termcolor
+
+# CartPole
+pip install stable-baselines3[extra]
+pip install opencv-python==4.5.5.64
+pip install scipy
+pip install sklearn
+pip install tqdm
+pip install scikit-learn
 
 ```
 
