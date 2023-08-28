@@ -160,19 +160,15 @@ def learn(accuracy,seed,popsize=20):
 list_acc=[1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1]# List of accuracies.                    
 list_seeds=range(2,102,1)# List with train seeds.
 
-# Combination of values (accuracy,seed) that define each task of the execution in the cluster.
-list_tasks=list(itertools.product(list_acc,list_seeds))
-
 # Parameters.
 default_N=100
 max_time=60*60 # one hour per seed and accuracy value.
 
 # Build a database with relevant data on task execution.
 for accuracy in list_acc:
-
+    df=[]
     for seed in tqdm(list_seeds):
         task=seed
-        df=[]
         learn(accuracy,seed)
 
     # Save database.
