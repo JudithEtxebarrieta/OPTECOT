@@ -1,3 +1,10 @@
+
+
+'''
+FALTA COMPLETARLO MEJOR EXPLICANDO PASA O PASO COMO USAR LA LIBRERIA BREVEMENTE
+
+Library to apply OPTECOT to mono-objective optimization problems.
+'''
 #==================================================================================================
 # LIBRARIES
 #==================================================================================================
@@ -25,6 +32,8 @@ warnings.filterwarnings("ignore")
 # CLASSES
 #==================================================================================================
 class AuxiliaryFunctions:
+
+    '''This class defines the auxiliary static methods to be used in the other classes.'''
 
     @staticmethod
     def from_argsort_to_ranking(list):
@@ -63,6 +72,7 @@ class AuxiliaryFunctions:
     
     @staticmethod
     def from_cost_to_theta(cost,theta0,theta1):
+        '''Calculate the value and accuracy of the theta parameter associated with a cost.'''
         if theta1>theta0:
             acc=theta0/theta1+cost*(1-theta0/theta1)
             return acc,int(theta1*acc)
@@ -72,12 +82,31 @@ class AuxiliaryFunctions:
 
     @staticmethod
     def extract_info_evaluating_set_with_equidistant_accuracies(set_solutions,objective_function,theta0,theta1,path):
-        '''Build data frames from information obtained after evaluating a set o solutions with 10 different theta values associated with equidistant accuracies.'''
+        '''
+        Build data frames from information obtained after evaluating a set o solutions with 10 different theta values associated 
+        with equidistant costs.
+        
+        Parameters
+        ==========
+        `set_solutions`: A matrix storing by rows random solutions of the problem to be optimized.
+        `objective_function`: Function defining the objective function to be optimized.
+        `theta0`: Value of the theta parameter associated with the minimum cost of the objective function.
+        `theta1`: Value of the theta parameter associated with the maximum cost of the objective function (original value of the parameter).
+        `path`: Path to save auxiliary data.
 
+        Returns
+        =======
+        `df_acc_time`: Data frame with the average evaluation times associated with evaluating the set of solutions using 
+        different accuracies for the parameter theta (equivalently, different evaluation costs).
+        '''
+
+        # Initialize database.
         df_info_set=[]
 
+        # List with equidistant cost values.
         list_cost=np.arange(0,1+1/10,1/9) # As cost and theta accuracy are linearly proportional, to equidistant values of cost corresponds equidistant values of accuracy.
 
+        # Evaluate de set of solutions using all costs.
         total_it=len(list_cost)*len(set_solutions)
         it=0
         for cost in list_cost:
@@ -87,25 +116,41 @@ class AuxiliaryFunctions:
                 score=objective_function(set_solutions[n_sol],theta=theta)
                 elapsed_time=time.time()-t
                 df_info_set.append([acc,n_sol,score,elapsed_time])
+
                 print('    Computing |S| and t^{period}... '+colored(str(round((it/total_it)*100,2))+'%','light_cyan'),end='\r')
                 sys.stdout.flush()
                 it+=1
 
-        df_info_set=pd.DataFrame(df_info_set,columns=['accuracy','n_solution','score','cost_per_eval'])
-        df_acc_time=df_info_set[['accuracy','cost_per_eval']]
+        # Save databases in directory for auxiliary data.
+        df_info_set=pd.DataFrame(df_info_set,columns=['accuracy','n_solution','score','time_per_eval'])
+        df_acc_time=df_info_set[['accuracy','time_per_eval']]
         df_acc_time=df_acc_time.groupby('accuracy').mean()
         df_acc_time=df_acc_time.reset_index()
 
         df_info_set.to_csv(path+'/df_info_set.csv')
         df_acc_time.to_csv(path+'/df_acc_time.csv')
+
         return df_acc_time
 
     @staticmethod
     def SampleSize_TimePeriod_bisection_method(popsize,min_sample_size,perc_cost,df_acc_time):
 
         '''
-        Calculate the sample size for the bisection method and the frequency with which the indications 
-        of the heuristic should be accepted.
+        Calculate the sample size for the bisection method and the time period with which the indications 
+        of the heuristic should be accepted to limit the execution time dedicated to cost readjustment.
+
+        Parameters
+        ==========
+        `popsize`: Population size to be considered in the RBEA.
+        `min_sample_size`: Minimum value proposed to define the size of the sample of solutions from a population to be 
+        `considered for estimating the optimal cost using the bisection method.
+        `perc_cost`: Percentage of the total execution time that we are willing to allow for the application of the bisection in the worst-case scenario. 
+        `df_acc_time`: Database with information on the time per evaluation associated with each accuracy of the theta parameter.
+
+        Returns
+        =======
+        `sample_size`: Population sample size to be used when bisection method is applied to readjust evaluation cost.
+        `time_period`: Time period to be considered to accept heuristic indications.
         '''
 
         def bisection_middle_points(lower,upper,type_cost='max'):
@@ -138,7 +183,7 @@ class AuxiliaryFunctions:
 
             return list+[max_value]
 
-        time_list=bisection_middle_points(min(df_acc_time['cost_per_eval']),max(df_acc_time['cost_per_eval']))
+        time_list=bisection_middle_points(min(df_acc_time['time_per_eval']),max(df_acc_time['time_per_eval']))
 
         # Cost of evaluating a population with maximum accuracy.
         cost_max_acc=time_list[-1]*popsize
@@ -165,13 +210,32 @@ class AuxiliaryFunctions:
 
     @staticmethod
     def interruption_threshold(popsize,sample_size,df_acc_time,path):
+
+        '''
+        Calculate the interruption threshold of the theta parameter accuracy to be considered to stop applying the heuristic.
         
+        Parameters
+        ==========
+        `popsize`: Population size to be considered in the RBEA.
+        `sample_size`: Population sample size to be used when bisection method is applied to readjust evaluation cost.
+        `df_acc_time`: Database with information on the time per evaluation associated with each accuracy of the theta parameter.
+        `path`: Path to save auxiliary data.
+
+        Returns
+        =======
+        `interruption_threshold`: Interruption threshold.
+        
+        '''
+        
+        # Initialize data frame.
         df=[]
+
+        # List of all possible behaviours of the bisection method in 4  iterations.
         list_sequences=[[0,0,0],[0,0,1],[0,1,0],[0,1,1],[1,0,0],[1,0,1],[1,1,0],[1,1,1]]
 
         # Read database with evaluation time of each accuracy.
         list_acc=list(df_acc_time['accuracy'])
-        list_time=list(df_acc_time['cost_per_eval'])
+        list_time=list(df_acc_time['time_per_eval'])
 
         for sequence in list_sequences:
             upper=max(list_time)
@@ -207,7 +271,7 @@ class AuxiliaryFunctions:
             # Update database.
             df.append([opt_acc,cost,pop_eval_save_perc])
 
-        # interruption threshold.
+        # Save created database and compute interruption threshold (the value of accuracy associated with the worst case of bisection).
         df_ExtraCost_SavePopEvalCost=pd.DataFrame(df,columns=['opt_acc','bisec_cost','pop_eval_save_perc'])
         df_ExtraCost_SavePopEvalCost.to_csv(path+'/df_ExtraCost_SavePopEvalCost.csv')
         interruption_threshold=float(max(df_ExtraCost_SavePopEvalCost['opt_acc']))
@@ -217,6 +281,8 @@ class AuxiliaryFunctions:
 
 class ExperimentalGraphs:
 
+    '''This class defines the methods for building experimental graphs.'''
+
     @staticmethod
     def bootstrap_mean_and_confidence_interval(data,bootstrap_iterations=1000):
         '''
@@ -224,8 +290,8 @@ class ExperimentalGraphs:
 
         Parameters
         ==========
-        data (list): Data on which the range between percentiles will be calculated.
-        bootstrap_iterations (int): Number of subsamples of data to be considered to calculate the percentiles of their means. 
+        `data` (list): Data on which the range between percentiles will be calculated.
+        `bootstrap_iterations` (int): Number of subsamples of data to be considered to calculate the percentiles of their means. 
 
         Return
         ======
@@ -238,10 +304,20 @@ class ExperimentalGraphs:
         return np.mean(data),np.quantile(mean_list, 0.05),np.quantile(mean_list, 0.95)
     
     @staticmethod
-    def train_data_to_figure_data(df_train_acc,list_train_times):
+    def train_data_to_figure_data(df_train_cost,list_train_times):
         '''
-        The database associated with a parameter value is summarized to the data needed to 
+        The database associated with an evaluation cost is summarized to the data needed to 
         construct the solution quality curves. 
+
+        Parameters
+        ==========
+        `df_train_cost`: Data frame with the data obtained during the execution process of the RBEA using an approximate objective function with a specific cost.
+        `list_train_times`: List with the runtimes to be drawn.
+
+        Returns
+        =======
+        Lists with mean and percentiles of the solution quality associated with each value in list_train_times.
+
         '''
 
         # Initialize lists for the graph.
@@ -253,13 +329,13 @@ class ExperimentalGraphs:
         for train_time in list_train_times:
 
             # Indexes of rows with a training time less than train_time.
-            ind_train=df_train_acc["elapsed_time"] <= train_time
+            ind_train=df_train_cost["elapsed_time"] <= train_time
             
             # Group the previous rows by seed and keep the row per group that has the highest score value associated with it.
-            interest_rows=df_train_acc[ind_train].groupby("seed")["score"].idxmax()
+            interest_rows=df_train_cost[ind_train].groupby("seed")["score"].idxmax()
 
             # Calculate the mean and confidence interval of the score.
-            interest=list(df_train_acc['score'][interest_rows])
+            interest=list(df_train_cost['score'][interest_rows])
             mean,q05,q95=ExperimentalGraphs.bootstrap_mean_and_confidence_interval(interest)
 
             # Save data.
@@ -311,22 +387,26 @@ class ExperimentalGraphs:
         plt.plot(list_train_time, all_mean, linewidth=1,label=r'\textbf{OPTECOT}',color=colors[1],marker=list_markers[1],markevery=0.1)
 
     @staticmethod
-    def illustrate_approximate_objective_functions_use(optecot):
+    def illustrate_approximate_objective_functions_use(optecot,title='Example'):
+
+        '''
+        Generate the figures of the initial experimentation in the paper:
+           - Figure 3 in the paper: Evaluation times, extra evaluation proportions and ranking preservations.
+           - Figure 4 in the paper: The solution quality curves associated with the use of approximate objective functions with constant cost.
+
+        To build the figures, only one instance of the `OPTECOT` class is needed, to which the `execute_CMAES_with_approximations` method has been previously applied.
+        '''
 
         print('Drawing results obtained after executing CMA-ES using approximate objective functions:')
         sys.stdout.flush()
 
-        list_acc=[]
-        for cost in optecot.list_costs:
-            acc,_=AuxiliaryFunctions.from_cost_to_theta(cost,optecot.theta0,optecot.theta1)
-            list_acc.append(acc)
-
-        # Obtener base de datos a partir de la cual se construira la grafica.
+        # Load database from which the graph will be constructed.
         df=pd.read_csv(optecot.auxiliary_data_path+'/df_info_set.csv',index_col=0)
 
         #------------------------------------------------------------------------------------------
-        # Funciones auxiliares
+        # Auciliary functions.
         #------------------------------------------------------------------------------------------
+        # Convert the text of graphics to latex bold text.
         def convert_textbf(x):
             return [r'\textbf{'+str(i)+'}' for i in x]
         
@@ -340,8 +420,8 @@ class ExperimentalGraphs:
         a_1=max(list_acc)       
 
         #------------------------------------------------------------------------------------------
-        # Construir gráficas asociadas a la evaluacion del conjunto de soluciones usando 
-        # las diferentes aproximaciones.
+        # Construct graphs associated with the evaluation of the solution set using the 
+        # different approximations (Figure 3 in the paper).
         #------------------------------------------------------------------------------------------
 
         print('    Generating figure of evaluation times, extra evaluation proportions and ranking preservations (Figure 3 in the paper)...',end='\r')
@@ -354,9 +434,9 @@ class ExperimentalGraphs:
         plt.figure(figsize=[5,5],constrained_layout=True)
 
         #__________________________________________________________________________________________
-        # GRAPH 1: evaluation time per accuracy and extra evaluations.
+        # GRAPH 1: Evaluation time per accuracy and extra evaluations.
 
-        # Define accuracy list.
+        # Define cost list.
         list_acc_str=[str(round(a_c(acc,a_0,a_1),2)) for acc in list_acc]
         list_acc_str.reverse()
         list_acc_float=[round(a_c(acc,a_0,a_1),2) for acc in list_acc]
@@ -367,7 +447,7 @@ class ExperimentalGraphs:
         all_q95=[]
 
         for accuracy in list_acc:
-            mean,q05,q95=ExperimentalGraphs.bootstrap_mean_and_confidence_interval(list(df[df['accuracy']==accuracy]['cost_per_eval']))
+            mean,q05,q95=ExperimentalGraphs.bootstrap_mean_and_confidence_interval(list(df[df['accuracy']==accuracy]['time_per_eval']))
             all_means.append(mean)
             all_q05.append(q05)
             all_q95.append(q95)
@@ -381,12 +461,13 @@ class ExperimentalGraphs:
             extra_eval=save_time/all_means[i]
             list_extra_eval.append(extra_eval)
 
+        # Build graph.
         color = sns.cubehelix_palette(start=2, rot=0, dark=0, light=.95, reverse=True, as_cmap=True)
         color=cm.get_cmap(color)
         color=color(np.linspace(0,1,3))
 
         ax=plt.subplot(221)
-        ax.set_title(r'\textbf{Turbines}',fontsize=16)
+        ax.set_title(r'\textbf{'+title+'}',fontsize=16)
         y=[i*(-1) for i in all_means]
         y.reverse()
         plt.barh(convert_textbf(list_acc_str), y, align='center',color=color[0])
@@ -442,13 +523,14 @@ class ExperimentalGraphs:
             
             return norm_abs_dist_matrix
 
+        # Build the matrix with the rankings obtained with each evaluation cost.
         ranking_list=[]
-
         for accuracy in list_acc:
             df_acc=df[df['accuracy']==accuracy]
             ranking=AuxiliaryFunctions.from_argsort_to_ranking(list(df_acc['score'].argsort()))
             ranking_list.append(ranking)
 
+        # Build graph.
         ranking_matrix=np.matrix(absolute_distance_matrix_between_rankings(ranking_matrix_sorted_by_max_acc(ranking_list)))
         color = sns.cubehelix_palette(start=2, rot=0, dark=0, light=.95, reverse=False, as_cmap=True)
 
@@ -468,24 +550,23 @@ class ExperimentalGraphs:
         # Save graph.
         plt.savefig(optecot.figure_path+'/ApproximateObjectiveFunctions_SolutionSet.png')
         plt.savefig(optecot.figure_path+'/ApproximateObjectiveFunctions_SolutionSet.pdf')
-
         plt.close()
 
         print('    Generating figure of evaluation times, extra evaluation proportions and ranking preservations (Figure 3 in the paper)'+ colored('    DONE','light_cyan'))
         sys.stdout.flush()
 
         #------------------------------------------------------------------------------------------
-        # Construir gráfica asociada a la ejecucion del RBEA usando diferentes aproximaciones con 
-        # una precision de theta constante durante toda la ejecucion.
+        # Construct graphs associated with the RBEA run using different approximations with constant 
+        # accuracy of theta during the whole execution (Figure 4 in the paper).
         #------------------------------------------------------------------------------------------
         print('    Generating figure of the solution quality curves associated with the use of approximate objective functions with constant cost (Figure 4 in the paper)...',end='\r')
         sys.stdout.flush()
 
         # Define list with limits of training times to be drawn.
-        df_train_acc_min=pd.read_csv('library_OPTECOT/results/data/df_ConstantAnalysis_cost'+'{:.02f}'.format(min(optecot.list_costs))+".csv", index_col=0)
-        df_train_acc_max=pd.read_csv('library_OPTECOT/results/data/df_ConstantAnalysis_cost'+'{:.02f}'.format(max(optecot.list_costs))+".csv", index_col=0)
-        min_time=max(df_train_acc_max.groupby('seed')['elapsed_time'].min())
-        split_time=max(df_train_acc_min.groupby('seed')['elapsed_time'].min())
+        df_train_cost_min=pd.read_csv(optecot.data_path+'/df_ConstantAnalysis_cost'+'{:.02f}'.format(min(optecot.list_costs))+".csv", index_col=0)
+        df_train_cost_max=pd.read_csv(optecot.data_path+'/df_ConstantAnalysis_cost'+'{:.02f}'.format(max(optecot.list_costs))+".csv", index_col=0)
+        min_time=max(df_train_cost_max.groupby('seed')['elapsed_time'].min())
+        split_time=max(df_train_cost_min.groupby('seed')['elapsed_time'].min())
         list_train_times=np.arange(min_time,optecot.max_time,split_time)
 
         # Build and save graphs.
@@ -504,10 +585,10 @@ class ExperimentalGraphs:
         for cost in optecot.list_costs:
 
             # Read database.
-            df_train_acc=pd.read_csv('library_OPTECOT/results/data/df_ConstantAnalysis_cost'+'{:.02f}'.format(cost)+".csv", index_col=0)
+            df_train_cost=pd.read_csv(optecot.data_path+'/df_ConstantAnalysis_cost'+'{:.02f}'.format(cost)+".csv", index_col=0)
 
             # Extract relevant information from the database.
-            all_mean_scores,all_q05_scores,all_q95_scores =ExperimentalGraphs.train_data_to_figure_data(df_train_acc,list_train_times)
+            all_mean_scores,all_q05_scores,all_q95_scores =ExperimentalGraphs.train_data_to_figure_data(df_train_cost,list_train_times)
 
             # Set maximum solution quality.
             if cost==max(optecot.list_costs):
@@ -521,7 +602,7 @@ class ExperimentalGraphs:
         ax.set_ylim([0.42,0.55])
         ax.set_xlabel("$t$",fontsize=23)
         ax.set_ylabel(r"\textbf{Solution quality}",fontsize=23)
-        ax.set_title(r'\textbf{Turbines}',fontsize=23)
+        ax.set_title(r'\textbf{'+title+'}',fontsize=23)
         leg=ax.legend(title="$c$",fontsize=16.5,title_fontsize=16.5,labelspacing=0.1,handlelength=0.8,loc='upper left')
         plt.axhline(y=score_limit,color='black', linestyle='--')
         ax.set_xscale('log')
@@ -538,8 +619,17 @@ class ExperimentalGraphs:
         sys.stdout.flush()
 
     @staticmethod
-    def illustrate_OPTECOT_application_results(optecot):
+    def illustrate_OPTECOT_application_results(optecot,title='Example'):
 
+        '''
+        Generate the mainfigures of the paper:
+           - Figure 5 in the paper: Solution quality curves (OPTECOT vs original objective function).
+           - Figure 6 in the paper: Quality improvement curves and time saving curves.
+           - Figure 7 in the paper: Optimal cost behavior during RBEA execution.
+
+        To build the figures, only one instance of the `OPTECOT` class is needed, to which the `execute_CMAES_with_OPTECOT` method has been previously applied.
+        '''
+        
         print('Drawing results obtained after executing CMA-ES appliying OPTECOT:')
         sys.stdout.flush()
 
@@ -556,12 +646,12 @@ class ExperimentalGraphs:
         min_time_h=max(df_optimal_acc.groupby('seed')['elapsed_time'].min())
 
         df_cost_per_acc=pd.read_csv(optecot.auxiliary_data_path+'/df_acc_time.csv',index_col=0)
-        time_split=list(df_cost_per_acc['cost_per_eval'])[0]*optecot.popsize
+        time_split=list(df_cost_per_acc['time_per_eval'])[0]*optecot.popsize
 
         list_train_time=np.arange(max(min_time_acc_max,min_time_h),optecot.max_time+time_split,time_split)
 
         #------------------------------------------------------------------------------------------
-        # Curva de calidad y comportamiento de coste optimo.
+        # Quality curve and optimal cost performance.
         #------------------------------------------------------------------------------------------
         print('    Generating figure of solution quality curves (Figure 5 in the paper) and optimal cost behavior (Figure 7 in the paper)...',end='\r')
         sys.stdout.flush()
@@ -571,9 +661,8 @@ class ExperimentalGraphs:
         plt.rc('text', usetex=True)
         plt.rcParams['text.latex.preamble'] = r'\boldmath'
 
-
         #__________________________________________________________________________________________
-        # GRAPH 1: best solution quality during execution process.
+        # GRAPH 1: Best solution quality during execution process.
 
         plt.figure(figsize=[7,12])
         plt.subplots_adjust(left=0.18,bottom=0.11,right=0.85,top=0.93,wspace=0.32,hspace=0.35)
@@ -594,7 +683,7 @@ class ExperimentalGraphs:
         ax.set_ylabel(r"\textbf{Solution quality}",fontsize=23)
         ax.set_xlabel("$t$",fontsize=23)
         ax.legend(fontsize=18,title_fontsize=18,labelspacing=0.1,handlelength=0.8,loc='lower right')
-        ax.set_title(r'\textbf{Turbines}',fontsize=23)
+        ax.set_title(r'\textbf{'+title+'}',fontsize=23)
         plt.xticks(fontsize=23)
         plt.yticks(fontsize=23)
         ax.set_xscale('log')
@@ -612,7 +701,7 @@ class ExperimentalGraphs:
         ax.set_xticks(range(500,4000,1000))
         ax.set_xlabel("$t$",fontsize=23)
         ax.set_ylabel("$\widetilde{c}$",fontsize=23)
-        ax.set_title(r'\textbf{Turbines}',fontsize=23)
+        ax.set_title(r'\textbf{'+title+'}',fontsize=23)
         plt.xticks(fontsize=23)
         plt.yticks(fontsize=23)
         ax.set_xscale('log')
@@ -626,7 +715,7 @@ class ExperimentalGraphs:
         sys.stdout.flush()
 
         #------------------------------------------------------------------------------------------
-        # Analisis de efectividad de OPTECOT.
+        # OPTECOT effectiveness analysis.
         #------------------------------------------------------------------------------------------
         print('    Generating figure of quality improvement curves and time saving curves (Figure 6 in the paper)... ',end='\r')
         sys.stdout.flush()
@@ -653,7 +742,7 @@ class ExperimentalGraphs:
         ax.grid(b=True,color='black',linestyle='--', linewidth=0.8,alpha=0.2,axis='both')
         plt.plot(list_train_time,quality_percentage,color=colors2[3],linewidth=1.2)
         plt.axhline(y=100,color='black', linestyle='--')
-        ax.set_title(r'\textbf{Turbines}',fontsize=15)
+        ax.set_title(r'\textbf{'+title+'}',fontsize=15)
         ax.set_ylabel(r"\textbf{QI}",fontsize=15)
         plt.yticks(fontsize=15)
         ax.set_xscale('log')
@@ -714,16 +803,78 @@ class ExperimentalGraphs:
         print(colored('Results drawn.','light_yellow',attrs=["bold"]))
         sys.stdout.flush()
 
-        
-
-
-
+    
 class OPTECOT:
 
-    def __init__(self,popsize,xdim,max_time,theta0,theta1,objective_min,objective_function,set_solutions,scaled_solution_transformer,
-                 alpha=0.95,beta=5,kappa=3,min_sample_size=10,perc_cost=0.25,
-                 customized_df_acc_time=None,auxiliary_data_path=None,data_path=None,figure_path=None,list_costs=None):
+    '''
+    This is the main class of the `MonoObjective_OPTECOT.py` library. It brings together the main methods that define the OPTECOT 
+    heuristic for mono-objective problems. The methods implement bisection, the procedure that tracks the optimal cost during 
+    the execution of the Rank-Based Evolutionary Algortihm (RBEA), and the use of either an approximate function with a specific 
+    cost or OPTECOT during the execution of the CMA-ES algorithm. 
+    '''
+
+    def __init__(self,popsize,xdim,xbounds,max_time,theta0,theta1,objective_min,objective_function,
+                 alpha=0.95,beta=5,kappa=3,min_sample_size=10,perc_cost=0.25,customized_paths=[None,None,None],customized_list_costs=None):
         
+        '''         
+        To use this this library it is required the definition of the following parameters and functions:
+        
+        Parameters
+        ==========
+
+        Compulsory
+        ----------
+
+        `popsize`: Population size to be considered in the RBEA (CMA-ES). \n
+        `xdim`: The dimension of a solution to the optimization problem. \n
+        `xbounds`: A matrix (list of lists) storing by rows the bounds (in case of continuous component) or explicit values (in case of discrete 
+        component) that can take each component that forms a random solutions of the problem to be optimized. For instance, if we have a problem
+        with `xdim=3` where the first componen is continuos variable that takes values in [0,10] and the second and therd components are discrete 
+        variables which can take the values {1,2,3} or {10,11,...,20}, respectively, `xbounds` will be defined as follows::
+
+            xbound=[[0,10], # List with lower and upper bound of the first continuous component
+                    [1,2,3], # List with all possible values that can take the second discrete component
+                    list(range(10,21)) # List with all possible values that can take the therd discrete component
+                    ] 
+
+        `max_time`: Maximum time to execute optimization algortihm (CMA-ES). \n
+        `theta0`: Value of the theta parameter associated with the minimum cost of the objective function.\n
+        `theta1`: Value of the theta parameter associated with the maximum cost of the objective function (original value of the parameter).\n
+        `objective_min`: True or False if the optimization problem is a minimization or maximization problem, respectively.\n
+
+        Optional
+        --------
+
+        `alpha`: Accuracy threshold for the optimal approximation (by default 0.95).\n
+        `beta`: Number of variances considered to calculate the confidence interval (by default 5).\n
+        `kappa`: Number of previous optimal evaluation costs to be compared to assess heuristic interruption (by default 3).\n
+        `min_sample_size`: Minimum value proposed to define the size of the sample of solutions from a population to be 
+        considered for estimating the optimal cost using the bisection method (by default 10).\n
+        `perc_cost`: Percentage of the total execution time (`max_time`) that we are willing to allow for the application of 
+        the bisection in the worst-case scenario (by default 0.25). \n 
+        `customized_paths`: List with three paths. The first one the path to save auxiliary data, the second one the path to
+        save main data, and the third one the path to save figures. By default a folder called `results` will be created in the same path 
+        where this file `MonoObjective_OPTECOT.py` is located, and three paths by default will be `.../results/auxiliary_data`, 
+        `.../results/data` and ``.../results/figures`` , respectively. If you wish to modify any of the default paths, you must indicate all 
+        three paths (no path can be set to `None`). In this case, the parameter `customized_list_costs` must also be filled in. The 
+        modification of the default value of the parameter `customized_paths` will be done when the data bases are already available, which are obtained 
+        after initializing the OPTECOT class for the first time and having executed the methods `execute_CMAES_with_approximations` and `execute_CMAES_with_OPTECOT` 
+        to obtain the necessary data to construct the graphs of interest.\n
+        `customized_list_costs`: This parameter must be specified when the default paths are modified (parameter `customized_paths`). It is 
+        a list of cost values to be plotted on the quality curve graph associated with the constant evaluation cost analysis.
+
+
+        Function
+        ========
+        `objective_function`: A function that implements the objective function of the optimization problem. It must have two arguments, 
+        `solution` and `theta`. The first one is a list that represents a candidate solution, and the second one is the parameter of the objective function 
+        that allows us to control its cost. In addition, it must return the evaluation `score` of the solution. The skeleton of the structure
+        would be as follows::
+        
+            def objective_function(solution,theta=theta1):
+                ...
+            return score
+        '''
     
         print('\nCreating an instance of OPTECOT:')
         sys.stdout.flush()
@@ -738,47 +889,91 @@ class OPTECOT:
         self.theta1=theta1
         self.objective_min=objective_min
         self.objective_function=objective_function
-        self.scaled_solution_transformer=scaled_solution_transformer
         self.alpha=alpha
         self.beta=beta
         self.kappa=kappa
         self.min_sample_size=min_sample_size
         self.perc_cost=perc_cost
 
-        if auxiliary_data_path== None:
+        if customized_paths[0]== None:
             self.auxiliary_data_path=os.path.abspath(__file__).split('/')[-2]+'/results/auxiliary_data'
-            # os.makedirs(self.auxiliary_data_path)
+            os.makedirs(self.auxiliary_data_path)
         else:
-            self.auxiliary_data_path=auxiliary_data_path
+            self.auxiliary_data_path=customized_paths[0]
 
-        if data_path== None:
+        if customized_paths[1]== None:
             self.data_path=os.path.abspath(__file__).split('/')[-2]+'/results/data'
-            # os.makedirs(self.data_path)
+            os.makedirs(self.data_path)
         else:
-            self.data_path=data_path
+            self.data_path=customized_paths[1]
 
-        if figure_path== None:
+        if customized_paths[2]== None:
             self.figure_path=os.path.abspath(__file__).split('/')[-2]+'/results/figures'
-            # os.makedirs(self.figure_path)
+            os.makedirs(self.figure_path)
         else:
-            self.figure_path=figure_path
+            self.figure_path=customized_paths[2]
+
+        # Implement scaled solution transformer function.
+        def scaled_solution_transformer(scaled_x):
+            '''Transform the scaled values of a solution to the real values.'''
+
+            # To transform contunuous parameters.
+            def transform_continuous(scaled_value,bounds):
+                return scaled_value*(bounds[1]-bounds[0])+bounds[0]
+
+            # To transform discrete parameters.
+            def transform_discrete(scaled_value,possible_values):
+                discretization=np.arange(0,1+1/len(possible_values),1/len(possible_values))
+                detection_list=discretization>scaled_value
+                return possible_values[list(detection_list).index(True)-1]
+            
+            real_x=[]
+            for i in range(len(xbounds)):
+                bounds=xbounds[i]
+                if len(bounds)>2:
+                    real_x.append(transform_discrete(scaled_x[i],bounds))
+                else:
+                    real_x.append(transform_continuous(scaled_x[i],bounds))
+
+            return real_x
+        self.scaled_solution_transformer=scaled_solution_transformer
+
 
         print('    Setting explicitly indicated parameters'+ colored('    DONE','light_cyan'))
         print('    Computing |S| and t^{period}... ',end='\r')
         sys.stdout.flush()
 
         # Compute the rest of arguments using given data.
-        if customized_df_acc_time is not None: # ESTE IF Y ELSE ES PROVISIONAL (puedo poner algo asi tb, pero lo definitivo de momento seria solo lo del else)
-            df_acc_time=customized_df_acc_time
-        else:
-            df_acc_time=AuxiliaryFunctions.extract_info_evaluating_set_with_equidistant_accuracies(set_solutions,objective_function,theta0,theta1,self.auxiliary_data_path)
+        if customized_paths!= [None,None,None]:
+            df_acc_time=pd.read_csv(customized_paths[0]+'/df_acc_time.csv',index_col=0)
+            self.list_costs=customized_list_costs
+
+
+        else: 
+            def generate_random_solutions(n_sample=100):   
+                '''Create a random set of solutions.'''
+                    
+                # List of seeds.
+                list_seeds=range(0,n_sample)
+
+                # Generate set of solutions.
+                set_solutions=[]
+                for seed in list_seeds:
+                    np.random.seed(seed)
+                    solution=[]
+                    for bounds in xbounds:
+                        if len(bounds)>2:
+                            solution.append(np.random.choice(bounds))
+                        else:
+                            solution.append(np.random.uniform(bounds[0], bounds[1]))
+                    set_solutions.append(solution)
+
+                return set_solutions
         
-        if list_costs is not None:
-            self.list_costs=list_costs
-        
+            df_acc_time=AuxiliaryFunctions.extract_info_evaluating_set_with_equidistant_accuracies(generate_random_solutions(),objective_function,theta0,theta1,self.auxiliary_data_path)
         
         self.interpolation_acc=list(df_acc_time['accuracy'])
-        self.interpolation_time=list(df_acc_time['cost_per_eval'])
+        self.interpolation_time=list(df_acc_time['time_per_eval'])
         self.lower_time=min(self.interpolation_time)
         self.upper_time=max(self.interpolation_time)
 
@@ -793,18 +988,20 @@ class OPTECOT:
 
     def evaluate_population(self,objective_function,population,accuracy,count_time_acc=True,count_time_gen=False,readjustment=False):
         '''
-        Generate a list of scores associated with each design in the population.
+        Generate a list of scores associated with each solution in the population.
 
         Parameters
         ==========
-        population: List of solutions forming the population.
-        accuracy: Accuracy set as optimal in the previous population.
-        count_time_acc: True or False if you want to add or not respectively the evaluation time as additional time to adjust the accuracy.
-        count_time_gen: True or False if you want to add or not respectively the evaluation time as natural time for the population evaluation.
+        `objective_function`: Funtion with the objective function implementation.\n
+        `population`: List of solutions forming the population.\n
+        `accuracy`: The optimal accuracy of the parameter `theta` set as optimal in the previous population.\n
+        `count_time_acc`: True or False if you want to add or not respectively the evaluation time as additional time to adjust the accuracy.\n
+        `count_time_gen`: True or False if you want to add or not respectively the evaluation time as natural time for the population evaluation.\n
+        `readjustment`: True or False if the `accuracy` provided has been obtained after applying bisection on the current population or has been derived from the previous population, respectively. \n
 
         Return
         ======
-        list_scores: List with the scores associated to each solution that forms the population.
+        `list_scores`: List with the scores associated to each solution that forms the population.
         '''
 
         # Obtain scores and times per evaluation.
@@ -889,21 +1086,21 @@ class OPTECOT:
 
     def execute_OPTECOT(self,gen,acc,population,train_seed,list_accuracies,list_variances):
         '''
-        Running heuristics during the training process.
+        Running OPTECOT heuristics during the training process.
 
         Parameters
         ==========
-        gen: Generation/population number in the CMA-ES algorithm.
-        acc: Accuracy associated with the previous generation.
-        population: List of solutions forming the population.
-        train_seed: Training seed.
-        list_accuracies: List with the optimal accuracies of the previous populations.
-        list_variances: List with the variances of the scores of the previous populations.
+        `gen`: Generation/population number in the RBEA algorithm.\n
+        `acc`: Accuracy of `theta` associated with the previous generation.\n
+        `population`: List of solutions forming the population.\n
+        `train_seed`: Training seed.\n
+        `list_accuracies`: List with the optimal accuracies of the previous populations.\n
+        `list_variances`: List with the variances of the scores of the previous populations.\n
 
         Returns
         =======
-        acc: Accuracy value selected as optimal.
-        time_best_acc: Evaluation time consumed in the last iteration of the bisection method.
+        `acc`: Accuracy value of `theta` selected as optimal.\n
+        `time_best_acc`: Evaluation time consumed in the last iteration of the bisection method.
         '''
 
         time_best_acc=0
@@ -945,10 +1142,9 @@ class OPTECOT:
 
         return acc,bool(time_best_acc)
     
-    # Como resolver el problema con un RBEA (en este caso CMA-ES) usando una funcion objetivo 
-    # aproximada definida con un valor del parametro theta asociado a una precision concreta 
+
     def execute_CMAES_with_approximation(self,cost,seed_index,seed,n_seeds,accuracy,df):
-        '''Run the CMA-ES algorithm with specific seed using approximate objective function defined by specified theta accuracy value.'''
+        '''Execute the CMA-ES algorithm with specific seed using approximate objective function defined by specified theta accuracy value.'''
 
         # Initialize CMA-ES.
         np.random.seed(seed)
@@ -995,6 +1191,17 @@ class OPTECOT:
             n_gen+=1
 
     def execute_CMAES_with_approximations(self,n_seeds,list_costs):
+        '''
+        Execute the CMA-ES algorithm with different seeds using approximate objective functions of different constant costs.
+
+        Parameters
+        ==========
+        `n_seeds`: Number of times to run the optimization algorithm using different seeds in each run but the same approximate 
+        objective function with a given evaluation cost.\n
+        `list_cost`: List of the constant evaluation cost to be considered for the approximate objective function. Each component on the
+        list will be an evaluation cost defined in [0,1], where the approximation of cost 1 represents the original objective function.
+
+        '''
 
         self.list_costs=list_costs
 
@@ -1024,11 +1231,11 @@ class OPTECOT:
         sys.stdout.flush()
         print('\n')
 
-
-
-    # Como resolvemos el problema con un RBEA (en este caso CMA-ES) aplicando el heuristico OPTECOT
     def execute_CMAES_with_OPTECOT(self,n_seeds):
-        '''Run the CMA-ES algorithm with specific seed applying OPTECOT.'''
+        '''
+        Execute the CMA-ES algorithm with different seeds applying OPTECOT. The unique parameter `n_seeds` represents the number of times 
+        to be executed the optimization algorithms using different seeds.
+        '''
 
         print("Executing CMA-ES appliying OPTECOT:")
         sys.stdout.flush()
@@ -1047,7 +1254,6 @@ class OPTECOT:
             # Initialize CMA-ES.
             np.random.seed(seed)
             es = cma.CMAEvolutionStrategy(np.random.random(self.xdim), 0.33,inopts={'bounds': [0, 1],'seed':seed,'popsize':self.popsize,'verbose':-9})
-
 
             # Until the maximum time is exhausted continue with CMA-ES execution and stored data of interest per population.
             n_gen=0
@@ -1073,7 +1279,6 @@ class OPTECOT:
                     list_accuracies=list(df_seed[5])
                     list_variances=list(df_seed[6])
 
-
                 accuracy,readjustment=self.execute_OPTECOT(n_gen,accuracy,list_turb_params,seed,list_accuracies,list_variances)
 
                 # Evaluate population with the optimal accuracy.
@@ -1081,7 +1286,6 @@ class OPTECOT:
 
                 if self.objective_min==False:
                     list_scores=[-score for score in list_scores]
-
 
                 # To build the following population.
                 es.tell(solutions, list_scores)
