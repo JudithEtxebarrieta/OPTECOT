@@ -2,16 +2,12 @@
 #==================================================================================================
 # LIBRARIES
 #==================================================================================================
-import pandas as pd
 import numpy as np
-from termcolor import colored
-from tqdm import tqdm
 from MonoObjective_OPTECOT import OPTECOT, ExperimentalGraphs
 
 import os
 import sys
 sys.path.append("OptimizationAlgorithms_KONFLOT/packages")
-
 import turbine_classes
 import MathTools as mt
 
@@ -94,9 +90,8 @@ def fitness_function(turb_params,theta=100):
 #==================================================================================================
 # EXAMPLE OF USE OF THE LIBRARY
 #==================================================================================================
-
 #--------------------------------------------------------------------------------------------------
-# Using OPTECOT for the first time.
+# To reproduce experimental analysis carried out in the paper.
 #--------------------------------------------------------------------------------------------------
 # Initialize OPTECOT class.
 optecot=OPTECOT(popsize=popsize,
@@ -114,27 +109,27 @@ optecot=OPTECOT(popsize=popsize,
                 perc_cost=perc_cost
                 )
 
-# Execute the CMA-ES algorithm with different seeds using approximate objective functions of different constant costs.
-optecot.execute_CMAES_with_approximations(100,[1.0,0.78,0.56,0.33,0.22,0])
+# Execute the CMA-ES algorithm with different seeds using approximate objective functions of different 
+# constant costs and save data of interest obtained during execution.
+optecot.execute_CMAES_with_approximations([1.0,0.78,0.56,0.33,0.22,0],n_seeds=100)
 
-# Execute the CMA-ES algorithm with different seeds applying OPTECOT.
-optecot.execute_CMAES_with_OPTECOT(100)
+# Execute the CMA-ES algorithm with different seeds applying OPTECOT and save data of interest obtained during execution.
+optecot.execute_CMAES_with_OPTECOT(n_seeds=100)
 
 # Draw results of the use of approximate objective functions to execute CMA-ES.
-ExperimentalGraphs.illustrate_approximate_objective_functions_use(optecot,'Turbines')   
+ExperimentalGraphs.illustrate_approximate_objective_functions_use(optecot,title='Turbines',initial_only=False,list_costs=[1.0,0.78,0.56,0.33,0.22,0])   
 
 # Draw results of appliying OPTECOT to execute CMA-ES.
-ExperimentalGraphs.illustrate_OPTECOT_application_results(optecot,'Turbines')
+ExperimentalGraphs.illustrate_OPTECOT_application_results(optecot,title='Turbines')
 
 #--------------------------------------------------------------------------------------------------
-# If you have already databases saved from other initialization of an OPTECOT class it is not
-# necessary to build again the databases to draw the graphs of interest.
+# To solve the optimization problem.
 #--------------------------------------------------------------------------------------------------
-# Initialize the class using the data stored in a previous initialization.
+# Initialize OPTECOT class.
 optecot=OPTECOT(popsize=popsize,
                 xdim=xdim,
                 xbounds=xbounds,
-                max_time=max_time,
+                max_time=5*60, # Only 5 minutes as example.
                 theta0=theta0,
                 theta1=theta1,
                 objective_min=False,
@@ -144,15 +139,22 @@ optecot=OPTECOT(popsize=popsize,
                 kappa=kappa,
                 min_sample_size=min_sample_size,
                 perc_cost=perc_cost,
-                customized_paths=['library_OPTECOT/results/auxiliary_data','library_OPTECOT/results/data','library_OPTECOT/results/figures'],
-                customized_list_costs=[1.0,0.78,0.56,0.33,0.22,0]
+                customized_paths=['library_OPTECOT/results/auxiliary_data','library_OPTECOT/results/data','library_OPTECOT/results/figures']
                 )
 
-# Draw results of the use of approximate objective functions to execute CMA-ES.
-ExperimentalGraphs.illustrate_approximate_objective_functions_use(optecot,'Turbines')   
+# Solve problem with CMA-ES using original objective function (equivalently using the approximation with evaluation cost 1).
+best_solution,score=optecot.execute_CMAES_with_approximations([1])
+print('Best solution: ',best_solution, '\nObjective value: ',score)
 
-# Draw results of appliying OPTECOT to execute CMA-ES.
-ExperimentalGraphs.illustrate_OPTECOT_application_results(optecot,'Turbines')
+# Solve problem with CMA-ES using approximate objective function of a predefined evaluation cost (e.g. 0.5).
+best_solution,score=optecot.execute_CMAES_with_approximations([0.5])
+print('Best solution: ',best_solution, '\nObjective value: ',score)
+
+# Solve problem with CMA-ES applying OPTECOT.
+best_solution,score=optecot.execute_CMAES_with_OPTECOT()
+print('Best solution: ',best_solution, '\nObjective value: ',score)
+
+
 
 
 

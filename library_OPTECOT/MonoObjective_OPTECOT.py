@@ -1,9 +1,128 @@
 
 
 '''
-FALTA COMPLETARLO MEJOR EXPLICANDO PASA O PASO COMO USAR LA LIBRERIA BREVEMENTE
+MonoObjective_OPTECOT
+=====================
+This library implements the OPTECOT (Optimal Evaluation Cost Tracking) heuristic defined in the paper 
+"Speeding-up Evolutionary Algorithms to solve Black-Box Optimization Problems". OPTECOT is designed to 
+speed up evolutionary algorithms based on rankings when they try to solve a mono-objective black-box 
+optimization problem. In these problems, the cost of the objective function is so large that the time
+(computational budget) available for its resolution is insufficient.
 
-Library to apply OPTECOT to mono-objective optimization problems.
+Content
+-------
+The library is formed by three classes:
+
+`OPTECOT`: This is the main class. It brings together the methods that implements the OPTECOT 
+heuristic for mono-objective problems. Theoretically, the heuristic is designed to be applied on any
+Rank-Based Evolutionary Algorithm (RBEA), but this class is implemented to apply OPTECOT with the CMA-ES 
+(Covariance Matrix Adaptation Evolution Strategy) optimization algorithm. \n
+`ExperimentalGraphs`: The methods of this class are designed to construct the graphs that appear 
+in the paper. They allow to compare the results obtained during the execution process of the CMA-ES algorithm 
+using the original objective function versus the use of approximate objective functions either with constant evaluation
+cost or tracked by OPTECOT. In addition, before proceeding to the execution of the optimization algorithm, 
+it is possible to construct a graph that allows assessing the possible effectiveness of the application
+of OPTECOT to solve the optimization problem.\n
+`AuxiliaryFunctions`: This class defines the auxiliary static methods to be used in the other classes. 
+
+How to use the library
+----------------------
+First, an instance of the OPTECOT class must be initialized by entering the values of the compulsory parameters: ::
+
+    # Import main class of the library.
+    from MonoObjective_OPTECOT import OPTECOT
+
+    # Initialize an instance of the class.
+    optecot=OPTECOT(popsize,xdim,xbounds,max_time,theta0,theta1, objective_min, objective_function)
+
+Initializing the class for the first time takes some time, since in addition to setting the explicitly indicated parameters, 
+other parameters are also calculated from the given ones. Moreover, a directory is created to store the data of interest 
+obtained during this procedure. 
+
+Once the class instance is initialized, it is possible to solve the available optimization problem 
+using the CMA-ES algorithm with the original objective function, an approximate function with predefined evaluation cost or by 
+tracking the optimal evaluation cost of the approximation using OPTECOT: ::
+
+    # Solve problem with CMA-ES using original objective function 
+    # (equivalently using the approximation with evaluation cost 1).
+    best_solution,score=optecot.execute_CMAES_with_approximations([1])
+
+    # Solve problem with CMA-ES using approximate objective function of a predefined 
+    # evaluation cost (e.g. 0.5).
+    best_solution,score=optecot.execute_CMAES_with_approximations([0.5])
+
+    # Solve problem with CMA-ES applying OPTECOT.
+    best_solution,score=optecot.execute_CMAES_with_OPTECOT()
+
+When executing each of the above lines of code, the results `best_solution` and `score` are obtained. The first one is a list of size 
+`xdim` that represents the best solution found by the algorithm at time `max_time`. The second one instead is the objective value of that 
+solution obtained after evaluating it using the original objective function. In addition, for each solution of the problem (execution of 
+one of the above lines) a database is saved (in the directory created when initializing the class) with the relevant data obtained during 
+the execution of the CMA-ES algorithm.
+
+Apart from solving the optimization problem, it is also possible to execute the experiments and analyses carried 
+out in the paper on the selected problem. Three main experiments can be distinguished:
+
+1. Initial experiment: A set of 100 random solutions is evaluated using approximations of the objective function of different costs. The 
+results are shown graphically, where the evaluation times and the ranking preservation of the approximations are represents allowing its comparison.
+
+2. Trade-off analysis between the cost and accuracy of different approximations: The optimization algorithm is run using different 
+approximations. The quality of the solution obtained during the execution process with the use of each approximation is plotted in a graph. 
+This allows comparing the performance of the algorithm using different approximations and provides an intuition about the trade-off between 
+cost and accuracy during the execution. 
+
+3. Benefits of applying OPTECOT: The solution quality obtained during the process of running the optimization algorithm using the original 
+objective function is compared with that obtained by applying OPTECOT. In addition to constructing graphs comparing the online 
+solution quality curves, the behaviour of the optimal evaluation cost and the percentage of the original execution time used by OPTECOT to reach 
+the original solution quality are also plotted.
+
+To draw the graphs, you must first build the databases with the necessary data. In this step, two main requirements must be fulfilled. On the one
+hand, the optimization algorithm must be run with the original objective function to compare the results with the original situation. On the other
+hand, the experiments must be performed with more than one seed for the comparisons to be reliable. ::
+
+    # Execute the CMA-ES algorithm with different seeds (e.g 100) using approximate objective functions 
+    # of different constant costs (e.g. the costs in {1.0,0.8,0.6,0.4,0.2,0} being 1 always among them) 
+    # and save data of interest obtained during execution.
+    optecot.execute_CMAES_with_approximations([1.0,0.8,0.6,0.4,0.2,0],n_seeds=100)
+
+    # Execute the CMA-ES algorithm with different seeds (e.g. 100) applying OPTECOT and save data of 
+    # interest obtained during execution.
+    optecot.execute_CMAES_with_OPTECOT(n_seeds=100)
+
+With the necessary databases available, it is possible to construct the graphs: ::
+
+    # Draw graph associated with experiment 1 (for its execution is not necessary to execute 
+    # execute_CMAES_with_approximations method before).
+    ExperimentalGraphs.illustrate_approximate_objective_functions_use(optecot,title='Figure title')  
+
+    # Draw graph associated with experiments 1 and 2 (for its execution is necessary to execute 
+    # execute_CMAES_with_approximations method before).
+    ExperimentalGraphs.illustrate_approximate_objective_functions_use(optecot,title='Figure title',initial_only=False,list_cots=[1.0,0.8,0.6,0.4,0.2,0])  
+
+    # Draw graph associated with experiments 3 (for its execution is necessary to execute 
+    # execute_CMAES_with_OPTECOT method before).
+    ExperimentalGraphs.illustrate_OPTECOT_application_results(optecot,title='Figure title')
+
+In the case of having available the necessary databases to draw the graphs because of having previously executed an instance of the class, 
+it is not necessary to execute the methods `execute_CMAES_with_approximations` and `execute_CMAES_with_OPTECOT` again. It is enough to 
+re-initialize another instance of the class with the same parameters and manually enter the paths to the directory where the data is stored. ::
+
+    # Re-initialice another instance of the class.
+    optecot=OPTECOT(popsize,xdim,xbounds,max_time,theta0,theta1, objective_min, objective_function, 
+                    customized_paths=['auxiliary data path','data path','figure path'])
+    
+    
+    # Draw graph associated with experiments 1 and 2.
+    ExperimentalGraphs.illustrate_approximate_objective_functions_use(optecot,[1.0,0.8,0.6,0.4,0.2,0],'Figure title',initial_only=False)  
+
+    # Draw graph associated with experiments 3.
+    ExperimentalGraphs.illustrate_OPTECOT_application_results(optecot,'Figure title')
+
+This allows you to modify the graphs without having to run the CMA-ES again. For example, you could draw the graph associated to experiment 2 
+representing the curves of only some costs. ::
+
+    # Draw graph associated with experiment 2 using only some cots (being 1 always among the selected ones).
+    ExperimentalGraphs.illustrate_approximate_objective_functions_use(optecot,title='Figure title',initial_only=False,list_cots=[1.0,0.6,0.2]) 
 '''
 #==================================================================================================
 # LIBRARIES
@@ -23,7 +142,6 @@ import plotly.express as px
 from matplotlib.patches import Rectangle
 import sys
 import os
-from tqdm import tqdm
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -387,7 +505,7 @@ class ExperimentalGraphs:
         plt.plot(list_train_time, all_mean, linewidth=1,label=r'\textbf{OPTECOT}',color=colors[1],marker=list_markers[1],markevery=0.1)
 
     @staticmethod
-    def illustrate_approximate_objective_functions_use(optecot,title='Example'):
+    def illustrate_approximate_objective_functions_use(optecot,list_costs=None,title='Example',initial_only=True):
 
         '''
         Generate the figures of the initial experimentation in the paper:
@@ -404,7 +522,7 @@ class ExperimentalGraphs:
         df=pd.read_csv(optecot.auxiliary_data_path+'/df_info_set.csv',index_col=0)
 
         #------------------------------------------------------------------------------------------
-        # Auciliary functions.
+        # Auxiliary functions.
         #------------------------------------------------------------------------------------------
         # Convert the text of graphics to latex bold text.
         def convert_textbf(x):
@@ -559,64 +677,66 @@ class ExperimentalGraphs:
         # Construct graphs associated with the RBEA run using different approximations with constant 
         # accuracy of theta during the whole execution (Figure 4 in the paper).
         #------------------------------------------------------------------------------------------
-        print('    Generating figure of the solution quality curves associated with the use of approximate objective functions with constant cost (Figure 4 in the paper)...',end='\r')
-        sys.stdout.flush()
 
-        # Define list with limits of training times to be drawn.
-        df_train_cost_min=pd.read_csv(optecot.data_path+'/df_ConstantAnalysis_cost'+'{:.02f}'.format(min(optecot.list_costs))+".csv", index_col=0)
-        df_train_cost_max=pd.read_csv(optecot.data_path+'/df_ConstantAnalysis_cost'+'{:.02f}'.format(max(optecot.list_costs))+".csv", index_col=0)
-        min_time=max(df_train_cost_max.groupby('seed')['elapsed_time'].min())
-        split_time=max(df_train_cost_min.groupby('seed')['elapsed_time'].min())
-        list_train_times=np.arange(min_time,optecot.max_time,split_time)
+        if initial_only==False:
+            print('    Generating figure of the solution quality curves associated with the use of approximate objective functions with constant cost (Figure 4 in the paper)...',end='\r')
+            sys.stdout.flush()
 
-        # Build and save graphs.
-        plt.figure(figsize=[7,6])
-        plt.rc('font', family='serif')
-        plt.rc('text', usetex=True)
-        plt.rcParams['text.latex.preamble'] = r'\boldmath'
-        plt.subplots_adjust(left=0.18,bottom=0.11,right=0.85,top=0.88,wspace=0.3,hspace=0.2)
-        ax=plt.subplot(111)
+            # Define list with limits of training times to be drawn.
+            df_train_cost_min=pd.read_csv(optecot.data_path+'/df_ConstantAnalysis_cost'+'{:.02f}'.format(min(list_costs))+".csv", index_col=0)
+            df_train_cost_max=pd.read_csv(optecot.data_path+'/df_ConstantAnalysis_cost'+'{:.02f}'.format(max(list_costs))+".csv", index_col=0)
+            min_time=max(df_train_cost_max.groupby('seed')['elapsed_time'].min())
+            split_time=max(df_train_cost_min.groupby('seed')['elapsed_time'].min())
+            list_train_times=np.arange(min_time,optecot.max_time,split_time)
 
-        colors=px.colors.qualitative.D3+['#FFB90F']
-        list_markers = ["o", "^", "s", "P", "v", 'D', "x", "1", "|", "+"]
+            # Build and save graphs.
+            plt.figure(figsize=[7,6])
+            plt.rc('font', family='serif')
+            plt.rc('text', usetex=True)
+            plt.rcParams['text.latex.preamble'] = r'\boldmath'
+            plt.subplots_adjust(left=0.18,bottom=0.11,right=0.85,top=0.88,wspace=0.3,hspace=0.2)
+            ax=plt.subplot(111)
 
-        ax.grid(b=True,color='black',linestyle='--', linewidth=0.8,alpha=0.2,axis='both')
-        curve=0
-        for cost in optecot.list_costs:
+            colors=px.colors.qualitative.D3+['#FFB90F']
+            list_markers = ["o", "^", "s", "P", "v", 'D', "x", "1", "|", "+"]
 
-            # Read database.
-            df_train_cost=pd.read_csv(optecot.data_path+'/df_ConstantAnalysis_cost'+'{:.02f}'.format(cost)+".csv", index_col=0)
+            ax.grid(b=True,color='black',linestyle='--', linewidth=0.8,alpha=0.2,axis='both')
+            curve=0
+            for cost in list_costs:
 
-            # Extract relevant information from the database.
-            all_mean_scores,all_q05_scores,all_q95_scores =ExperimentalGraphs.train_data_to_figure_data(df_train_cost,list_train_times)
+                # Read database.
+                df_train_cost=pd.read_csv(optecot.data_path+'/df_ConstantAnalysis_cost'+'{:.02f}'.format(cost)+".csv", index_col=0)
 
-            # Set maximum solution quality.
-            if cost==max(optecot.list_costs):
-                score_limit=all_mean_scores[-1]
+                # Extract relevant information from the database.
+                all_mean_scores,all_q05_scores,all_q95_scores =ExperimentalGraphs.train_data_to_figure_data(df_train_cost,list_train_times)
 
-            # Draw curve.
-            ax.fill_between(list_train_times,all_q05_scores,all_q95_scores, alpha=.2, linewidth=0,color=colors[curve])
-            plt.plot(list_train_times, all_mean_scores, linewidth=1,label=r'\textbf{'+str(cost)+'}',color=colors[curve],marker=list_markers[curve],markevery=0.1)
-            curve+=1
+                # Set maximum solution quality.
+                if cost==max(list_costs):
+                    score_limit=all_mean_scores[-1]
 
-        ax.set_ylim([0.42,0.55])
-        ax.set_xlabel("$t$",fontsize=23)
-        ax.set_ylabel(r"\textbf{Solution quality}",fontsize=23)
-        ax.set_title(r'\textbf{'+title+'}',fontsize=23)
-        leg=ax.legend(title="$c$",fontsize=16.5,title_fontsize=16.5,labelspacing=0.1,handlelength=0.8,loc='upper left')
-        plt.axhline(y=score_limit,color='black', linestyle='--')
-        ax.set_xscale('log')
-        plt.xticks(fontsize=23)
-        plt.yticks(fontsize=23)
+                # Draw curve.
+                ax.fill_between(list_train_times,all_q05_scores,all_q95_scores, alpha=.2, linewidth=0,color=colors[curve])
+                plt.plot(list_train_times, all_mean_scores, linewidth=1,label=r'\textbf{'+str(cost)+'}',color=colors[curve],marker=list_markers[curve],markevery=0.1)
+                curve+=1
 
-        plt.savefig(optecot.figure_path+'/ApproximateObjectiveFunctions_ConstantAnalysis.png')
-        plt.savefig(optecot.figure_path+'/ApproximateObjectiveFunctions_ConstantAnalysis.pdf')
+            ax.set_ylim([0.42,0.55])
+            ax.set_xlabel("$t$",fontsize=23)
+            ax.set_ylabel(r"\textbf{Solution quality}",fontsize=23)
+            ax.set_title(r'\textbf{'+title+'}',fontsize=23)
+            leg=ax.legend(title="$c$",fontsize=16.5,title_fontsize=16.5,labelspacing=0.1,handlelength=0.8,loc='upper left')
+            plt.axhline(y=score_limit,color='black', linestyle='--')
+            ax.set_xscale('log')
+            plt.xticks(fontsize=23)
+            plt.yticks(fontsize=23)
 
-        plt.close()
+            plt.savefig(optecot.figure_path+'/ApproximateObjectiveFunctions_ConstantAnalysis.png')
+            plt.savefig(optecot.figure_path+'/ApproximateObjectiveFunctions_ConstantAnalysis.pdf')
 
-        print('    Generating figure of the solution quality curves associated with the use of approximate objective functions with constant cost (Figure 4 in the paper)'+colored('    DONE','light_cyan'))
-        print(colored('Results drawn.','light_yellow',attrs=["bold"]))
-        sys.stdout.flush()
+            plt.close()
+
+            print('    Generating figure of the solution quality curves associated with the use of approximate objective functions with constant cost (Figure 4 in the paper)'+colored('    DONE','light_cyan'))
+            print(colored('Results drawn.','light_yellow',attrs=["bold"]))
+            sys.stdout.flush()
 
     @staticmethod
     def illustrate_OPTECOT_application_results(optecot,title='Example'):
@@ -641,7 +761,7 @@ class ExperimentalGraphs:
 
         # Define training times to be drawn.
         df_max_acc=pd.read_csv(optecot.data_path+'/df_ConstantAnalysis_cost1.00.csv', index_col=0)
-        df_optimal_acc=pd.read_csv(optecot.data_path+'/df_OPTECOT.csv', index_col=0)
+        df_optimal_acc=pd.read_csv(optecot.data_path+'/df_OPTECOT_Analysis.csv', index_col=0)
         min_time_acc_max=max(df_max_acc.groupby('seed')['elapsed_time'].min())
         min_time_h=max(df_optimal_acc.groupby('seed')['elapsed_time'].min())
 
@@ -707,8 +827,8 @@ class ExperimentalGraphs:
         ax.set_xscale('log')
         ax.set_ylim([0,1])
 
-        plt.savefig(optecot.figure_path+'/OPTECOT_QualityCurve+OptimalCostbehaviour.png')
-        plt.savefig(optecot.figure_path+'/OPTECOT_QualityCurve+OptimalCostbehaviour.pdf')
+        plt.savefig(optecot.figure_path+'/OPTECOT_QualityCurve+OptimalCostBehaviour.png')
+        plt.savefig(optecot.figure_path+'/OPTECOT_QualityCurve+OptimalCostBehaviour.pdf')
         plt.close()
 
         print('    Generating figure of solution quality curves (Figure 5 in the paper) and optimal cost behavior (Figure 7 in the paper)'+colored('    DONE','light_cyan'))
@@ -814,10 +934,10 @@ class OPTECOT:
     '''
 
     def __init__(self,popsize,xdim,xbounds,max_time,theta0,theta1,objective_min,objective_function,
-                 alpha=0.95,beta=5,kappa=3,min_sample_size=10,perc_cost=0.25,customized_paths=[None,None,None],customized_list_costs=None):
+                 alpha=0.95,beta=5,kappa=3,min_sample_size=10,perc_cost=0.25,customized_paths=[None,None,None]):
         
         '''         
-        To use this this library it is required the definition of the following parameters and functions:
+        To use this library it is required the definition of the following parameters and functions:
         
         Parameters
         ==========
@@ -856,13 +976,9 @@ class OPTECOT:
         save main data, and the third one the path to save figures. By default a folder called `results` will be created in the same path 
         where this file `MonoObjective_OPTECOT.py` is located, and three paths by default will be `.../results/auxiliary_data`, 
         `.../results/data` and ``.../results/figures`` , respectively. If you wish to modify any of the default paths, you must indicate all 
-        three paths (no path can be set to `None`). In this case, the parameter `customized_list_costs` must also be filled in. The 
-        modification of the default value of the parameter `customized_paths` will be done when the data bases are already available, which are obtained 
-        after initializing the OPTECOT class for the first time and having executed the methods `execute_CMAES_with_approximations` and `execute_CMAES_with_OPTECOT` 
-        to obtain the necessary data to construct the graphs of interest.\n
-        `customized_list_costs`: This parameter must be specified when the default paths are modified (parameter `customized_paths`). It is 
-        a list of cost values to be plotted on the quality curve graph associated with the constant evaluation cost analysis.
-
+        three paths (no path can be set to `None`). The modification of the default value of the parameter `customized_paths` will be done when
+        the data bases are already available, which are obtained after initializing the OPTECOT class for the first time and having executed the
+        methods `execute_CMAES_with_approximations` and `execute_CMAES_with_OPTECOT` to obtain the necessary data to construct the graphs of interest.\n
 
         Function
         ========
@@ -946,11 +1062,10 @@ class OPTECOT:
         # Compute the rest of arguments using given data.
         if customized_paths!= [None,None,None]:
             df_acc_time=pd.read_csv(customized_paths[0]+'/df_acc_time.csv',index_col=0)
-            self.list_costs=customized_list_costs
 
 
         else: 
-            def generate_random_solutions(n_sample=100):   
+            def generate_random_solutions(n_sample=2):   
                 '''Create a random set of solutions.'''
                     
                 # List of seeds.
@@ -1014,13 +1129,21 @@ class OPTECOT:
             list_scores.append(score)
 
             if self.print_message is not False:
+                if self.unique_seed:
+                    if elapsed_time+self.time_acc+self.time_proc>self.max_time:
+                        print("Executing CMA-ES appliying OPTECOT... "+colored('100.00%','light_cyan'),end='\r')
+                        sys.stdout.flush()
+                    else:
+                        print("Executing CMA-ES appliying OPTECOT... "+colored('{:.2f}'.format(((elapsed_time+self.time_acc+self.time_proc)/self.max_time)*100)+'%','light_cyan'),end='\r')
+                        sys.stdout.flush()
 
-                if elapsed_time+self.time_acc+self.time_proc>self.max_time:
-                    print("    Processing execution with seed "+str(self.print_message-1)+'...   '+colored('100.00%','light_cyan'),end='\r')
-                    sys.stdout.flush()
                 else:
-                    print("    Processing execution with seed "+str(self.print_message-1)+'...   '+colored('{:.2f}'.format(((elapsed_time+self.time_acc+self.time_proc)/self.max_time)*100)+'%','light_cyan'),end='\r')
-                    sys.stdout.flush()
+                    if elapsed_time+self.time_acc+self.time_proc>self.max_time:
+                        print("    Processing execution with seed "+str(self.print_message-1)+'...   '+colored('100.00%','light_cyan'),end='\r')
+                        sys.stdout.flush()
+                    else:
+                        print("    Processing execution with seed "+str(self.print_message-1)+'...   '+colored('{:.2f}'.format(((elapsed_time+self.time_acc+self.time_proc)/self.max_time)*100)+'%','light_cyan'),end='\r')
+                        sys.stdout.flush()
 
         # Update time counters.
         if count_time_acc and not count_time_gen:
@@ -1169,12 +1292,21 @@ class OPTECOT:
                 score=self.objective_function(turb_params, theta=int(self.theta1*accuracy))
                 eval_time+=time.time()-t
 
-                if eval_time>self.max_time:
-                    print("    Processing execution with approximation of cost "+str(cost)+'...  '+colored('100.00% of the '+str(seed_index)+'/'+str(n_seeds)+' seed executed','light_cyan'),end='\r')
-                    sys.stdout.flush()
-                else: 
-                    print("    Processing execution with approximation of cost "+str(cost)+'...   '+colored('{:.2f}'.format(round((eval_time/self.max_time)*100,2))+'% of the '+str(seed_index)+'/'+str(n_seeds)+' seed executed','light_cyan'),end='\r')
-                    sys.stdout.flush()
+                if n_seeds==1:
+                    if eval_time>self.max_time:
+                        print("Executing CMA-ES using approximate objective function of cost "+str(cost)+'...  '+colored('100.00%' ,'light_cyan'),end='\r')
+                        sys.stdout.flush()
+                    else: 
+                        print("Executing CMA-ES using approximate objective function of cost "+str(cost)+'...   '+colored('{:.2f}'.format(round((eval_time/self.max_time)*100,2))+'%','light_cyan'),end='\r')
+                        sys.stdout.flush()
+                    
+                else:
+                    if eval_time>self.max_time:
+                        print("    Processing execution with approximation of cost "+str(cost)+'...  '+colored('100.00% of the '+str(seed_index)+'/'+str(n_seeds)+' seed executed','light_cyan'),end='\r')
+                        sys.stdout.flush()
+                    else: 
+                        print("    Processing execution with approximation of cost "+str(cost)+'...   '+colored('{:.2f}'.format(round((eval_time/self.max_time)*100,2))+'% of the '+str(seed_index)+'/'+str(n_seeds)+' seed executed','light_cyan'),end='\r')
+                        sys.stdout.flush()
 
                 if self.objective_min:
                     list_scores.append(score)
@@ -1185,60 +1317,90 @@ class OPTECOT:
             es.tell(solutions, list_scores)
 
             # Accumulate data of interest.
-            test_score=self.objective_function(self.scaled_solution_transformer(es.result.xbest))
-            df.append([accuracy,seed,n_gen,test_score,eval_time])
+            best_solution=self.scaled_solution_transformer(es.result.xbest)
+            test_score=self.objective_function(best_solution)
+            if n_seeds==1:
+                df.append([accuracy,seed,n_gen,best_solution,test_score,eval_time])
+            else:
+                df.append([accuracy,seed,n_gen,test_score,eval_time])
+                
 
             n_gen+=1
 
-    def execute_CMAES_with_approximations(self,n_seeds,list_costs):
+    def execute_CMAES_with_approximations(self,list_costs,n_seeds=1):
         '''
         Execute the CMA-ES algorithm with different seeds using approximate objective functions of different constant costs.
 
         Parameters
         ==========
+        `list_costs`: List of the constant evaluation cost to be considered for the approximate objective function. Each component on the
+        list will be an evaluation cost defined in [0,1], where the approximation of cost 1 represents the original objective function.\n
         `n_seeds`: Number of times to run the optimization algorithm using different seeds in each run but the same approximate 
-        objective function with a given evaluation cost.\n
-        `list_cost`: List of the constant evaluation cost to be considered for the approximate objective function. Each component on the
-        list will be an evaluation cost defined in [0,1], where the approximation of cost 1 represents the original objective function.
+        objective function with a given evaluation cost.
 
         '''
-
-        self.list_costs=list_costs
-
-        list_seeds=range(2,2+n_seeds)
-        
-        list_acc=[]
-        for cost in list_costs:
-            acc,_=AuxiliaryFunctions.from_cost_to_theta(cost,self.theta0,self.theta1)
-            list_acc.append(round(float(acc),1))
-
-        print("Executing CMA-ES using approximate objective functions:")
-        df=[]
-        for i in range(len(list_acc)):
-            sys.stdout.flush()
+        if n_seeds==1:
+            # Initialize database and ejecute CMA-ES.
             df=[]
-            accuracy=list_acc[i]
-            for j in range(len(list_seeds)):
-                seed=list_seeds[j]
-                self.execute_CMAES_with_approximation(self.list_costs[i],j+1,seed,n_seeds,accuracy,df)
+            acc,_=AuxiliaryFunctions.from_cost_to_theta(list_costs[0],self.theta0,self.theta1)
+            self.execute_CMAES_with_approximation(list_costs[0],1,2,1,acc,df)
 
             # Save database.
-            df=pd.DataFrame(df,columns=['accuracy','seed','n_gen','score','elapsed_time'])
-            df.to_csv(self.data_path+'/df_ConstantAnalysis_cost'+'{:.02f}'.format(self.list_costs[i])+'.csv')
-            print("    Processing execution with approximation of cost "+str(self.list_costs[i])+colored('    DONE'+' '*29,'light_cyan'))
-            sys.stdout.flush()
-        print(colored('CMA-ES executed with all approximations.','light_yellow',attrs=["bold"]))
-        sys.stdout.flush()
-        print('\n')
+            df=pd.DataFrame(df,columns=['accuracy','seed','n_gen','xbest','score','elapsed_time'])
+            df.to_csv(self.data_path+'/df_Approximation_cost'+'{:.02f}'.format(list_costs[0])+'.csv')
 
-    def execute_CMAES_with_OPTECOT(self,n_seeds):
+            print("Executing CMA-ES using approximate objective function of cost "+str(list_costs[0])+colored('  DONE        ','light_cyan'))
+            print(colored('CMA-ES executed with the approximation and execution data saved.','light_yellow',attrs=["bold"]))
+            sys.stdout.flush()
+
+            # Return best solution and its objective value.
+            idx=df['score'].idxmax()
+            return df.iloc[idx]['xbest'], df.iloc[idx]['score']
+
+        else:
+
+            list_seeds=range(2,2+n_seeds)
+            
+            list_acc=[]
+            for cost in list_costs:
+                acc,_=AuxiliaryFunctions.from_cost_to_theta(cost,self.theta0,self.theta1)
+                list_acc.append(round(float(acc),1))
+
+            print("Executing CMA-ES using approximate objective functions:")
+            df=[]
+            for i in range(len(list_acc)):
+                sys.stdout.flush()
+                df=[]
+                accuracy=list_acc[i]
+                for j in range(len(list_seeds)):
+                    seed=list_seeds[j]
+                    self.execute_CMAES_with_approximation(list_costs[i],j+1,seed,n_seeds,accuracy,df)
+
+                # Save database.
+                df=pd.DataFrame(df,columns=['accuracy','seed','n_gen','score','elapsed_time'])
+                df.to_csv(self.data_path+'/df_ConstantAnalysis_cost'+'{:.02f}'.format(list_costs[i])+'.csv')
+                print("    Processing execution with approximation of cost "+str(list_costs[i])+colored('    DONE'+' '*29,'light_cyan'))
+                sys.stdout.flush()
+            print(colored('CMA-ES executed with all approximations.','light_yellow',attrs=["bold"]))
+            sys.stdout.flush()
+            print('\n')
+
+
+    def execute_CMAES_with_OPTECOT(self,n_seeds=1):
         '''
         Execute the CMA-ES algorithm with different seeds applying OPTECOT. The unique parameter `n_seeds` represents the number of times 
         to be executed the optimization algorithms using different seeds.
         '''
 
-        print("Executing CMA-ES appliying OPTECOT:")
-        sys.stdout.flush()
+        if n_seeds==1:
+            print("Executing CMA-ES appliying OPTECOT... ",end='\r')
+            sys.stdout.flush()
+            self.unique_seed=True
+                    
+        else:
+            print("Executing CMA-ES appliying OPTECOT:")
+            sys.stdout.flush()
+            self.unique_seed=False
 
         list_seeds=range(2,2+n_seeds,1) 
         df=[] 
@@ -1259,8 +1421,12 @@ class OPTECOT:
             n_gen=0
             while self.time_acc+self.time_proc<self.max_time:
 
-                print("    Processing execution with seed "+str(seed-1)+'...   '+colored('{:.2f}'.format(((self.time_acc+self.time_proc)/self.max_time)*100)+'%','light_cyan'),end='\r')
-                sys.stdout.flush()
+                if n_seeds==1:
+                    print("Executing CMA-ES appliying OPTECOT... "+colored('{:.2f}'.format(((self.time_acc+self.time_proc)/self.max_time)*100)+'%','light_cyan'),end='\r')
+                    sys.stdout.flush()
+                else:
+                    print("    Processing execution with seed "+str(seed-1)+'...   '+colored('{:.2f}'.format(((self.time_acc+self.time_proc)/self.max_time)*100)+'%','light_cyan'),end='\r')
+                    sys.stdout.flush()
 
                 # New population.
                 solutions = es.ask()
@@ -1291,18 +1457,37 @@ class OPTECOT:
                 es.tell(solutions, list_scores)
 
                 # Accumulate data of interest.
-                test_score= self.objective_function(self.scaled_solution_transformer(es.result.xbest))
-                df.append([seed,n_gen,test_score,readjustment,accuracy,np.var(list_scores),self.time_proc,self.time_acc,self.time_acc+self.time_proc])
+                best_solution=self.scaled_solution_transformer(es.result.xbest)
+                test_score= self.objective_function(best_solution)
+
+                if n_seeds==1:
+                    df.append([seed,n_gen,best_solution,test_score,readjustment,accuracy,np.var(list_scores),self.time_proc,self.time_acc,self.time_acc+self.time_proc])
+                else:
+                    df.append([seed,n_gen,test_score,readjustment,accuracy,np.var(list_scores),self.time_proc,self.time_acc,self.time_acc+self.time_proc])
 
                 n_gen+=1
 
-            print("    Processing execution with seed "+str(seed-1)+colored('    DONE       ','light_cyan'))
+            if n_seeds==1:
+                print("Executing CMA-ES appliying OPTECOT"+colored('    DONE   ','light_cyan'))
+                sys.stdout.flush()
+            else:
+                print("    Processing execution with seed "+str(seed-1)+colored('    DONE       ','light_cyan'))
+                sys.stdout.flush()
+
+        if n_seeds==1:
+            df=pd.DataFrame(df,columns=['seed','n_gen','xbest','score','readjustment','accuracy','variance','elapsed_time_proc','elapsed_time_acc','elapsed_time'])
+            df.to_csv(self.data_path+'/df_OPTECOT.csv')
+            print(colored('CMA-ES executed appliying OPTECOT and execution data saved.','light_yellow',attrs=["bold"]))
             sys.stdout.flush()
 
-        df=pd.DataFrame(df,columns=['seed','n_gen','score','readjustment','accuracy','variance','elapsed_time_proc','elapsed_time_acc','elapsed_time'])
-        df.to_csv(self.data_path+'/df_OPTECOT.csv')
-        print(colored('CMA-ES executed appliying OPTECOT with all seeds.','light_yellow',attrs=["bold"]))
-        sys.stdout.flush()
+            # Return best solution and its objective value.
+            idx=df['score'].idxmax()
+            return df.iloc[idx]['xbest'], df.iloc[idx]['score']
+        else:
+            df=pd.DataFrame(df,columns=['seed','n_gen','score','readjustment','accuracy','variance','elapsed_time_proc','elapsed_time_acc','elapsed_time'])
+            df.to_csv(self.data_path+'/df_OPTECOT_Analisys.csv')
+            print(colored('CMA-ES executed appliying OPTECOT with all seeds.','light_yellow',attrs=["bold"]))
+            sys.stdout.flush()
         print('\n')
 
 
