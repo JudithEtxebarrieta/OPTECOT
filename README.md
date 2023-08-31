@@ -206,19 +206,19 @@ To use MonoObjective_OPTECOT only requires the definition of certain parameters 
 - `xdim`: The dimension of a solution to the optimization problem.
 - `xbounds`: A matrix (list of lists) storing by rows the bounds (in case of continuous component) or explicit values (in case of discrete component) that can take each component that forms a random solutions of the problem to be optimized. For instance, if we have a problem with `xdim=3` where the first componen is continuos variable that takes values in [0,10], and the second and third components are discrete variables which can take the values {1,2,3} or {10,11,...,20}, respectively, `xbounds` will be defined as follows:
   ```python
-    xbound=[[0,10], # List with lower and upper bound of the first continuous component
-            [1,2,3], # List with all possible values that can take the second discrete component
-            list(range(10,21)) # List with all possible values that can take the third discrete component
-            ]
+  xbound=[[0,10], # List with lower and upper bound of the first continuous component
+          [1,2,3], # List with all possible values that can take the second discrete component
+          list(range(10,21)) # List with all possible values that can take the third discrete component
+          ]
   ```
 - `max_time`: Maximum time (in seconds) to execute optimization algorithm (CMA-ES).
 - `theta0`,`theta1`: Value of the theta parameter associated with the minimum and maximum cost of the objective function, respectively.
 - `objective_min`: True or False if the optimization problem is a minimization or maximization problem, respectively.
 - `objective_function`: A function that implements the objective function of the optimization problem. It must have two arguments, `solution` and `theta`. The first one is a list that represents a candidate solution, and the second one is the parameter of the objective function that allows us to control its cost. In addition, it must return the evaluation `score` of the solution. The skeleton of the structure would be as follows:
   ```python
-      def objective_function(solution,theta=theta1):
-          ...
-      return score
+  def objective_function(solution,theta=theta1):
+      ...
+  return score
   ```
 *Main code*
 
@@ -290,7 +290,9 @@ ExperimentalGraphs.illustrate_OPTECOT_application_results(optecot,title='Figure 
 ```python
 # Re-initialice another instance of the class.
 optecot=OPTECOT(popsize,xdim,xbounds,max_time,theta0,theta1, objective_min, objective_function,
-                customized_paths=['library_OPTECOT/results/auxiliary_data','library_OPTECOT/results/data','library_OPTECOT/results/figures'])
+                customized_paths=['library_OPTECOT/results/auxiliary_data',
+                                  'library_OPTECOT/results/data',
+                                  'library_OPTECOT/results/figures'])
 
 # Draw graph associated with experiments 1 and 2.
 ExperimentalGraphs.illustrate_approximate_objective_functions_use(optecot,title='Figure title',
@@ -301,7 +303,8 @@ ExperimentalGraphs.illustrate_OPTECOT_application_results(optecot,title='Figure 
 ```
 This allows you to modify the graphs without having to run the CMA-ES again. For example, you could draw the graph associated to experiment 2 representing the curves of only some costs.
 ```python
-# Draw graph associated with experiment 2 using only some cots (being 1 always among the selected ones).
+# Draw graph associated with experiment 2 using only some cots 
+# (being 1 always among the selected ones).
 ExperimentalGraphs.illustrate_approximate_objective_functions_use(optecot,title='Figure title',
 initial_only=False,list_cots=[1.0,0.6,0.2])
 ```
