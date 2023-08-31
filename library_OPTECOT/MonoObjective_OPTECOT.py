@@ -27,7 +27,7 @@ of OPTECOT to solve the optimization problem.\n
 
 How to use the library
 ----------------------
-First, an instance of the OPTECOT class must be initialized by entering the values of the compulsory parameters: ::
+Firstly, an instance of the OPTECOT class must be initialized by entering the values of the compulsory parameters: ::
 
     # Import main class of the library.
     from MonoObjective_OPTECOT import OPTECOT
@@ -55,8 +55,8 @@ tracking the optimal evaluation cost of the approximation using OPTECOT: ::
     best_solution,score=optecot.execute_CMAES_with_OPTECOT()
 
 When executing each of the above lines of code, the results `best_solution` and `score` are obtained. The first one is a list of size 
-`xdim` that represents the best solution found by the algorithm at time `max_time`. The second one instead is the objective value of that 
-solution obtained after evaluating it using the original objective function. In addition, for each solution of the problem (execution of 
+`xdim` that represents the best solution found by the algorithm at time `max_time`. The second one instead is the objective value of 
+`best_solution` obtained after evaluating it using the original objective function. In addition, for each solution of the problem (execution of 
 one of the above lines) a database is saved (in the directory created when initializing the class) with the relevant data obtained during 
 the execution of the CMA-ES algorithm.
 
@@ -64,7 +64,9 @@ Apart from solving the optimization problem, it is also possible to execute the 
 out in the paper on the selected problem. Three main experiments can be distinguished:
 
 1. Initial experiment: A set of 100 random solutions is evaluated using approximations of the objective function of different costs. The 
-results are shown graphically, where the evaluation times and the ranking preservation of the approximations are represents allowing its comparison.
+results are shown graphically, where the evaluation times and the ranking preservation of the approximations are represented. This graph 
+allows us to assess the application of OPTECOT, as it shows if there is a lower-cost approximation that can save time and preserve the ranking 
+of the best solutions.
 
 2. Trade-off analysis between the cost and accuracy of different approximations: The optimization algorithm is run using different 
 approximations. The quality of the solution obtained during the execution process with the use of each approximation is plotted in a graph. 
@@ -97,7 +99,8 @@ With the necessary databases available, it is possible to construct the graphs: 
 
     # Draw graph associated with experiments 1 and 2 (for its execution is necessary to execute 
     # execute_CMAES_with_approximations method before).
-    ExperimentalGraphs.illustrate_approximate_objective_functions_use(optecot,title='Figure title',initial_only=False,list_cots=[1.0,0.8,0.6,0.4,0.2,0])  
+    ExperimentalGraphs.illustrate_approximate_objective_functions_use(optecot,title='Figure title',
+    initial_only=False,list_cots=[1.0,0.8,0.6,0.4,0.2,0])  
 
     # Draw graph associated with experiments 3 (for its execution is necessary to execute 
     # execute_CMAES_with_OPTECOT method before).
@@ -113,16 +116,18 @@ re-initialize another instance of the class with the same parameters and manuall
     
     
     # Draw graph associated with experiments 1 and 2.
-    ExperimentalGraphs.illustrate_approximate_objective_functions_use(optecot,[1.0,0.8,0.6,0.4,0.2,0],'Figure title',initial_only=False)  
+    ExperimentalGraphs.illustrate_approximate_objective_functions_use(optecot,title='Figure title',
+    initial_only=False,list_costs=[1.0,0.8,0.6,0.4,0.2,0])  
 
     # Draw graph associated with experiments 3.
-    ExperimentalGraphs.illustrate_OPTECOT_application_results(optecot,'Figure title')
+    ExperimentalGraphs.illustrate_OPTECOT_application_results(optecot,title='Figure title')
 
 This allows you to modify the graphs without having to run the CMA-ES again. For example, you could draw the graph associated to experiment 2 
 representing the curves of only some costs. ::
 
     # Draw graph associated with experiment 2 using only some cots (being 1 always among the selected ones).
-    ExperimentalGraphs.illustrate_approximate_objective_functions_use(optecot,title='Figure title',initial_only=False,list_cots=[1.0,0.6,0.2]) 
+    ExperimentalGraphs.illustrate_approximate_objective_functions_use(optecot,title='Figure title',
+    initial_only=False,list_cots=[1.0,0.6,0.2]) 
 '''
 #==================================================================================================
 # LIBRARIES
@@ -929,7 +934,7 @@ class OPTECOT:
     '''
     This is the main class of the `MonoObjective_OPTECOT.py` library. It brings together the main methods that define the OPTECOT 
     heuristic for mono-objective problems. The methods implement bisection, the procedure that tracks the optimal cost during 
-    the execution of the Rank-Based Evolutionary Algortihm (RBEA), and the use of either an approximate function with a specific 
+    the execution of the Rank-Based Evolutionary Algorithm (RBEA), and the use of either an approximate function with a specific 
     cost or OPTECOT during the execution of the CMA-ES algorithm. 
     '''
 
@@ -949,15 +954,15 @@ class OPTECOT:
         `xdim`: The dimension of a solution to the optimization problem. \n
         `xbounds`: A matrix (list of lists) storing by rows the bounds (in case of continuous component) or explicit values (in case of discrete 
         component) that can take each component that forms a random solutions of the problem to be optimized. For instance, if we have a problem
-        with `xdim=3` where the first componen is continuos variable that takes values in [0,10] and the second and therd components are discrete 
+        with `xdim=3` where the first componen is continuos variable that takes values in [0,10], and the second and third components are discrete 
         variables which can take the values {1,2,3} or {10,11,...,20}, respectively, `xbounds` will be defined as follows::
 
             xbound=[[0,10], # List with lower and upper bound of the first continuous component
                     [1,2,3], # List with all possible values that can take the second discrete component
-                    list(range(10,21)) # List with all possible values that can take the therd discrete component
+                    list(range(10,21)) # List with all possible values that can take the third discrete component
                     ] 
 
-        `max_time`: Maximum time to execute optimization algortihm (CMA-ES). \n
+        `max_time`: Maximum time to execute optimization algorithm (CMA-ES). \n
         `theta0`: Value of the theta parameter associated with the minimum cost of the objective function.\n
         `theta1`: Value of the theta parameter associated with the maximum cost of the objective function (original value of the parameter).\n
         `objective_min`: True or False if the optimization problem is a minimization or maximization problem, respectively.\n
