@@ -230,7 +230,7 @@ from MonoObjective_OPTECOT import OPTECOT
 optecot=OPTECOT(popsize,xdim,xbounds,max_time,theta0,theta1, objective_min,objective_function)
 ```
 
-Initializing the class for the first time takes some time, since in addition to setting the explicitly indicated parameters, other parameters are also calculated from the given ones. Moreover, a directory is created to store the data of interest obtained during this procedure. By default a folder called `results` will be created in the same path where this file MonoObjective_OPTECOT.py is located, being `library_OPTECOT/results/auxiliary_data` the path for auxiliary data , `library_OPTECOT/results/data` the path for main data and `library_OPTECOT/results/figures` the path for figures.
+Initializing the class for the first time takes some time, since in addition to setting the explicitly indicated parameters, other parameters are also calculated from the given ones. Moreover, a directory is created to store the data of interest obtained during this procedure. By default, a folder called `results` will be created in the same path where the file `MonoObjective_OPTECOT.py` is located, being `library_OPTECOT/results/auxiliary_data` the path for auxiliary data , `library_OPTECOT/results/data` the path for main data and `library_OPTECOT/results/figures` the path for figures.
 
 **Step 2** Once the class instance is initialized, it is possible to solve the available optimization problem using the CMA-ES algorithm in three different ways:
 
@@ -254,7 +254,7 @@ When executing each of the above lines of code, the results `best_solution` and 
 
 2. Trade-off analysis between the cost and accuracy of different approximations: The optimization algorithm is run using different approximations. The quality of the solution obtained during the execution process with the use of each approximation is plotted in a graph (Figure 4 in the paper). This allows comparing the performance of the algorithm using different approximations and provides an intuition about the trade-off between cost and accuracy during the execution.
 
-3. Benefits of applying OPTECOT: The solution quality obtained during the process of running the optimization algorithm using the original objective function is compared with that obtained by applying OPTECOT. In addition to constructing graphs comparing the online solution quality curves (Figure 5 in the paper), the behaviour of the optimal evaluation cost (Figure 7 in the paper) and the percentage of the original execution time used by OPTECOT to reach the original solution quality are also plotted (Figure 6 in the paper).
+3. Benefits of applying OPTECOT: The solution quality obtained during the process of running the optimization algorithm using the original objective function is compared with that obtained by applying OPTECOT. In addition to constructing graphs comparing the online solution quality curves (Figure 5 in the paper), the behaviour of the optimal evaluation cost (Figure 7 in the paper) and the percentage of the original execution time used by OPTECOT to reach the original solution quality is also plotted (Figure 6 in the paper).
 
 To draw the graphs, you must first build the databases with the necessary data. In this step, two main requirements must be fulfilled. On the one hand, the optimization algorithm must be run with the original objective function to compare the results with the original situation. On the other hand, the experiments must be performed with more than one seed for the comparisons to be reliable.
 
@@ -271,6 +271,9 @@ optecot.execute_CMAES_with_OPTECOT(n_seeds=100)
 
 With the necessary databases available, it is possible to construct the graphs:
 ```python
+# Import class to construct the graphs.
+from MonoObjective_OPTECOT import ExperimentalGraphs
+
 # Draw graph associated with experiment 1 (for its execution is not necessary to execute
 # execute_CMAES_with_approximations method before).
 ExperimentalGraphs.illustrate_approximate_objective_functions_use(optecot,title='Figure title')
@@ -285,7 +288,7 @@ initial_only=False,list_cots=[1.0,0.8,0.6,0.4,0.2,0])
 ExperimentalGraphs.illustrate_OPTECOT_application_results(optecot,title='Figure title')
 ```
 
-**Step 4** *(possible suplementary of 3)* In the case of having available the necessary databases to draw the graphs because of having previously executed an instance of the class, it is not necessary to execute the methods `execute_CMAES_with_approximations` and `execute_CMAES_with_OPTECOT` again. It is enough to re-initialize another instance of the class with the same parameters and manually enter the paths to the directory where the data is stored.
+**Step 4** *(possible supplementary of 3)* In the case of having available the necessary databases to draw the graphs because of having previously executed an instance of the class, it is not necessary to execute the methods `execute_CMAES_with_approximations` and `execute_CMAES_with_OPTECOT` again. It is enough to re-initialize another instance of the class with the same parameters and manually enter the paths to the directory where the data is stored.
 
 ```python
 # Re-initialice another instance of the class.
@@ -301,7 +304,7 @@ initial_only=False,list_costs=[1.0,0.8,0.6,0.4,0.2,0])
 # Draw graph associated with experiments 3.
 ExperimentalGraphs.illustrate_OPTECOT_application_results(optecot,title='Figure title')
 ```
-This allows you to modify the graphs without having to run the CMA-ES again. For example, you could draw the graph associated to experiment 2 representing the curves of only some costs.
+This allows you to modify the graphs without having to run the CMA-ES again. For example, you could draw the graph associated with experiment 2 representing the curves of only some costs.
 ```python
 # Draw graph associated with experiment 2 using only some cots 
 # (being 1 always among the selected ones).

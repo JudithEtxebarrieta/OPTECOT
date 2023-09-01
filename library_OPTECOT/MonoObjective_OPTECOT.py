@@ -76,7 +76,7 @@ cost and accuracy during the execution.
 3. Benefits of applying OPTECOT: The solution quality obtained during the process of running the optimization algorithm using the original 
 objective function is compared with that obtained by applying OPTECOT. In addition to constructing graphs comparing the online 
 solution quality curves, the behaviour of the optimal evaluation cost and the percentage of the original execution time used by OPTECOT to reach 
-the original solution quality are also plotted.
+the original solution quality is also plotted.
 
 To draw the graphs, you must first build the databases with the necessary data. In this step, two main requirements must be fulfilled. On the one
 hand, the optimization algorithm must be run with the original objective function to compare the results with the original situation. On the other
@@ -92,6 +92,9 @@ hand, the experiments must be performed with more than one seed for the comparis
     optecot.execute_CMAES_with_OPTECOT(n_seeds=100)
 
 With the necessary databases available, it is possible to construct the graphs: ::
+
+    # Import class to construct the graphs.
+    from MonoObjective_OPTECOT import ExperimentalGraphs
 
     # Draw graph associated with experiment 1 (for its execution is not necessary to execute 
     # execute_CMAES_with_approximations method before).
@@ -122,7 +125,7 @@ re-initialize another instance of the class with the same parameters and manuall
     # Draw graph associated with experiments 3.
     ExperimentalGraphs.illustrate_OPTECOT_application_results(optecot,title='Figure title')
 
-This allows you to modify the graphs without having to run the CMA-ES again. For example, you could draw the graph associated to experiment 2 
+This allows you to modify the graphs without having to run the CMA-ES again. For example, you could draw the graph associated with experiment 2 
 representing the curves of only some costs. ::
 
     # Draw graph associated with experiment 2 using only some cots (being 1 always among the selected ones).
@@ -978,7 +981,7 @@ class OPTECOT:
         `perc_cost`: Percentage of the total execution time (`max_time`) that we are willing to allow for the application of 
         the bisection in the worst-case scenario (by default 0.25). \n 
         `customized_paths`: List with three paths. The first one the path to save auxiliary data, the second one the path to
-        save main data, and the third one the path to save figures. By default a folder called `results` will be created in the same path 
+        save main data, and the third one the path to save figures. By default, a folder called `results` will be created in the same path 
         where this file `MonoObjective_OPTECOT.py` is located, and three paths by default will be `.../results/auxiliary_data`, 
         `.../results/data` and ``.../results/figures`` , respectively. If you wish to modify any of the default paths, you must indicate all 
         three paths (no path can be set to `None`). The modification of the default value of the parameter `customized_paths` will be done when
