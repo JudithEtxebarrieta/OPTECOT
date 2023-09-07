@@ -1073,7 +1073,7 @@ class OPTECOT:
 
 
         else: 
-            def generate_random_solutions(n_sample=2):   
+            def generate_random_solutions(n_sample=100):   
                 '''Create a random set of solutions.'''
                     
                 # List of seeds.
@@ -1131,8 +1131,12 @@ class OPTECOT:
         list_scores=[]
         elapsed_time=0
         for solution in population:
+            if self.theta1>self.theta0:
+                theta=int(self.theta1*accuracy)
+            else:
+                theta=int(self.theta1/accuracy)
             t=time.time()
-            score=objective_function(solution, theta=int(self.theta1*accuracy))
+            score=objective_function(solution, theta=theta)
             elapsed_time+=time.time()-t
             list_scores.append(score)
 
@@ -1296,8 +1300,12 @@ class OPTECOT:
             # Obtain scores and compute elapsed time.
             list_scores=[]
             for turb_params in list_turb_params:
+                if self.theta1>self.theta0:
+                    theta=int(self.theta1*accuracy)
+                else:
+                    theta=int(self.theta1/accuracy)
                 t=time.time()
-                score=self.objective_function(turb_params, theta=int(self.theta1*accuracy))
+                score=self.objective_function(turb_params, theta=theta)
                 eval_time+=time.time()-t
 
                 if n_seeds==1:
