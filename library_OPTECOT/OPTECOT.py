@@ -1,7 +1,7 @@
 
 
 '''
-MonoObjective_OPTECOT
+OPTECOT
 =====================
 This library implements the OPTECOT (Optimal Evaluation Cost Tracking) heuristic defined in the paper 
 "Speeding-up Evolutionary Algorithms to solve Black-Box Optimization Problems". OPTECOT is designed to 
@@ -30,10 +30,10 @@ How to use the library
 Firstly, an instance of the OPTECOT class must be initialized by entering the values of the compulsory parameters: ::
 
     # Import main class of the library.
-    from MonoObjective_OPTECOT import OPTECOT
+    from OPTECOT import OPTECOT
 
     # Initialize an instance of the class.
-    optecot=OPTECOT(popsize,xdim,xbounds,max_time,theta0,theta1, objective_min, objective_function)
+    optecot=OPTECOT(xdim,xbounds,max_time,theta0,theta1, objective_min, objective_function)
 
 Initializing the class for the first time takes some time, since in addition to setting the explicitly indicated parameters, 
 other parameters are also calculated from the given ones. Moreover, a directory is created to store the data of interest 
@@ -94,7 +94,7 @@ hand, the experiments must be performed with more than one seed for the comparis
 With the necessary databases available, it is possible to construct the graphs: ::
 
     # Import class to construct the graphs.
-    from MonoObjective_OPTECOT import ExperimentalGraphs
+    from OPTECOT import ExperimentalGraphs
 
     # Draw graph associated with experiment 1 (for its execution is not necessary to execute 
     # execute_CMAES_with_approximations method before).
@@ -114,7 +114,7 @@ it is not necessary to execute the methods `execute_CMAES_with_approximations` a
 re-initialize another instance of the class with the same parameters and manually enter the paths to the directory where the data is stored. ::
 
     # Re-initialice another instance of the class.
-    optecot=OPTECOT(popsize,xdim,xbounds,max_time,theta0,theta1, objective_min, objective_function, 
+    optecot=OPTECOT(xdim,xbounds,max_time,theta0,theta1, objective_min, objective_function, 
                     customized_paths=['auxiliary data path','data path','figure path'])
     
     
@@ -935,14 +935,14 @@ class ExperimentalGraphs:
 class OPTECOT:
 
     '''
-    This is the main class of the `MonoObjective_OPTECOT.py` library. It brings together the main methods that define the OPTECOT 
+    This is the main class of the `OPTECOT.py` library. It brings together the main methods that define the OPTECOT 
     heuristic for mono-objective problems. The methods implement bisection, the procedure that tracks the optimal cost during 
     the execution of the Rank-Based Evolutionary Algorithm (RBEA), and the use of either an approximate function with a specific 
     cost or OPTECOT during the execution of the CMA-ES algorithm. 
     '''
 
-    def __init__(self,popsize,xdim,xbounds,max_time,theta0,theta1,objective_min,objective_function,
-                 alpha=0.95,beta=5,kappa=3,min_sample_size=10,perc_cost=0.25,customized_paths=[None,None,None]):
+    def __init__(self,xdim,xbounds,max_time,theta0,theta1,objective_min,objective_function,
+                 alpha=0.95,beta=5,kappa=3,popsize=20,min_sample_size=10,perc_cost=0.25,customized_paths=[None,None,None]):
         
         '''         
         To use this library it is required the definition of the following parameters and functions:
@@ -953,7 +953,6 @@ class OPTECOT:
         Compulsory
         ----------
 
-        `popsize`: Population size to be considered in the RBEA (CMA-ES). \n
         `xdim`: The dimension of a solution to the optimization problem. \n
         `xbounds`: A matrix (list of lists) storing by rows the bounds (in case of continuous component) or explicit values (in case of discrete 
         component) that can take each component that forms a random solutions of the problem to be optimized. For instance, if we have a problem
@@ -976,13 +975,14 @@ class OPTECOT:
         `alpha`: Accuracy threshold for the optimal approximation (by default 0.95).\n
         `beta`: Number of variances considered to calculate the confidence interval (by default 5).\n
         `kappa`: Number of previous optimal evaluation costs to be compared to assess heuristic interruption (by default 3).\n
+        `popsize`: Population size to be considered in the CMA-ES, this value must be greater or equal to 20 (by default 20). \n
         `min_sample_size`: Minimum value proposed to define the size of the sample of solutions from a population to be 
         considered for estimating the optimal cost using the bisection method (by default 10).\n
         `perc_cost`: Percentage of the total execution time (`max_time`) that we are willing to allow for the application of 
         the bisection in the worst-case scenario (by default 0.25). \n 
         `customized_paths`: List with three paths. The first one the path to save auxiliary data, the second one the path to
         save main data, and the third one the path to save figures. By default, a folder called `results` will be created in the same path 
-        where this file `MonoObjective_OPTECOT.py` is located, and three paths by default will be `.../results/auxiliary_data`, 
+        where this file `OPTECOT.py` is located, and three paths by default will be `.../results/auxiliary_data`, 
         `.../results/data` and ``.../results/figures`` , respectively. If you wish to modify any of the default paths, you must indicate all 
         three paths (no path can be set to `None`). The modification of the default value of the parameter `customized_paths` will be done when
         the data bases are already available, which are obtained after initializing the OPTECOT class for the first time and having executed the
@@ -1006,7 +1006,6 @@ class OPTECOT:
         sys.stdout.flush()
 
         # Initialize arguments taking into account giving data.
-        self.popsize=popsize
         self.xdim=xdim
         self.max_time=max_time
         self.theta0=theta0
@@ -1016,6 +1015,7 @@ class OPTECOT:
         self.alpha=alpha
         self.beta=beta
         self.kappa=kappa
+        self.popsize=popsize
         self.min_sample_size=min_sample_size
         self.perc_cost=perc_cost
 

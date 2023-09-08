@@ -1,9 +1,9 @@
-''' Solving Turbines problem using `MonoObjetive_OPTECOT.py` library. '''
+''' Solving Turbines problem using `OPTECOT.py` library. '''
 #==================================================================================================
 # LIBRARIES
 #==================================================================================================
 import numpy as np
-from MonoObjective_OPTECOT import OPTECOT, ExperimentalGraphs
+from OPTECOT import OPTECOT, ExperimentalGraphs
 
 import os
 import sys
@@ -16,8 +16,7 @@ import MathTools as mt
 #==================================================================================================
 #--------------------------------------------------------------------------------------------------
 # Compulsory parameters
-#--------------------------------------------------------------------------------------------------
-popsize=20 
+#-------------------------------------------------------------------------------------------------- 
 theta1=100 
 theta0=10 
 xdim=6 
@@ -37,6 +36,7 @@ objective_min=False
 alpha=0.95 
 beta=5 
 kappa=3 
+popsize=20
 min_sample_size=10
 perc_cost=0.25 
 
@@ -94,8 +94,7 @@ def fitness_function(turb_params,theta=100):
 # To reproduce experimental analysis carried out in the paper.
 #--------------------------------------------------------------------------------------------------
 # Initialize OPTECOT class.
-optecot=OPTECOT(popsize=popsize,
-                xdim=xdim,
+optecot=OPTECOT(xdim=xdim,
                 xbounds=xbounds,
                 max_time=max_time,
                 theta0=theta0,
@@ -105,6 +104,7 @@ optecot=OPTECOT(popsize=popsize,
                 alpha=alpha,
                 beta=beta,
                 kappa=kappa,
+                popsize=popsize,
                 min_sample_size=min_sample_size,
                 perc_cost=perc_cost
                 )
@@ -126,8 +126,7 @@ ExperimentalGraphs.illustrate_OPTECOT_application_results(optecot,title='Turbine
 # To solve the optimization problem.
 #--------------------------------------------------------------------------------------------------
 # Initialize OPTECOT class.
-optecot=OPTECOT(popsize=popsize,
-                xdim=xdim,
+optecot=OPTECOT(xdim=xdim,
                 xbounds=xbounds,
                 max_time=5*60, # Only 5 minutes as example.
                 theta0=theta0,
@@ -137,6 +136,7 @@ optecot=OPTECOT(popsize=popsize,
                 alpha=alpha,
                 beta=beta,
                 kappa=kappa,
+                popsize=popsize,
                 min_sample_size=min_sample_size,
                 perc_cost=perc_cost,
                 customized_paths=['library_OPTECOT/results/auxiliary_data','library_OPTECOT/results/data','library_OPTECOT/results/figures']
