@@ -192,17 +192,16 @@ Figure 2.- Solution quality curves during the execution of the optimization algo
 **Optimal evaluation cost behaviour.** By tracking the optimal evaluation cost during the algorithm execution, OPTECOT allows to decrease or increase the cost of the objective function when needed (see the graphs in the second row of Figure 2). This leads to time savings in cases where the optimal cost is lower and maintains the quality of the solution when the optimal cost is higher.
 
 
- ## MonoObjective_OPTECOT library
+ ## OPTECOT library
 
-To solve a different optimization problem (not necessarily related to the previous environments) by applying OPTECOT, we have created the MonoObjective_OPTECOT library (located in `library_OPTECOT/MonoObjective_OPTECOT.py`). Although theoretically the heuristic is designed to be applied to any RBEA, this library is implemented to apply OPTECOT with the CMA-ES (Covariance Matrix Adaptation Evolution Strategy) optimization algorithm.
+To solve a different optimization problem (not necessarily related to the previous environments) by applying OPTECOT, we have created the OPTECOT library (located in `library_OPTECOT/OPTECOT.py`). Although theoretically the heuristic is designed to be applied to any RBEA, this library is implemented to apply OPTECOT with the CMA-ES (Covariance Matrix Adaptation Evolution Strategy) optimization algorithm.
 
-To use MonoObjective_OPTECOT only requires the definition of certain parameters and the implementation of the objective function. With these inputs, the library allows us to solve the problem using the CMA-ES algorithm with the original objective function, an approximation with a predefined evaluation cost or by applying OPTECOT. Moreover, it is also possible to carry out the same experiments performed in the paper on the selected environments, but in this case on the newly available problem.  An example of use can be seen in the `library_OPTECOT/MonoObjective_Example.py` file, where the Turbines environment is used as an example. Overall, the steps to follow to use the library are described below: 
+To use OPTECOT only requires the definition of certain parameters and the implementation of the objective function. With these inputs, the library allows us to solve the problem using the CMA-ES algorithm with the original objective function, an approximation with a predefined evaluation cost or by applying OPTECOT. Moreover, it is also possible to carry out the same experiments performed in the paper on the selected environments, but in this case on the newly available problem.  An example of use can be seen in the `library_OPTECOT/Example.py` file, where the Turbines environment is used as an example. Overall, the steps to follow to use the library are described below: 
 
 **Step 1** An instance of the OPTECOT class must be initialized by entering the values of the compulsory parameters:
 
 *Required inputs*
 
-- `popsize`: Population size to be considered in the RBEA (CMA-ES).
 - `xdim`: The dimension of a solution to the optimization problem.
 - `xbounds`: A matrix (list of lists) storing by rows the bounds (in case of continuous component) or explicit values (in case of discrete component) that can take each component that forms a random solutions of the problem to be optimized. For instance, if we have a problem with `xdim=3` where the first componen is continuos variable that takes values in [0,10], and the second and third components are discrete variables which can take the values {1,2,3} or {10,11,...,20}, respectively, `xbounds` will be defined as follows:
   ```python
@@ -224,13 +223,13 @@ To use MonoObjective_OPTECOT only requires the definition of certain parameters 
 
 ```python
 # Import main class of the library.
-from MonoObjective_OPTECOT import OPTECOT
+from OPTECOT import OPTECOT
 
 # Initialize an instance of the class.
-optecot=OPTECOT(popsize,xdim,xbounds,max_time,theta0,theta1, objective_min,objective_function)
+optecot=OPTECOT(xdim,xbounds,max_time,theta0,theta1, objective_min,objective_function)
 ```
 
-Initializing the class for the first time takes some time, since in addition to setting the explicitly indicated parameters, other parameters are also calculated from the given ones. Moreover, a directory is created to store the data of interest obtained during this procedure. By default, a folder called `results` will be created in the same path where the file `MonoObjective_OPTECOT.py` is located, being `library_OPTECOT/results/auxiliary_data` the path for auxiliary data , `library_OPTECOT/results/data` the path for main data and `library_OPTECOT/results/figures` the path for figures.
+Initializing the class for the first time takes some time, since in addition to setting the explicitly indicated parameters, other parameters are also calculated from the given ones. Moreover, a directory is created to store the data of interest obtained during this procedure. By default, a folder called `results` will be created in the same path where the file `OPTECOT.py` is located, being `library_OPTECOT/results/auxiliary_data` the path for auxiliary data , `library_OPTECOT/results/data` the path for main data and `library_OPTECOT/results/figures` the path for figures.
 
 **Step 2** Once the class instance is initialized, it is possible to solve the available optimization problem using the CMA-ES algorithm in three different ways:
 
@@ -272,7 +271,7 @@ optecot.execute_CMAES_with_OPTECOT(n_seeds=100)
 With the necessary databases available, it is possible to construct the graphs:
 ```python
 # Import class to construct the graphs.
-from MonoObjective_OPTECOT import ExperimentalGraphs
+from OPTECOT import ExperimentalGraphs
 
 # Draw graph associated with experiment 1 (for its execution is not necessary to execute
 # execute_CMAES_with_approximations method before).
@@ -292,7 +291,7 @@ ExperimentalGraphs.illustrate_OPTECOT_application_results(optecot,title='Figure 
 
 ```python
 # Re-initialice another instance of the class.
-optecot=OPTECOT(popsize,xdim,xbounds,max_time,theta0,theta1, objective_min, objective_function,
+optecot=OPTECOT(xdim,xbounds,max_time,theta0,theta1, objective_min, objective_function,
                 customized_paths=['library_OPTECOT/results/auxiliary_data',
                                   'library_OPTECOT/results/data',
                                   'library_OPTECOT/results/figures'])
