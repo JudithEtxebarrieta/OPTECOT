@@ -128,7 +128,7 @@ ExperimentalGraphs.illustrate_OPTECOT_application_results(optecot,title='Turbine
 # Initialize OPTECOT class.
 optecot=OPTECOT(xdim=xdim,
                 xbounds=xbounds,
-                max_time=5*60, # Only 5 minutes as example.
+                max_time=5*60, # Only 5 minutes as an example.
                 theta0=theta0,
                 theta1=theta1,
                 objective_min=False,

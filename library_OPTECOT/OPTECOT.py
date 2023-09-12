@@ -209,7 +209,7 @@ class AuxiliaryFunctions:
     @staticmethod
     def extract_info_evaluating_set_with_equidistant_accuracies(set_solutions,objective_function,theta0,theta1,path):
         '''
-        Build data frames from information obtained after evaluating a set o solutions with 10 different theta values associated 
+        Build data frames from information obtained after evaluating a set of solutions with 10 different theta values associated 
         with equidistant costs.
         
         Parameters
@@ -1343,27 +1343,35 @@ class OPTECOT:
 
             n_gen+=1
 
-    def execute_CMAES_with_approximations(self,list_costs,n_seeds=1):
+    def execute_CMAES_with_approximations(self,list_costs,n_seeds=1,seed=2):
         '''
         Execute the CMA-ES algorithm with different seeds using approximate objective functions of different constant costs.
 
         Parameters
         ==========
         `list_costs`: List of the constant evaluation cost to be considered for the approximate objective function. Each component on the
-        list will be an evaluation cost defined in [0,1], where the approximation of cost 1 represents the original objective function.\n
-        `n_seeds`: Number of times to run the optimization algorithm using different seeds in each run but the same approximate 
-        objective function with a given evaluation cost.
+        list will be an evaluation cost defined in [0,1], where the approximation of cost 1 represents the original objective function. To solve 
+        the optimization problem using an approximation, the list will consist only of the cost associated with that approximation. To carry out 
+        the constant cost analysis instead (the second experiment described above), the list must be defined by all the costs that are desired to 
+        participate in the analysis.\n
+        `n_seeds`: By default takes the value 1, the optimization problem is solved by executing once the CMA-ES (single seed) with the 
+        approximate function of the unique cost stored in `list_costs`. Higher values of this parameter will be used to carry out the constant 
+        cost analysis. In this case, the parameter indicates the number of times to run the optimization algorithm using a different seed in each 
+        run but the same approximate objective function with a given evaluation cost (a cost in `list_costs`).\n
+        `seed`: By default takes the value 2, the seed with which the CMA-ES will be executed to solve the optimization problem using the single 
+        cost stored in `list_costs`. In case you want to solve the problem using another seed, you must modify this parameter, taking into account 
+        that it must take a value greater than 2.
 
         '''
         if n_seeds==1:
             # Initialize database and ejecute CMA-ES.
             df=[]
             acc,_=AuxiliaryFunctions.from_cost_to_theta(list_costs[0],self.theta0,self.theta1)
-            self.execute_CMAES_with_approximation(list_costs[0],1,2,1,acc,df)
+            self.execute_CMAES_with_approximation(list_costs[0],1,seed,1,acc,df)
 
             # Save database.
             df=pd.DataFrame(df,columns=['accuracy','seed','n_gen','xbest','score','elapsed_time'])
-            df.to_csv(self.data_path+'/df_Approximation_cost'+'{:.02f}'.format(list_costs[0])+'.csv')
+            df.to_csv(self.data_path+'/df_Approximation_cost'+'{:.02f}'.format(list_costs[0])+'_seed'+str(seed)+'.csv')
 
             print("Executing CMA-ES using approximate objective function of cost "+str(list_costs[0])+colored('  DONE        ','light_cyan'))
             print(colored('CMA-ES executed with the approximation and execution data saved.','light_yellow',attrs=["bold"]))
@@ -1402,23 +1410,32 @@ class OPTECOT:
             print('\n')
 
 
-    def execute_CMAES_with_OPTECOT(self,n_seeds=1):
+    def execute_CMAES_with_OPTECOT(self,n_seeds=1,seed=2):
         '''
-        Execute the CMA-ES algorithm with different seeds applying OPTECOT. The unique parameter `n_seeds` represents the number of times 
-        to be executed the optimization algorithms using different seeds.
+        Execute the CMA-ES algorithm with different seeds applying OPTECOT. 
+
+        Parameters
+        ==========
+        `n_seeds`: By default takes the value 1, the optimization problem is solved by executing once the CMA-ES (single seed) applying OPTECOT. 
+        Higher values of this parameter will be used to carry out the OPTECOT benefits analysis (the third experiment described above). In this 
+        case, the parameter indicates the number of times to run the optimization algorithm using different seeds.
+        `seed`: By default takes the value 2, the seed with which the CMA-ES will be executed to solve the optimization problem applying OPTECOT. 
+        In case you want to solve the problem using another seed, you must modify this parameter, taking into account that it must take a value 
+        greater than 2.
         '''
 
         if n_seeds==1:
             print("Executing CMA-ES appliying OPTECOT... ",end='\r')
             sys.stdout.flush()
             self.unique_seed=True
+            list_seeds=[seed]
                     
         else:
             print("Executing CMA-ES appliying OPTECOT:")
             sys.stdout.flush()
             self.unique_seed=False
+            list_seeds=range(2,2+n_seeds,1) 
 
-        list_seeds=range(2,2+n_seeds,1) 
         df=[] 
 
         for seed in list_seeds:
@@ -1492,7 +1509,7 @@ class OPTECOT:
 
         if n_seeds==1:
             df=pd.DataFrame(df,columns=['seed','n_gen','xbest','score','readjustment','accuracy','variance','elapsed_time_proc','elapsed_time_acc','elapsed_time'])
-            df.to_csv(self.data_path+'/df_OPTECOT.csv')
+            df.to_csv(self.data_path+'/df_OPTECOT_seed'+str(seed)+'.csv')
             print(colored('CMA-ES executed appliying OPTECOT and execution data saved.','light_yellow',attrs=["bold"]))
             sys.stdout.flush()
 
