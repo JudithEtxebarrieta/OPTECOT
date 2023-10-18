@@ -206,8 +206,8 @@ To use OPTECOT only requires the definition of certain parameters and the implem
 - `xbounds`: A matrix (list of lists) storing by rows the bounds (in case of continuous component) or explicit values (in case of discrete component) that can take each component that forms a random solutions of the problem to be optimized. For instance, if we have a problem with `xdim=3` where the first componen is continuos variable that takes values in [0,10], and the second and third components are discrete variables which can take the values {1,2,3} or {10,11,...,20}, respectively, `xbounds` will be defined as follows:
   ```python
   xbound=[[0,10], # List with lower and upper bound of the first continuous component
-          [1,2,3], # List with all possible values that can take the second discrete component
-          list(range(10,21)) # List with all possible values that can take the third discrete component
+          set([1,2,3]), # List with all possible values that can take the second discrete component
+          set(range(10,21)) # List with all possible values that can take the third discrete component
           ]
   ```
 - `max_time`: Maximum time (in seconds) to execute optimization algorithm (CMA-ES).

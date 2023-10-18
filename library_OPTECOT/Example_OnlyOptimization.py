@@ -20,12 +20,12 @@ import MathTools as mt
 theta1=100 
 theta0=10 
 xdim=6 
-xbounds=[[3,5,7],# Blade-number gene.
-        [0.4, 0.7],# Hub solidity gene.
-        [0.4, 0.7], # Tip solidity gene.
-        [0.4, 0.75], # Hub-to-tip-ratio gene.
-        [0,3],# Tip-clearance gene.	  
-        list(np.arange(0,27)) # Airfoil dist. gene.
+xbounds=[set([3,5,7]),# Blade-number gene. (DISCRETE)
+        [0.4, 0.7],# Hub solidity gene. (CONTINUOUS)
+        [0.4, 0.7], # Tip solidity gene. (CONTINUOUS)
+        [0.4, 0.75], # Hub-to-tip-ratio gene. (CONTINUOUS)
+        [0,3],# Tip-clearance gene.	(CONTINUOUS)
+        set(np.arange(0,27)) # Airfoil dist. gene. (DISCRETE)
         ]
 max_time=5*60 # 5 minutes in seconds.
 objective_min=False

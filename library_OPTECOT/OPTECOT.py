@@ -960,8 +960,8 @@ class OPTECOT:
         variables which can take the values {1,2,3} or {10,11,...,20}, respectively, `xbounds` will be defined as follows::
 
             xbound=[[0,10], # List with lower and upper bound of the first continuous component
-                    [1,2,3], # List with all possible values that can take the second discrete component
-                    list(range(10,21)) # List with all possible values that can take the third discrete component
+                    set([1,2,3]), # List with all possible values that can take the second discrete component
+                    set(range(10,21)) # List with all possible values that can take the third discrete component
                     ] 
 
         `max_time`: Maximum time to execute optimization algorithm (CMA-ES). \n
@@ -1054,8 +1054,8 @@ class OPTECOT:
             real_x=[]
             for i in range(len(xbounds)):
                 bounds=xbounds[i]
-                if len(bounds)>2:
-                    real_x.append(transform_discrete(scaled_x[i],bounds))
+                if type(bounds)==set:
+                    real_x.append(transform_discrete(scaled_x[i],list(bounds)))
                 else:
                     real_x.append(transform_continuous(scaled_x[i],bounds))
 
@@ -1085,8 +1085,8 @@ class OPTECOT:
                     np.random.seed(seed)
                     solution=[]
                     for bounds in xbounds:
-                        if len(bounds)>2:
-                            solution.append(np.random.choice(bounds))
+                        if type(bounds)==set:
+                            solution.append(np.random.choice(list(bounds)))
                         else:
                             solution.append(np.random.uniform(bounds[0], bounds[1]))
                     set_solutions.append(solution)
