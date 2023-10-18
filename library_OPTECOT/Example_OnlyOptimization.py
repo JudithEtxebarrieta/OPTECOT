@@ -27,7 +27,7 @@ xbounds=[[3,5,7],# Blade-number gene.
         [0,3],# Tip-clearance gene.	  
         list(np.arange(0,27)) # Airfoil dist. gene.
         ]
-max_time=60*60 # 1h in seconds.
+max_time=5*60 # 5 minutes in seconds.
 objective_min=False
 
 #--------------------------------------------------------------------------------------------------
@@ -84,7 +84,7 @@ def fitness_function(turb_params,theta=100):
 # Initialize OPTECOT class.
 optecot=OPTECOT(xdim=xdim,
                 xbounds=xbounds,
-                max_time=5*60, # Only 5 minutes as an example.
+                max_time=max_time, 
                 theta0=theta0,
                 theta1=theta1,
                 objective_min=objective_min,
