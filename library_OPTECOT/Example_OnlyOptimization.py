@@ -80,8 +80,9 @@ def fitness_function(turb_params,theta=100):
 #==================================================================================================
 # EXAMPLE OF USE OF THE LIBRARY (to solve the optimization problem)
 #==================================================================================================
-
+#--------------------------------------------------------------------------------------------------
 # Initialize OPTECOT class.
+#--------------------------------------------------------------------------------------------------
 optecot=OPTECOT(xdim=xdim,
                 xbounds=xbounds,
                 max_time=max_time, 
@@ -91,9 +92,32 @@ optecot=OPTECOT(xdim=xdim,
                 objective_function=fitness_function
                 )
 
+#--------------------------------------------------------------------------------------------------
 # Solve problem with CMA-ES applying OPTECOT.
-best_solution,score=optecot.execute_CMAES_with_OPTECOT()
+#--------------------------------------------------------------------------------------------------
+# OPTION 1: running the solutions of each population sequentially 
+# - Save informative data extracted from the optimization process in: results/data/Example1.csv 
+# - Interesting columns in the csv: 
+#       >>"xbest": solution vector per iteration
+#       >>"score": fitness value of solution vector per iteration
+#       >>"elapsed_time": elapsed time per iteration
+best_solution,score=optecot.execute_CMAES_with_OPTECOT(info_data_file_name='Example1')
 print('Best solution: ',best_solution, '\nObjective value: ',score)
+
+
+# OPTION 2: running the solutions of each population in parallel 
+# - Save informative data extracted from the optimization process in: results/data/Example2.csv 
+#  (note that in the same time more data have been obtained than in Example 1, the parallel 
+#   evaluation allows the evaluation of more solutions and therefore more populations)
+# - Interesting columns in the csv: 
+#       >>"xbest": solution vector per iteration
+#       >>"score": fitness value of solution vector per iteration
+#       >>"elapsed_time": elapsed time per iteration
+optecot.in_parallel=True
+best_solution,score=optecot.execute_CMAES_with_OPTECOT(info_data_file_name='Example2')
+print('Best solution: ',best_solution, '\nObjective value: ',score)
+
+
 
 
 

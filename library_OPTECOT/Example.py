@@ -37,6 +37,7 @@ alpha=0.95
 beta=5 
 kappa=3 
 popsize=20
+in_parallel=False
 min_sample_size=10
 perc_cost=0.25 
 
@@ -105,6 +106,7 @@ optecot=OPTECOT(xdim=xdim,
                 beta=beta,
                 kappa=kappa,
                 popsize=popsize,
+                in_parallel=in_parallel,
                 min_sample_size=min_sample_size,
                 perc_cost=perc_cost
                 )
@@ -137,6 +139,7 @@ optecot=OPTECOT(xdim=xdim,
                 beta=beta,
                 kappa=kappa,
                 popsize=popsize,
+                in_parallel=in_parallel,
                 min_sample_size=min_sample_size,
                 perc_cost=perc_cost,
                 customized_paths=['library_OPTECOT/results/auxiliary_data','library_OPTECOT/results/data','library_OPTECOT/results/figures']
