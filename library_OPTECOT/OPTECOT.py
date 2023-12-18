@@ -150,6 +150,8 @@ import plotly.express as px
 from matplotlib.patches import Rectangle
 import sys
 import os
+from joblib import Parallel, delayed, cpu_count
+import shutil
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -942,7 +944,7 @@ class OPTECOT:
     '''
 
     def __init__(self,xdim,xbounds,max_time,theta0,theta1,objective_min,objective_function,
-                 alpha=0.95,beta=5,kappa=3,popsize=20,min_sample_size=10,perc_cost=0.25,customized_paths=[None,None,None]):
+                 alpha=0.95,beta=5,kappa=3,popsize=20,in_parallel=False,min_sample_size=10,perc_cost=0.25,customized_paths=[None,None,None]):
         
         '''         
         To use this library it is required the definition of the following parameters and functions:
@@ -976,6 +978,7 @@ class OPTECOT:
         `beta`: Number of variances considered to calculate the confidence interval (by default 5).\n
         `kappa`: Number of previous optimal evaluation costs to be compared to assess heuristic interruption (by default 3).\n
         `popsize`: Population size to be considered in the CMA-ES, this value must be greater or equal to 20 (by default 20). \n
+        `in_parallel`: True or False if you want to evaluate the solutions of each population in parallel or sequentially, respectively (by default False).\n
         `min_sample_size`: Minimum value proposed to define the size of the sample of solutions from a population to be 
         considered for estimating the optimal cost using the bisection method (by default 10).\n
         `perc_cost`: Percentage of the total execution time (`max_time`) that we are willing to allow for the application of 
@@ -1016,6 +1019,7 @@ class OPTECOT:
         self.beta=beta
         self.kappa=kappa
         self.popsize=popsize
+        self.in_parallel=in_parallel
         self.min_sample_size=min_sample_size
         self.perc_cost=perc_cost
 
@@ -1130,32 +1134,56 @@ class OPTECOT:
         # Obtain scores and times per evaluation.
         list_scores=[]
         elapsed_time=0
-        for solution in population:
-            if self.theta1>self.theta0:
-                theta=int(self.theta1*accuracy)
-            else:
-                theta=int(self.theta1/accuracy)
+
+        if self.theta1>self.theta0:
+            theta=int(self.theta1*accuracy)
+        else:
+            theta=int(self.theta1/accuracy)
+
+        if not self.in_parallel:
+            for solution in population:
+                t=time.time()
+                score=objective_function(solution, theta=theta)
+                elapsed_time+=time.time()-t
+                list_scores.append(score)
+
+                if self.print_message is not False:
+                    if self.unique_seed:
+                        if elapsed_time+self.time_acc+self.time_proc>self.max_time:
+                            print("Executing CMA-ES appliying OPTECOT... "+colored('100.00%','light_cyan'),end='\r')
+                            sys.stdout.flush()
+                        else:
+                            print("Executing CMA-ES appliying OPTECOT... "+colored('{:.2f}'.format(((elapsed_time+self.time_acc+self.time_proc)/self.max_time)*100)+'%','light_cyan'),end='\r')
+                            sys.stdout.flush()
+
+                    else:
+                        if elapsed_time+self.time_acc+self.time_proc>self.max_time:
+                            print("    Processing execution with seed "+str(self.print_message-1)+'...   '+colored('100.00%','light_cyan'),end='\r')
+                            sys.stdout.flush()
+                        else:
+                            print("    Processing execution with seed "+str(self.print_message-1)+'...   '+colored('{:.2f}'.format(((elapsed_time+self.time_acc+self.time_proc)/self.max_time)*100)+'%','light_cyan'),end='\r')
+                            sys.stdout.flush()
+        
+        if self.in_parallel:
+            n_jobs=cpu_count()
+            os.makedirs(sys.path[0]+'/PopulationScores')
+
+            def parallel_f(solution,index):
+                score=objective_function(solution, theta=theta)
+                np.save(sys.path[0]+'/PopulationScores'+'/'+str(index),score)
+
             t=time.time()
-            score=objective_function(solution, theta=theta)
+            Parallel(n_jobs=n_jobs)(delayed(parallel_f)(population[i],i) for i in range(len(population)))
             elapsed_time+=time.time()-t
-            list_scores.append(score)
 
-            if self.print_message is not False:
-                if self.unique_seed:
-                    if elapsed_time+self.time_acc+self.time_proc>self.max_time:
-                        print("Executing CMA-ES appliying OPTECOT... "+colored('100.00%','light_cyan'),end='\r')
-                        sys.stdout.flush()
-                    else:
-                        print("Executing CMA-ES appliying OPTECOT... "+colored('{:.2f}'.format(((elapsed_time+self.time_acc+self.time_proc)/self.max_time)*100)+'%','light_cyan'),end='\r')
-                        sys.stdout.flush()
-
-                else:
-                    if elapsed_time+self.time_acc+self.time_proc>self.max_time:
-                        print("    Processing execution with seed "+str(self.print_message-1)+'...   '+colored('100.00%','light_cyan'),end='\r')
-                        sys.stdout.flush()
-                    else:
-                        print("    Processing execution with seed "+str(self.print_message-1)+'...   '+colored('{:.2f}'.format(((elapsed_time+self.time_acc+self.time_proc)/self.max_time)*100)+'%','light_cyan'),end='\r')
-                        sys.stdout.flush()
+            def obtain_score_list(popsize):
+                list_scores=[]
+                for i in range(popsize):
+                    score=float(np.load(sys.path[0]+'/PopulationScores'+'/'+str(i)+'.npy'))
+                    list_scores.append(score) 
+                shutil.rmtree(sys.path[0]+'/PopulationScores',ignore_errors=True)
+                return list_scores
+            list_scores=obtain_score_list(len(population))
 
         # Update time counters.
         if count_time_acc and not count_time_gen:
@@ -1410,7 +1438,7 @@ class OPTECOT:
             print('\n')
 
 
-    def execute_CMAES_with_OPTECOT(self,n_seeds=1,seed=2):
+    def execute_CMAES_with_OPTECOT(self,n_seeds=1,seed=2,info_data_file_name=None):
         '''
         Execute the CMA-ES algorithm with different seeds applying OPTECOT. 
 
@@ -1421,7 +1449,9 @@ class OPTECOT:
         case, the parameter indicates the number of times to run the optimization algorithm using different seeds.
         `seed`: By default takes the value 2, the seed with which the CMA-ES will be executed to solve the optimization problem applying OPTECOT. 
         In case you want to solve the problem using another seed, you must modify this parameter, taking into account that it must take a value 
-        greater than 2.
+        greater than 2.\n
+        `info_data_file_name`: A string of characters with the name you want to assign to the file in which the informative data obtained during 
+        the optimization process is stored.
         '''
 
         if n_seeds==1:
@@ -1474,9 +1504,9 @@ class OPTECOT:
                     accuracy=None
                 else:
                     df_seed=pd.DataFrame(df)
-                    df_seed=df_seed[df_seed[1]==seed]
-                    list_accuracies=list(df_seed[5])
-                    list_variances=list(df_seed[6])
+                    df_seed=df_seed[df_seed[0]==seed]
+                    list_accuracies=list(df_seed[4])
+                    list_variances=list(df_seed[5])
 
                 accuracy,readjustment=self.execute_OPTECOT(n_gen,accuracy,list_turb_params,seed,list_accuracies,list_variances)
 
@@ -1509,7 +1539,10 @@ class OPTECOT:
 
         if n_seeds==1:
             df=pd.DataFrame(df,columns=['seed','n_gen','xbest','score','readjustment','accuracy','variance','elapsed_time_proc','elapsed_time_acc','elapsed_time'])
-            df.to_csv(self.data_path+'/df_OPTECOT_seed'+str(seed)+'.csv')
+            if info_data_file_name==None:
+                df.to_csv(self.data_path+'/df_OPTECOT_seed'+str(seed)+'.csv')
+            else:
+                df.to_csv(self.data_path+'/'+info_data_file_name+'.csv')
             print(colored('CMA-ES executed appliying OPTECOT and execution data saved.','light_yellow',attrs=["bold"]))
             sys.stdout.flush()
 
