@@ -147,7 +147,7 @@ def draw_and_save_figures_per_heuristic():
     #----------------------------------------------------------------------------------------------
     # GRAPH 2: Graphical representation of the accuracy behavior.
     #----------------------------------------------------------------------------------------------
-    plt.figure(figsize=[4,3])
+    plt.figure(figsize=[6,5])
     plt.subplots_adjust(left=0.31,bottom=0.26,right=0.85,top=0.88,wspace=0.3,hspace=0.2)
     ax=plt.subplot(111)
     ax.grid(b=True,color='black',linestyle='--', linewidth=0.8,alpha=0.2,axis='both')

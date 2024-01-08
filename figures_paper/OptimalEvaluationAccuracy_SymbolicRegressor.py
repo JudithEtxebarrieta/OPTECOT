@@ -140,7 +140,7 @@ def draw_and_save_figures_per_heuristic():
     plt.xticks(fontsize=23)
     plt.yticks(fontsize=23)
     ax.invert_yaxis()
-    ax.set_xscale('log')
+    #ax.set_xscale('log')
 
     plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_SymbolicRegressor_Q.pdf')
     plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_SymbolicRegressor_Q.png')
@@ -150,25 +150,25 @@ def draw_and_save_figures_per_heuristic():
     #----------------------------------------------------------------------------------------------
     # GRAPH 2: Graphical representation of the accuracy behavior.
     #----------------------------------------------------------------------------------------------
-    plt.figure(figsize=[4,3])
+    plt.figure(figsize=[6,5])
     plt.subplots_adjust(left=0.31,bottom=0.26,right=0.85,top=0.88,wspace=0.3,hspace=0.2)
     ax=plt.subplot(111)
     ax.grid(b=True,color='black',linestyle='--', linewidth=0.8,alpha=0.2,axis='both')
 
     # Draw curves.
     df=df_optimal_acc[df_optimal_acc['heuristic_param']=='[5, 3]']
-    plt.gca().add_patch(Rectangle((410000, .43), 1000000-410000, 0.55-0.43,linewidth=0.5,facecolor='white',edgecolor='black'))
+    #plt.gca().add_patch(Rectangle((410000, .43), 1000000-410000, 0.55-0.43,linewidth=0.5,facecolor='white',edgecolor='black'))
     draw_accuracy_behaviour(df,'n_eval',0.1,1)
 
     ax.set_title(r'\textbf{SR}',fontsize=23)
     ax.set_xlabel("$t$",fontsize=23)
     ax.ticklabel_format(style='sci', axis='x', useOffset=True, scilimits=(3010,0))
     ax.set_ylabel("$\widetilde{c}$",fontsize=23)
-    ax.set_xticks(range(200000,1000000,250000))
+    #ax.set_xticks(range(200000,1000000,250000))
     plt.xticks(fontsize=23)
     plt.yticks(fontsize=23)
-    ax.set_xscale('log')
-    ax.set_ylim([0,1])
+    #ax.set_xscale('log')
+    #ax.set_ylim([0,1])
 
     plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_SymbolicRegressor_c.pdf')
     plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_SymbolicRegressor_c.png')
@@ -224,8 +224,8 @@ def draw_heuristic_effectiveness():
     ax.set_title(r'\textbf{SR}',fontsize=15)
     ax.set_ylabel(r"\textbf{QI}",fontsize=15)
     plt.yticks(fontsize=15)
-    plt.xticks([])
-    ax.set_xscale('log')
+    #plt.xticks([])
+    #ax.set_xscale('log')
     ax.set_ylim([88,132])
     ax.set_yticks([100,115,130])
 
@@ -244,12 +244,12 @@ def draw_heuristic_effectiveness():
 
     ax.set_ylabel(r"\textbf{Solution quality}",fontsize=15)
     ax.legend(fontsize=11,title_fontsize=11,labelspacing=0.01,loc='lower right',handlelength=1)
-    plt.xticks([])
+    #plt.xticks([])
     plt.yticks(fontsize=15)
     ax.invert_yaxis()
     ax.set_ylim([0.45,0.08])
     ax.set_yticks(np.arange(0.1,0.4,0.1))
-    ax.set_xscale('log')
+    #ax.set_xscale('log')
 
     #----------------------------------------------------------------------------------------------
     # GRAPH 3: Curve of time saving.
@@ -273,7 +273,7 @@ def draw_heuristic_effectiveness():
     plt.plot(list_train_n_eval, list_time_y,color=colors2[3],label='Time', linewidth=1.2)
     plt.axhline(y=100,color='black', linestyle='--')
 
-    ax.set_xscale('log')
+    #ax.set_xscale('log')
     ax.set_ylabel(r"\textbf{TR}",fontsize=15)
     ax.set_xlabel("$t$",fontsize=15)
     plt.yticks(fontsize=15)

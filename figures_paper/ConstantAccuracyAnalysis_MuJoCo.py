@@ -67,7 +67,8 @@ def a_c(a,a_0,a_1):
 total_list_acc=np.load('results/data/MuJoCo/ConstantAccuracyAnalysis/list_acc.npy')
 a_0=min(total_list_acc)
 a_1=max(total_list_acc)
-list_acc=[1.0,0.9,0.6,0.3,0.2,0.1]
+list_acc=[1.0,0.8,0.5,0.4,0.3,0.2,0.1]
+
 
 # List with limits of training steps to be drawn.
 df_train_acc_min=pd.read_csv("results/data/MuJoCo/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis_acc"+str(min(list_acc))+".csv", index_col=0)

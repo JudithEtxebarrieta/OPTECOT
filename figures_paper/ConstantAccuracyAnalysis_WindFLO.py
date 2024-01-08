@@ -67,7 +67,7 @@ def a_c(a,a_0,a_1):
 total_list_acc=np.load('results/data/WindFLO/ConstantAccuracyAnalysis/list_acc.npy')
 a_0=min(total_list_acc)
 a_1=max(total_list_acc)
-list_acc=[1.0,0.889,0.556,0.223,0.112,0.001]
+list_acc=[1.0,0.778,0.445,0.334,0.223,0.112,0.001]
 
 # Define list with limits of training times to be drawn.
 df_train_acc_min=pd.read_csv("results/data/WindFLO/ConstantAccuracyAnalysis/df_ConstantAccuracyAnalysis"+str(min(list_acc))+".csv", index_col=0)

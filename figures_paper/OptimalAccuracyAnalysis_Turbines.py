@@ -132,14 +132,14 @@ def draw_and_save_figures_per_heuristic():
     ax.fill_between(list_train_time,all_q05,all_q95, alpha=.2, linewidth=0,color=colors[1])
     plt.plot(list_train_time, all_mean, linewidth=1,label=r'\textbf{OPTECOT}',color=colors[1],marker=list_markers[1],markevery=0.1)
 
-
+    ax.set_xticks(np.arange(0,3800,800))
     ax.set_ylabel(r"\textbf{Solution quality}",fontsize=23)
     ax.set_xlabel("$t$",fontsize=23)
     ax.legend(fontsize=18,title_fontsize=18,labelspacing=0.1,handlelength=0.8,loc='lower right')
     ax.set_title(r'\textbf{Turbines}',fontsize=23)
     plt.xticks(fontsize=23)
     plt.yticks(fontsize=23)
-    ax.set_xscale('log')
+    #ax.set_xscale('log')
 
     plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_Turbines_Q.pdf')
     plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_Turbines_Q.png')
@@ -149,7 +149,7 @@ def draw_and_save_figures_per_heuristic():
     #----------------------------------------------------------------------------------------------
     # GRAPH 2: Graphical representation of the accuracy behavior.
     #----------------------------------------------------------------------------------------------
-    plt.figure(figsize=[4,3])
+    plt.figure(figsize=[6,5])
     plt.subplots_adjust(left=0.31,bottom=0.26,right=0.85,top=0.88,wspace=0.3,hspace=0.2)
     ax=plt.subplot(111)
     ax.grid(b=True,color='black',linestyle='--', linewidth=0.8,alpha=0.2,axis='both')
@@ -159,14 +159,15 @@ def draw_and_save_figures_per_heuristic():
     draw_accuracy_behaviour(df,'elapsed_time')
 
     ax.ticklabel_format(style='sci', axis='x', useOffset=True, scilimits=(0,0))
+    ax.set_yticks(np.arange(0,1.2,0.2))
     ax.set_xticks(range(500,4000,1000))
     ax.set_xlabel("$t$",fontsize=23)
     ax.set_ylabel("$\widetilde{c}$",fontsize=23)
     ax.set_title(r'\textbf{Turbines}',fontsize=23)
     plt.xticks(fontsize=23)
     plt.yticks(fontsize=23)
-    ax.set_xscale('log')
-    ax.set_ylim([0,1])
+    #ax.set_xscale('log')
+    #ax.set_ylim([0,1])
 
     plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_Turbines_c.pdf')
     plt.savefig('figures_paper/figures/OptimalAccuracyAnalysis/OptimalAccuracyAnalysis_Turbines_c.png')
@@ -201,7 +202,7 @@ def draw_heuristic_effectiveness():
     ax.set_title(r'\textbf{Turbines}',fontsize=15)
     ax.set_ylabel(r"\textbf{QI}",fontsize=15)
     plt.yticks(fontsize=15)
-    ax.set_xscale('log')
+    #ax.set_xscale('log')
     ax.set_ylim([99.5,103.5])
     ax.set_yticks([100,101,102,103])
 
@@ -220,7 +221,7 @@ def draw_heuristic_effectiveness():
     ax.set_ylabel(r"\textbf{Solution quality}",fontsize=15)
     ax.legend(fontsize=11,title_fontsize=11,labelspacing=0.01,handlelength=1)
     plt.yticks(fontsize=15)
-    ax.set_xscale('log')
+    #ax.set_xscale('log')
 
     #----------------------------------------------------------------------------------------------
     # GRAPH 3: Curve of time saving.
@@ -248,7 +249,7 @@ def draw_heuristic_effectiveness():
     ax.set_xlabel("$t$",fontsize=15)
     plt.yticks(fontsize=15)
     plt.xticks(fontsize=15)
-    ax.set_xscale('log')
+    #ax.set_xscale('log')
     ax.set_ylim([45,135])
     ax.set_yticks([50,75,100,125])
 
@@ -260,7 +261,7 @@ def draw_heuristic_effectiveness():
     #----------------------------------------------------------------------------------------------
     # ZOOM OF GRAPH 2
     #----------------------------------------------------------------------------------------------
-    plt.figure(figsize=[2,1.5])
+    plt.figure(figsize=[4,3])
     plt.subplots_adjust(left=0.28,bottom=0.62,right=0.6,top=0.87,wspace=0.3,hspace=0.07)
     ax=plt.subplot(111)
 

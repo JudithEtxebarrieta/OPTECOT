@@ -71,7 +71,7 @@ def a_c(a,a_0,a_1):
 total_list_acc=np.load('results/data/Turbines/ConstantAccuracyAnalysis/list_acc.npy')
 a_0=min(total_list_acc)
 a_1=max(total_list_acc)
-list_acc=[1.0,0.8,0.6,0.4,0.3,0.1]
+list_acc=[1.0,0.8,0.5,0.4,0.3,0.2,0.1]
 
 # Define list with limits of training times to be drawn.
 df_train_acc_min=pd.read_csv("results_Hipatia/df_ConstantAccuracyAnalysis_acc"+str(min(list_acc))+".csv", index_col=0)
@@ -111,14 +111,15 @@ for accuracy in list_acc:
     plt.plot(list_train_times, all_mean_scores, linewidth=1,label=r'\textbf{'+str(round(a_c(accuracy,a_0,a_1),2))+'}',color=colors[curve],marker=list_markers[curve],markevery=0.1)
     curve+=1
 
-plt.gca().add_patch(Rectangle((2000, .516), 3600-2000, 0.526-0.516,facecolor='white',edgecolor='black'))
-ax.set_ylim([0.42,0.55])
+plt.gca().add_patch(Rectangle((2000, .520), 3600-2000, 0.526-0.520,facecolor='white',edgecolor='black'))
+#ax.set_ylim([0.42,0.55])
+ax.set_xticks(np.arange(0,3800,800))
 ax.set_xlabel("$t$",fontsize=23)
 ax.set_ylabel(r"\textbf{Solution quality}",fontsize=23)
 ax.set_title(r'\textbf{Turbines}',fontsize=23)
 leg=ax.legend(title="$c$",fontsize=16.5,title_fontsize=16.5,labelspacing=0.1,handlelength=0.8,loc='upper left')
 plt.axhline(y=score_limit,color='black', linestyle='--')
-ax.set_xscale('log')
+#ax.set_xscale('log')
 plt.xticks(fontsize=23)
 plt.yticks(fontsize=23)
 
@@ -128,7 +129,7 @@ plt.show()
 plt.close()
 
 # Zoom.
-plt.figure(figsize=[7,4])
+plt.figure(figsize=[8,6])
 plt.subplots_adjust(left=0.57,bottom=0.44,right=0.93,top=0.88,wspace=0.3,hspace=0.2)
 ax=plt.subplot(111)
 ax.grid(b=True,color='black',linestyle='--', linewidth=0.8,alpha=0.2,axis='both')
@@ -154,8 +155,8 @@ ax.set_yticks(np.arange(0.520,0.524,0.002),rotation=0)
 ax.set_xticks(np.arange(2200,3600,500))
 ax.ticklabel_format(style='sci', axis='x', useOffset=True, scilimits=(0,0))
 ax.set_title('Zoom',fontsize=23)
-ax.set_xlim([2000,3750])
-ax.set_ylim([0.518,0.526])
+ax.set_xlim([2000,3600])
+ax.set_ylim([0.5205,0.5255])
 plt.axhline(y=score_limit,color='black', linestyle='--')
 plt.xticks(fontsize=23)
 plt.yticks(fontsize=23)
