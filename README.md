@@ -310,18 +310,32 @@ This allows you to modify the graphs without having to run the CMA-ES again. For
 ExperimentalGraphs.illustrate_approximate_objective_functions_use(optecot,title='Figure title',
 initial_only=False,list_cots=[1.0,0.6,0.2])
 ```
+ ## Citation
+If you found this work useful, we would appreciate a citation. The corresponding BiBTeX citation is given below:
+ ```bibtex
+ @article{echevarrieta2024speeding,
+  title={Speeding-up Evolutionary Algorithms to solve Black-Box Optimization Problems},
+  author={Echevarrieta, Judith and Arza, Etor and P{\'e}rez, Aritz},
+  journal={IEEE Transactions on Evolutionary Computation},
+  year={2024},
+  publisher={IEEE},
+  doi={10.1109/TEVC.2024.3352450}
+}
+ ```
+
  ## References
 
-[1] T. Stephens, H. van Kemenade, J. McDermott, T. Gates, A. Rai, B. Price, N. de Vos, S. Niculae, S. Ao, and I. Bell, “Gplearn - Genetic Programming in Python, with a scikit-learn inspired API.” Available: https://github.com/trevorstephens/gplearn
+[1] J. Echevarrieta, E. Arza, and A. Pérez. Speeding-up Evolutionary Algorithms to solve Black-Box Optimization Problems. IEEE Transactions on Evolutionary Computation (2024). Available: https://doi.org/10.1109/TEVC.2024.3352450
 
-[2] S. Reddy, “WindFLO - A Framework for Fast Wind Farm Layout Optimization”, Mar. 2023. Available: https://github.com/sohailrreddy/WindFLO
+[2] T. Stephens, H. van Kemenade, J. McDermott, T. Gates, A. Rai, B. Price, N. de Vos, S. Niculae, S. Ao, and I. Bell. Gplearn - Genetic Programming in Python, with a scikit-learn inspired API. Available: https://github.com/trevorstephens/gplearn
 
-[3] Farama-Foundation, “Gymnasium,” Farama Foundation, Apr. 2023. Available: https://github.com/Farama-Foundation/Gymnasium
+[3] S. Reddy. WindFLO - A Framework for Fast Wind Farm Layout Optimization. Available: https://github.com/sohailrreddy/WindFLO
 
-[4] A. Zarketa-Astigarraga, A. Martin-Mayor, A. Maeso, B. De Miguel, M. Martinez-Agirre, and M. Penalba, “A computationally Efficient Ga-Based Optimisation Tool for the Design of Power Take-Off Systems in Realistic Wave Climates: The Wells Turbine Case,” SSRN, Preprint,
-2023. Available: https://www.ssrn.com/abstract=4379648
+[4] Farama-Foundation. Gymnasium. Available: https://github.com/Farama-Foundation/Gymnasium
 
-[5] A. Raffin, T. Lips, A. KG, and P. Daniel, “Stable Baselines3 RL tutorial”, Apr. 2023. Available: https://github.com/araffin/rl-tutorial-jnrr19/blob/47cca257ce9814ee4be7a645e5411275284f1727/1_getting_started.ipynb
+[5] A. Zarketa-Astigarraga, A. Martin-Mayor, A. Maeso, B. De Miguel, M. Martinez-Agirre, and M. Penalba. A computationally Efficient Ga-Based Optimisation Tool for the Design of Power Take-Off Systems in Realistic Wave Climates: The Wells Turbine Case. SSRN (2023). Available: https://ssrn.com/abstract=4379648 or http://dx.doi.org/10.2139/ssrn.4379648
+
+[6] A. Raffin, T. Lips, A. KG, and P. Daniel. Stable Baselines3 RL tutorial. Available: https://github.com/araffin/rl-tutorial-jnrr19/blob/47cca257ce9814ee4be7a645e5411275284f1727/1_getting_started.ipynb
 
 
 
