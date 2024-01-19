@@ -311,7 +311,7 @@ ExperimentalGraphs.illustrate_approximate_objective_functions_use(optecot,title=
 initial_only=False,list_cots=[1.0,0.6,0.2])
 ```
  ## Citation
-If you found this work useful, we would appreciate a citation. The corresponding BiBTeX citation is given below:
+If you found this work useful, we would appreciate a citation. The corresponding BibTeX citation is given below:
  ```bibtex
  @article{echevarrieta2024speeding,
   title={Speeding-up Evolutionary Algorithms to solve Black-Box Optimization Problems},
