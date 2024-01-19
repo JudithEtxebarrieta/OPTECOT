@@ -2,7 +2,7 @@
  Judith Echevarrieta, Etor Arza and Aritz Pérez
 
 ## Repository content
-This repository contains supplementary material for the paper _Speeding-up Evolutionary Algorithms to solve Black-Box Optimization Problems_. In this work, we have presented OPTECOT (Optimal Evaluation Cost Tracking): a technique to reduce the cost of solving a computationally expensive black-box optimization problem using population-based algorithms, avoiding loss of solution quality. OPTECOT requires a set of approximate objective functions of different costs and accuracies, obtained by modifying a strategic parameter in the definition of the original function. The proposal allows the selection of the lowest cost approximation with the trade-off between cost and accuracy in real time during the algorithm execution. The effectiveness of the proposal has been demonstrated in four different environments: **Symbolic Regressor**, **WindFLO**, **Swimmer** (from MuJoCo) and **Turbines**. In addition, future work has been motivated by using the environment **CartPole**. 
+This repository contains supplementary material for the paper _Speeding-up Evolutionary Algorithms to Solve Black-Box Optimization Problems_. In this work, we have presented OPTECOT (Optimal Evaluation Cost Tracking): a technique to reduce the cost of solving a computationally expensive black-box optimization problem using population-based algorithms, avoiding loss of solution quality. OPTECOT requires a set of approximate objective functions of different costs and accuracies, obtained by modifying a strategic parameter in the definition of the original function. The proposal allows the selection of the lowest cost approximation with the trade-off between cost and accuracy in real time during the algorithm execution. The effectiveness of the proposal has been demonstrated in four different environments: **Symbolic Regressor**, **WindFLO**, **Swimmer** (from MuJoCo) and **Turbines**. In addition, future work has been motivated by using the environment **CartPole**. 
 
 <table width='80%' align='center'>
   <tr>
@@ -314,7 +314,7 @@ initial_only=False,list_cots=[1.0,0.6,0.2])
 If you found this work useful, we would appreciate a citation. The corresponding BibTeX citation is given below:
  ```bibtex
  @article{echevarrieta2024speeding,
-  title={Speeding-up Evolutionary Algorithms to solve Black-Box Optimization Problems},
+  title={Speeding-up Evolutionary Algorithms to Solve Black-Box Optimization Problems},
   author={Echevarrieta, Judith and Arza, Etor and P{\'e}rez, Aritz},
   journal={IEEE Transactions on Evolutionary Computation},
   year={2024},
@@ -325,7 +325,7 @@ If you found this work useful, we would appreciate a citation. The corresponding
 
  ## References
 
-[1] J. Echevarrieta, E. Arza, and A. Pérez. Speeding-up Evolutionary Algorithms to solve Black-Box Optimization Problems. IEEE Transactions on Evolutionary Computation (2024). Available: https://doi.org/10.1109/TEVC.2024.3352450
+[1] J. Echevarrieta, E. Arza, and A. Pérez. Speeding-up Evolutionary Algorithms to Solve Black-Box Optimization Problems. IEEE Transactions on Evolutionary Computation (2024). Available: https://doi.org/10.1109/TEVC.2024.3352450
 
 [2] T. Stephens, H. van Kemenade, J. McDermott, T. Gates, A. Rai, B. Price, N. de Vos, S. Niculae, S. Ao, and I. Bell. Gplearn - Genetic Programming in Python, with a scikit-learn inspired API. Available: https://github.com/trevorstephens/gplearn
 
