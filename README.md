@@ -191,7 +191,7 @@ pip install plotly
 # WindFLO
 pip install f90nml
 pip install git+https://github.com/CMA-ES/pycma.git@master
-cd windflo/release/
+cd WindFLO/release/
 make OS=LINUX MAIN=main
 cd ../../
 
